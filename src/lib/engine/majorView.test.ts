@@ -178,3 +178,48 @@ describe('programLabel', () => {
 		expect(programLabel('physics-astrophysics-bs')).not.toMatch(/\bBS\b/);
 	});
 });
+
+describe('term availability', () => {
+	it('honours hand-recorded offerings the catalog omits', () => {
+		// The catalog names a term for only 10 of 126 PHYS/ASTP courses; the rest come from
+		// data/local/preferences.yaml, confirmed by the department.
+		for (const code of ['PHYS 303', 'PHYS 323', 'PHYS 355', 'PHYS 420', 'PHYS 425', 'PHYS 452']) {
+			expect(catalog.courses.get(code)?.terms, `${code} should be fall-only`).toEqual(['fall']);
+		}
+		for (const code of ['PHYS 309', 'PHYS 319', 'PHYS 413', 'PHYS 453', 'PHYS 454', 'PHYS 456']) {
+			expect(catalog.courses.get(code)?.terms, `${code} should be spring-only`).toEqual(['spring']);
+		}
+	});
+
+	it('leaves the every-semester and sporadic courses unconstrained', () => {
+		// Asserting a term for these would be inventing data: the intro sequences run every
+		// semester, and the upper-division electives run sporadically.
+		for (const code of ['PHYS 261N', 'PHYS 262N', 'PHYS 411', 'PHYS 415', 'PHYS 416', 'PHYS 417']) {
+			expect(catalog.courses.get(code)?.terms, `${code} should have no fixed term`).toBeUndefined();
+		}
+	});
+
+	it('keeps what the catalog does state', () => {
+		expect(catalog.courses.get('PHYS 323')?.terms).toEqual(['fall']);
+		expect(catalog.courses.get('PHYS 319')?.terms).toEqual(['spring']);
+	});
+
+	it('never schedules a course outside the terms it is taught', () => {
+		const result = generatePlan({
+			program: astro,
+			catalog,
+			settings: { ...DEFAULT_SETTINGS },
+			startTerm: 'fall',
+			startYear: 2026,
+			priorCredits: [],
+			placements: ['MATH 163', 'MATH 166', 'MATH 162M']
+		});
+		for (const sem of result.semesters) {
+			for (const c of sem.courses) {
+				const terms = catalog.courses.get(c.code)?.terms;
+				if (!terms) continue;
+				expect(terms, `${c.code} placed in ${sem.term}`).toContain(sem.term);
+			}
+		}
+	});
+});

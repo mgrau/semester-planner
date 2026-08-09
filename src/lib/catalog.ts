@@ -1,5 +1,6 @@
 import type {
 	Catalog,
+	Term,
 	Course,
 	GenEdCategory,
 	PriorCredit as PriorCreditSeed,
@@ -36,6 +37,7 @@ interface PreferencesDoc {
 	requirement_labels?: Record<string, string>;
 	starting_preparation?: PreparationOption[];
 	earliest_year?: Record<string, number>;
+	term_offerings?: Record<string, Term[]>;
 }
 
 /** A checkbox offered when creating a student: what they already bring with them. */
@@ -190,6 +192,19 @@ function applyCategoryFilters(categories: GenEdCategory[]): GenEdCategory[] {
 	});
 }
 
+/**
+ * Apply hand-recorded term availability over what the catalog states.
+ *
+ * The catalog names a term for only a handful of courses, and a course with no stated term is
+ * treated as available every term — so a fall-only course would silently be schedulable in the
+ * spring. These overrides are departmental knowledge; see data/local/preferences.yaml.
+ */
+function applyTermOfferings(courses: Course[]): Course[] {
+	const overrides = preferences.term_offerings ?? {};
+	if (!Object.keys(overrides).length) return courses;
+	return courses.map((c) => (overrides[c.code] ? { ...c, terms: overrides[c.code] } : c));
+}
+
 function buildCourseIndex(courses: Course[]): Map<string, Course> {
 	const map = new Map<string, Course>();
 	for (const c of courses) {
@@ -208,14 +223,14 @@ for (const mod of Object.values(programDocs)) {
 	if (p?.id) programs.set(p.id, normalizeProgram(p));
 }
 
+export const allCourses: Course[] = applyTermOfferings(coursesData.courses ?? []);
+
 export const catalog: Catalog = {
-	courses: buildCourseIndex(coursesData.courses ?? []),
+	courses: buildCourseIndex(allCourses),
 	genEd: applyCategoryFilters(genEdData.categories ?? []),
 	programs,
 	catalogYear: coursesData.meta?.catalog_year ?? genEdData.meta?.catalog_year ?? 'unknown'
 };
-
-export const allCourses: Course[] = coursesData.courses ?? [];
 
 export const programList: NormalizedProgram[] = [...programs.values()].sort((a, b) =>
 	a.name.localeCompare(b.name)

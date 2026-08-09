@@ -12,7 +12,7 @@ localStorage and travel as YAML files.
 ```sh
 npm install
 npm run dev          # http://localhost:5173
-npm test             # 105 tests, incl. end-to-end against the real catalog
+npm test             # 109 tests, incl. end-to-end against the real catalog
 npm run build        # static site in build/
 ```
 
@@ -102,6 +102,11 @@ it. Three things live there:
   "PHYS 120 or PHYS 309" → "Seminar", "PHYS 499W or PHYS 489W & PHYS 490W" → "Senior Thesis").
   A key is either a bare requirement id (all programs) or `<programId>:<requirementId>`, which
   wins. Ids are the `id:` fields in `data/programs/*.yaml`.
+- **`term_offerings`** — when a course is actually taught. The catalog states this for only 10
+  of the 126 PHYS/ASTP courses, and ODU publishes no rotation, so without it the planner assumes
+  every course runs every term and will put a fall-only course in the spring. Twelve are recorded
+  from the department; the intro sequences (every semester) and the sporadic upper-division
+  electives are deliberately left unconstrained rather than given invented terms.
 - **`earliest_year`** — the year of study a course may first be scheduled in. The catalog asks
   only for ENGL 211C before Senior Thesis, so nothing but class standing keeps PHYS 489W out of
   the sophomore year; this puts the thesis sequence in terms 7 and 8 where it belongs.
@@ -192,8 +197,9 @@ ODU changed.
 
 - The full course catalog ships to the browser as one ~890 KB gzipped chunk. Fine for an internal
   tool; would want splitting by subject if this ever went public.
-- Term availability comes from prose in course descriptions ("offered fall, spring"). Where the
-  catalog is silent, the planner assumes a course is available every term.
+- Term availability comes from prose in course descriptions ("offered fall, spring"), which the
+  catalog supplies for only 10 of 126 PHYS/ASTP courses. The gap is filled by `term_offerings` in
+  `data/local/preferences.yaml`. Anything in neither is assumed available every term.
 - Variable-credit courses (PHYS 297 is 1–3) are planned at their minimum.
 - The requirement assignment is greedy, most-constrained-first. It is not provably optimal when a
   course could satisfy several elective pools, but it is stable and explainable.

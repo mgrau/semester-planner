@@ -140,6 +140,44 @@ starting_preparation:
     grants:
       - { course: MATH 162M, credits: 3 }
 
+# When a course is actually taught.
+#
+# The catalog states this for only 10 of the 126 PHYS/ASTP courses — the rest carry no
+# "(Offered Fall)" note at all, and ODU publishes no rotation schedule. Where the catalog is
+# silent the planner assumes a course runs every term, which will cheerfully schedule a
+# fall-only course in the spring. Anything listed here overrides that assumption.
+#
+# Values are any of: fall, spring, summer.
+term_offerings:
+  # Confirmed by the department, 2026. Agrees with the catalog everywhere the catalog states a
+  # term (323, 355 fall; 319 spring) and fills in the rest, which it does not.
+  #
+  # Fall only
+  PHYS 303: [fall] # Intermediate Experimental Physics
+  PHYS 323: [fall] # Modern Physics
+  PHYS 355: [fall] # Mathematical Methods of Physics
+  PHYS 420: [fall] # Introductory Computational Physics
+  PHYS 425: [fall] # Electromagnetism I
+  PHYS 452: [fall] # Introduction to Quantum Mechanics
+
+  # Spring only
+  PHYS 309: [spring] # Physics on the Back of an Envelope
+  PHYS 319: [spring] # Analytical Mechanics
+  PHYS 413: [spring] # Methods of Experimental Physics
+  PHYS 453: [spring] # Electromagnetism II
+  PHYS 454: [spring] # Thermal and Statistical Physics
+  PHYS 456: [spring] # Intermediate Quantum Mechanics
+
+  # Deliberately absent, and why:
+  #
+  # The introductory sequences (PHYS 231N/232N, 261N/262N, 226N/227N) run every semester. The
+  # catalog already says so for 231N/232N; the others are left unconstrained, which has the same
+  # effect and avoids asserting a summer offering nobody has confirmed.
+  #
+  # The upper-division electives (PHYS 411, 415, 416, 417) run sporadically rather than on a
+  # fixed rotation, so no term can be recorded truthfully. Leaving them unconstrained lets the
+  # planner place them anywhere; confirm availability with the department before registration.
+
 # Courses that should not be scheduled before a given year of study.
 #
 # The catalog's prerequisites are necessary but not sufficient for good advising: PHYS 489W
