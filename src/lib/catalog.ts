@@ -38,6 +38,7 @@ interface PreferencesDoc {
 	starting_preparation?: PreparationOption[];
 	earliest_year?: Record<string, number>;
 	term_offerings?: Record<string, Term[]>;
+	discontinued?: string[];
 }
 
 /** A checkbox offered when creating a student: what they already bring with them. */
@@ -201,8 +202,17 @@ function applyCategoryFilters(categories: GenEdCategory[]): GenEdCategory[] {
  */
 function applyTermOfferings(courses: Course[]): Course[] {
 	const overrides = preferences.term_offerings ?? {};
-	if (!Object.keys(overrides).length) return courses;
-	return courses.map((c) => (overrides[c.code] ? { ...c, terms: overrides[c.code] } : c));
+	const retired = new Set(preferences.discontinued ?? []);
+	if (!Object.keys(overrides).length && !retired.size) return courses;
+	return courses.map((c) => {
+		const terms = overrides[c.code];
+		if (!terms && !retired.has(c.code)) return c;
+		return {
+			...c,
+			...(terms ? { terms } : {}),
+			...(retired.has(c.code) ? { discontinued: true } : {})
+		};
+	});
 }
 
 function buildCourseIndex(courses: Course[]): Map<string, Course> {

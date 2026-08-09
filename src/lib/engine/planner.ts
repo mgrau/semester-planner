@@ -132,7 +132,11 @@ function neededCourses(
 		// "Select two of the following") need a concrete pick, or the plan silently omits most
 		// of the physics major. Options are chosen as whole groups so a two-course sequence is
 		// never half-scheduled.
-		const options = poolOptions(req).filter((g) => g.every((c) => catalog.courses.has(c)));
+		// A discontinued course cannot satisfy anything: PHYS 120 is still listed as an option for
+		// the Seminar requirement, but only PHYS 309 is actually available.
+		const options = poolOptions(req).filter((g) =>
+			g.every((c) => catalog.courses.has(c) && !catalog.courses.get(c)!.discontinued)
+		);
 		if (!options.length) continue;
 
 		const satisfiedOptions = options.filter((g) => g.every((c) => held.has(c))).length;
@@ -342,7 +346,7 @@ export function generatePlan(req: PlanRequest): PlanResult {
 		const eligible = [...needed]
 			.filter((code) => {
 				const course = catalog.courses.get(code);
-				if (!course) return false;
+				if (!course || course.discontinued) return false;
 				if (!offeredIn(course, term)) return false;
 				if (yearOfStudy < (earliestYear.get(code) ?? 0)) return false;
 				return evaluate(course.prereq, before).satisfied;

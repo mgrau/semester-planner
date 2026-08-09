@@ -145,6 +145,16 @@ export function validatePlan(student: Student, catalog: Catalog): Issue[] {
 				});
 			}
 
+			if (course.discontinued) {
+				issues.push({
+					severity: 'warning',
+					kind: 'unknown-course',
+					message: `${pc.code} is no longer offered by ODU. Replace it with a current course.`,
+					semesterId: sem.id,
+					course: pc.code
+				});
+			}
+
 			if (course.needs_review) {
 				issues.push({
 					severity: 'info',

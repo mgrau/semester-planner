@@ -12,7 +12,7 @@ localStorage and travel as YAML files.
 ```sh
 npm install
 npm run dev          # http://localhost:5173
-npm test             # 109 tests, incl. end-to-end against the real catalog
+npm test             # 112 tests, incl. end-to-end against the real catalog
 npm run build        # static site in build/
 ```
 
@@ -105,8 +105,12 @@ it. Three things live there:
 - **`term_offerings`** — when a course is actually taught. The catalog states this for only 10
   of the 126 PHYS/ASTP courses, and ODU publishes no rotation, so without it the planner assumes
   every course runs every term and will put a fall-only course in the spring. Twelve are recorded
-  from the department; the intro sequences (every semester) and the sporadic upper-division
-  electives are deliberately left unconstrained rather than given invented terms.
+  from the department; courses that genuinely run every semester (the intro sequences, the senior
+  thesis courses, introductory astronomy) and the sporadic upper-division electives are
+  deliberately left unconstrained rather than given invented terms.
+- **`discontinued`** — courses ODU no longer offers. They stay in the catalog so a returning
+  student's credit can still be named, but the planner will not schedule them and a plan
+  containing one is flagged. PHYS 120 is listed, which leaves PHYS 309 as the Seminar requirement.
 - **`earliest_year`** — the year of study a course may first be scheduled in. The catalog asks
   only for ENGL 211C before Senior Thesis, so nothing but class standing keeps PHYS 489W out of
   the sophomore year; this puts the thesis sequence in terms 7 and 8 where it belongs.

@@ -4,6 +4,8 @@ import { majorViewProgress } from './majorView';
 import { generatePlan } from './planner';
 import { reservedByCategory, reservedCredits, takenFrom, totalCredits } from './requirements';
 import { DEFAULT_SETTINGS } from '$lib/stores/roster.svelte';
+import { validatePlan } from './validate';
+import type { Student } from '$lib/types';
 
 const astro = catalog.programs.get('physics-astrophysics-bs')!;
 
@@ -189,12 +191,26 @@ describe('term availability', () => {
 		for (const code of ['PHYS 309', 'PHYS 319', 'PHYS 413', 'PHYS 453', 'PHYS 454', 'PHYS 456']) {
 			expect(catalog.courses.get(code)?.terms, `${code} should be spring-only`).toEqual(['spring']);
 		}
+		expect(catalog.courses.get('ASTP 414')?.terms).toEqual(['fall']);
+		expect(catalog.courses.get('ASTP 313')?.terms).toEqual(['spring']);
 	});
 
 	it('leaves the every-semester and sporadic courses unconstrained', () => {
 		// Asserting a term for these would be inventing data: the intro sequences run every
 		// semester, and the upper-division electives run sporadically.
-		for (const code of ['PHYS 261N', 'PHYS 262N', 'PHYS 411', 'PHYS 415', 'PHYS 416', 'PHYS 417']) {
+		for (const code of [
+			'PHYS 261N',
+			'PHYS 262N',
+			'PHYS 411',
+			'PHYS 415',
+			'PHYS 416',
+			'PHYS 417',
+			'PHYS 489W',
+			'PHYS 490W',
+			'ASTP 103N',
+			'ASTP 104N',
+			'ASTP 495'
+		]) {
 			expect(catalog.courses.get(code)?.terms, `${code} should have no fixed term`).toBeUndefined();
 		}
 	});
@@ -223,3 +239,56 @@ describe('term availability', () => {
 		}
 	});
 });
+
+describe('discontinued courses', () => {
+	it('marks PHYS 120 as no longer offered but keeps it nameable', () => {
+		// A returning student may hold credit for it, so it stays in the catalog.
+		const phys120 = catalog.courses.get('PHYS 120');
+		expect(phys120).toBeDefined();
+		expect(phys120?.discontinued).toBe(true);
+	});
+
+	it('picks the surviving option for a requirement that lists it', () => {
+		// The Seminar requirement is "PHYS 120 or PHYS 309"; only PHYS 309 still runs.
+		const result = generatePlan({
+			program: astro,
+			catalog,
+			settings: { ...DEFAULT_SETTINGS },
+			startTerm: 'fall',
+			startYear: 2026,
+			priorCredits: [],
+			placements: ['MATH 163', 'MATH 166', 'MATH 162M']
+		});
+		const codes = result.semesters.flatMap((s) => s.courses.map((c) => c.code));
+		expect(codes).not.toContain('PHYS 120');
+		expect(codes).toContain('PHYS 309');
+	});
+
+	it('warns when a discontinued course is already sitting in a plan', () => {
+		const student = studentWith({
+			semesters: [
+				{ id: 'fall-2026', term: 'fall', year: 2026, courses: [{ code: 'PHYS 120', credits: 1 }] }
+			]
+		});
+		const warnings = validatePlan(student, catalog).filter((i) =>
+			i.message.includes('no longer offered')
+		);
+		expect(warnings.length).toBe(1);
+	});
+});
+
+function studentWith(overrides: Partial<Student> = {}): Student {
+	return {
+		id: 't',
+		name: 'Test',
+		programId: 'physics-astrophysics-bs',
+		catalogYear: catalog.catalogYear,
+		startTerm: 'fall',
+		startYear: 2026,
+		priorCredits: [],
+		semesters: [],
+		settings: { ...DEFAULT_SETTINGS },
+		updatedAt: '',
+		...overrides
+	};
+}

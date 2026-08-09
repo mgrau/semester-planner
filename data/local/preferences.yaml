@@ -160,8 +160,11 @@ term_offerings:
   PHYS 425: [fall] # Electromagnetism I
   PHYS 452: [fall] # Introduction to Quantum Mechanics
 
+  ASTP 414: [fall] # Relativity and Cosmology
+
   # Spring only
   PHYS 309: [spring] # Physics on the Back of an Envelope
+  ASTP 313: [spring] # Elements of Astrophysics
   PHYS 319: [spring] # Analytical Mechanics
   PHYS 413: [spring] # Methods of Experimental Physics
   PHYS 453: [spring] # Electromagnetism II
@@ -170,13 +173,22 @@ term_offerings:
 
   # Deliberately absent, and why:
   #
-  # The introductory sequences (PHYS 231N/232N, 261N/262N, 226N/227N) run every semester. The
-  # catalog already says so for 231N/232N; the others are left unconstrained, which has the same
-  # effect and avoids asserting a summer offering nobody has confirmed.
+  # These run every semester, so an unconstrained entry is both simpler and more accurate than
+  # listing terms: the introductory physics sequences (PHYS 231N/232N, 261N/262N, 226N/227N),
+  # the senior thesis courses (PHYS 489W/490W/499W), introductory astronomy (ASTP 103N/104N),
+  # and ASTP 495.
   #
   # The upper-division electives (PHYS 411, 415, 416, 417) run sporadically rather than on a
   # fixed rotation, so no term can be recorded truthfully. Leaving them unconstrained lets the
   # planner place them anywhere; confirm availability with the department before registration.
+
+# Courses ODU no longer offers.
+#
+# They stay in the catalog data — a returning student may hold credit for one, and the app must
+# still be able to name it — but the planner will not schedule them, and a plan containing one
+# is flagged.
+discontinued:
+  - PHYS 120 # Physics in the 21st Century. Leaves PHYS 309 as the Seminar requirement.
 
 # Courses that should not be scheduled before a given year of study.
 #

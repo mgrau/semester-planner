@@ -47,6 +47,11 @@ export interface Course {
 	raw_prereq_text?: string;
 	raw_precoreq_text?: string;
 	needs_review?: boolean;
+	/**
+	 * ODU no longer offers this course. It stays in the catalog so a returning student's credit
+	 * can still be named, but the planner will not schedule it.
+	 */
+	discontinued?: boolean;
 }
 
 export interface GenEdCategory {
