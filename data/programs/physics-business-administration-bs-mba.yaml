@@ -1,0 +1,285 @@
+meta:
+  source: https://catalog.odu.edu/undergraduate/sciences/physics/physics-business-administration-bs-mba/
+  scraped_at: "2026-08-09"
+  catalog_year: "2026-2027"
+program:
+  id: physics-business-administration-bs-mba
+  name: Physics and Master of Business Administration (BS, MBA)
+  department: Physics
+  total_credits: 150
+  credits_listed: 147-153
+  description: The Bachelor of Science in physics and Master of Business Administration dual degree program is a
+    five-year program. After students have satisfactorily completed their undergraduate requirements, they complete
+    the remaining requirements in the MBA program. Students must earn a minimum of 150 credits (120 discrete credits
+    for the undergraduate degree and 30 discrete credits for the graduate degree).
+  requirements:
+  - id: gened-written
+    name: Written Communication
+    gened: written
+    credits: 6
+    section: Lower-Division General Education
+  - id: gened-oral
+    name: Oral Communication
+    gened: oral
+    credits: 3
+    section: Lower-Division General Education
+  - id: gened-math
+    name: Mathematics
+    gened: math
+    credits: 3
+    section: Lower-Division General Education
+    satisfied_by_major: true
+    notes: 'Mathematics: satisfied by the major'
+  - id: gened-language
+    name: Language and Culture
+    gened: language
+    credits: 0-6
+    section: Lower-Division General Education
+  - id: gened-information
+    name: Information Literacy and Research
+    gened: information
+    credits: 3
+    section: Lower-Division General Education
+    one_of: [CS 120G, CS 121G, OEAS 130G]
+    notes: 'Information Literacy and Research: CS 120G, CS 121G, or OEAS 130G'
+  - id: gened-behavior
+    name: Human Behavior
+    gened: behavior
+    credits: 3
+    section: Lower-Division General Education
+  - id: gened-creativity
+    name: Human Creativity
+    gened: creativity
+    credits: 3
+    section: Lower-Division General Education
+  - id: gened-interpret
+    name: Interpreting the Past
+    gened: interpret
+    credits: 3
+    section: Lower-Division General Education
+  - id: gened-literature
+    name: Literature
+    gened: literature
+    credits: 3
+    section: Lower-Division General Education
+  - id: gened-philosophy
+    name: Philosophy and Ethics
+    gened: philosophy
+    credits: 3
+    section: Lower-Division General Education
+  - id: gened-nature
+    name: The Nature of Science
+    gened: nature
+    credits: 8
+    section: Lower-Division General Education
+    satisfied_by_major: true
+    notes: 'Nature of Science: satisfied by the major'
+  - id: gened-impact
+    name: Impact of Technology
+    gened: impact
+    credits: 3
+    section: Lower-Division General Education
+  - id: upper-division-gened
+    name: Upper-Division General Education
+    section: Upper-Division General Education
+    notes: The upper-division general education requirement is met by the MBA coursework.
+  - id: complete-lower-division-requirements
+    name: Complete lower-division requirements
+    notes: Complete lower-division requirements
+    credits: 30-36
+    section: Physics and MBA Dual Degree
+    area: General Education
+  - id: complete-upper-division-requirements-satisfied-b
+    name: Complete upper-division requirements (satisfied by MBA coursework)
+    notes: Complete upper-division requirements (satisfied by MBA coursework)
+    section: Physics and MBA Dual Degree
+    area: General Education
+  - id: physics-course-requirements-required
+    name: Physics Course Requirements Required Courses
+    all_of: [MATH 211, MATH 212, CHEM 121N, CHEM 122N, CHEM 123N, CHEM 124N, PHYS 323, PHYS 319, PHYS 303, PHYS
+        355, PHYS 413, PHYS 425, PHYS 452, PHYS 454]
+    section: Physics and MBA Dual Degree
+    area: Physics Course Requirements
+    credits: 40
+  - id: math-312-or
+    name: MATH 312 or MATH 285
+    one_of: [MATH 312, MATH 285]
+    credits: 4
+    section: Physics and MBA Dual Degree
+    area: Physics Course Requirements
+  - id: math-307-or
+    name: MATH 307 or MATH 280
+    one_of: [MATH 307, MATH 280]
+    credits: 3
+    section: Physics and MBA Dual Degree
+    area: Physics Course Requirements
+  - id: physics-course-requirements-select
+    name: 'Select one of the following:'
+    one_of: [MATH 316, MATH 401, MATH 421, MATH 422]
+    credits: 3
+    section: Physics and MBA Dual Degree
+    area: Physics Course Requirements
+  - id: cs-151-or
+    name: CS 151 or CS 153
+    one_of: [CS 151, CS 153]
+    credits: 4
+    section: Physics and MBA Dual Degree
+    area: Physics Course Requirements
+  - id: phys-261n-or
+    name: PHYS 261N or PHYS 231N or PHYS 226N
+    one_of: [PHYS 261N, PHYS 231N, PHYS 226N]
+    credits: 4
+    section: Physics and MBA Dual Degree
+    area: Physics Course Requirements
+  - id: phys-262n-or
+    name: PHYS 262N or PHYS 232N or PHYS 227N
+    one_of: [PHYS 262N, PHYS 232N, PHYS 227N]
+    credits: 4
+    section: Physics and MBA Dual Degree
+    area: Physics Course Requirements
+  - id: physics-course-requirements-select-2
+    name: 'Select one of the following:'
+    one_of: [PHYS 420, PHYS 453, PHYS 456]
+    credits: 3
+    section: Physics and MBA Dual Degree
+    area: Physics Course Requirements
+  - id: phys-499w-or
+    name: PHYS 499W or PHYS 489W & PHYS 490W
+    one_of: [PHYS 499W, {all_of: [PHYS 489W, PHYS 490W]}]
+    credits: 3
+    section: Physics and MBA Dual Degree
+    area: Physics Course Requirements
+    footnote_refs: ['*']
+  - id: approved-physics-seminar
+    name: Approved Physics Seminar
+    notes: Approved Physics Seminar
+    credits: 1
+    section: Physics and MBA Dual Degree
+    area: Physics Course Requirements
+  - id: physics-course-requirements-select-3
+    name: 'Select one of the following:'
+    one_of: [ASTP 313, PHYS 411, ASTP 414, PHYS 415, PHYS 416, PHYS 417]
+    credits: 3
+    section: Physics and MBA Dual Degree
+    area: Physics Course Requirements
+  - id: complete-mba-coursework
+    name: Complete MBA coursework
+    notes: Complete MBA coursework
+    credits: 45
+    section: Physics and MBA Dual Degree
+    area: MBA Coursework
+  double_counts:
+  - {satisfies: math, source: 'Mathematics: satisfied by the major'}
+  - {satisfies: nature, source: 'Nature of Science: satisfied by the major'}
+  policies:
+  - All majors for the BS degree in physics require completion of a minimum of 120 credit hours (150 credit hours
+    for the dual degree in physics and electrical engineering and the dual degree in physics and the Master of Business
+    Administration), which must include both a minimum of 30 credit hours overall and 12 credit hours in upper-level
+    courses in the major program from Old Dominion University, completion of ENGL 110C, ENGL 211C or ENGL 231C,
+    and the writing intensive (W) course in the major with a grade of C or better, and Senior Assessment.
+  - Additionally, physics majors require completion of the Physics Exit Exam with a minimum score of 20th percentile,
+    and the astrophysics major requires completion of the Astrophysics Exit Exam with a minimum score of 20th percentile.
+  - Additional hours may be required to meet the foreign language requirement.
+  - All majors require a minimum grade of C in PHYS 261N-PHYS 262N, PHYS 231N-PHYS 232N, or PHYS 226N-PHYS 227N.
+  - Except for the secondary physics education major, physics majors require a minimum cumulative grade point average
+    of 2.00 overall and in the major.
+  - The secondary physics education major requires a minimum 2.75 grade point average overall, in the major, and
+    in the professional education core, with no grade less than a C- in the major and professional education core.
+  - The professional education core satisfies the upper-level general education requirement.
+  - Students in this major must earn a minimum of 150 credit hours (120 discrete credit hours for the undergraduate
+    degree and 30 discrete credit hours for the graduate degree).
+  - MBA courses may be taken beginning with the second semester of the junior year.
+  - Students must maintain a 3.0 grade point average in these courses to continue in the program.
+  - Additional information can be found in the section on BS/MBA Dual Dominion Program at the beginning of the College
+    of Sciences section of this Catalog and the Strome College of Business section in the Graduate Catalog.
+  footnotes:
+  - {marker: '*', text: Grade of C or better required in PHYS 499W or both PHYS 489W and PHYS 490W}
+  plan_notes:
+  - '*PHYS 420 is offered fall semester only. ASTP 313, PHYS 453, and PHYS 456 are offered spring semester only.'
+  plan_of_study:
+  - year: Freshman
+    term: Fall
+    credits: 16
+    items:
+    - {course: ENGL 110C, notes: Grade of C or better required, credits: 3}
+    - {course: MATH 211, credits: 4}
+    - {placeholder: Human Creativity, category: creativity, credits: 3}
+    - {placeholder: Oral Communication, category: oral, credits: 3}
+    - {placeholder: Elective or Language & Culture I (May be waived; See requirement details), category: language,
+      credits: 3}
+  - year: Freshman
+    term: Spring
+    credits: 14-17
+    items:
+    - {one_of: [ENGL 211C, ENGL 231C], notes: ENGL 211C or ENGL 231C (Grade of C or better required), credits: 3}
+    - {course: MATH 212, credits: 4}
+    - {one_of: [CS 151, CS 153], notes: CS 151 or CS 153, credits: 4}
+    - {placeholder: Human Behavior, category: behavior, credits: 3}
+    - {placeholder: Elective or Language & Culture II (May be waived; See requirement details), category: language,
+      credits: 0-3}
+  - year: Sophomore
+    term: Fall
+    credits: 14
+    items:
+    - {one_of: [CHEM 121N, CHEM 122N], notes: CHEM 121N and CHEM 122N*, credits: 4}
+    - {one_of: [PHYS 261N, PHYS 231N, PHYS 226N], notes: PHYS 261N or PHYS 231N or PHYS 226N, credits: 4}
+    - {one_of: [CS 120G, CS 121G, OEAS 130G], notes: 'Information Literacy and Research: CS 120G or CS 121G or OEAS
+        130G', credits: 3}
+    - {placeholder: Literature, category: literature, credits: 3}
+  - year: Sophomore
+    term: Spring
+    credits: 15
+    items:
+    - {one_of: [CHEM 123N, CHEM 124N], notes: CHEM 123N and CHEM 124N*, credits: 4}
+    - {one_of: [MATH 312, MATH 285], notes: MATH 312 or MATH 285, credits: 4}
+    - {one_of: [PHYS 262N, PHYS 232N, PHYS 227N], notes: PHYS 262N or PHYS 232N or PHYS 227N, credits: 4}
+    - {placeholder: Impact of Technology, category: impact, credits: 3}
+  - year: Junior
+    term: Fall
+    credits: 15
+    items:
+    - {one_of: [MATH 307, MATH 280], notes: MATH 307 or MATH 280, credits: 3}
+    - {course: PHYS 323, credits: 3}
+    - {course: PHYS 303, credits: 3}
+    - {course: PHYS 355, credits: 3}
+    - {course: PHYS 425, credits: 3}
+  - year: Junior
+    term: Spring
+    credits: 16
+    items:
+    - {course: PHYS 319, credits: 3}
+    - {course: PHYS 413, credits: 3}
+    - {one_of: [MATH 316, MATH 401, MATH 421, MATH 422], notes: MATH 316 or MATH 401 or MATH 421 or MATH 422, credits: 3}
+    - {placeholder: MBA Course, credits: 1}
+    - {placeholder: Interpreting the Past, category: interpret, credits: 3}
+    - {placeholder: Philosophy and Ethics, category: philosophy, credits: 3}
+  - year: Senior
+    term: Fall
+    credits: 16
+    items:
+    - {course: PHYS 452, credits: 3}
+    - {one_of: [ASTP 414, PHYS 411, PHYS 420], notes: ASTP 414 or PHYS 411 or PHYS 420, credits: 3, footnote_refs: [
+        '*']}
+    - {one_of: [PHYS 499W, {all_of: [PHYS 489W, PHYS 490W]}], notes: PHYS 499W or PHYS 489W and PHYS 490W (C or
+        better required)*, credits: 3}
+    - {placeholder: MBA courses, credits: 7}
+  - year: Senior
+    term: Spring
+    credits: 16
+    items:
+    - {one_of: [ASTP 313, PHYS 415, PHYS 416, PHYS 417], notes: ASTP 313 or PHYS 415 or PHYS 416 or PHYS 417, credits: 3,
+      footnote_refs: ['*']}
+    - {course: PHYS 454, credits: 3}
+    - {placeholder: Approved Physics Seminar*, credits: 1}
+    - {placeholder: MBA courses, credits: 9}
+  - year: Fifth Year
+    term: Fall
+    credits: 14
+    items:
+    - {placeholder: MBA courses, credits: 14}
+  - year: Fifth Year
+    term: Spring
+    credits: 14
+    items:
+    - {placeholder: MBA courses, credits: 14}
+  plan_total_credits: 150-153

@@ -1,0 +1,259 @@
+meta:
+  source: https://catalog.odu.edu/undergraduate/sciences/physics/physics-bs/
+  scraped_at: "2026-08-09"
+  catalog_year: "2026-2027"
+program:
+  id: physics-bs
+  name: Physics (BS)
+  degree: BS
+  department: Physics
+  total_credits: 120
+  credits_listed: 117-123
+  requirements:
+  - id: gened-written
+    name: Written Communication
+    gened: written
+    credits: 6
+    section: Lower-Division General Education
+  - id: gened-oral
+    name: Oral Communication
+    gened: oral
+    credits: 3
+    section: Lower-Division General Education
+  - id: gened-math
+    name: Mathematics
+    gened: math
+    credits: 3
+    section: Lower-Division General Education
+    satisfied_by_major: true
+    notes: 'Mathematics: satisfied by the major'
+  - id: gened-language
+    name: Language and Culture
+    gened: language
+    credits: 0-6
+    section: Lower-Division General Education
+  - id: gened-information
+    name: Information Literacy and Research
+    gened: information
+    credits: 3
+    section: Lower-Division General Education
+    one_of: [CS 120G, CS 121G, OEAS 130G]
+    notes: 'Information Literacy and Research: CS 120G or CS 121G or OEAS 130G'
+  - id: gened-behavior
+    name: Human Behavior
+    gened: behavior
+    credits: 3
+    section: Lower-Division General Education
+  - id: gened-creativity
+    name: Human Creativity
+    gened: creativity
+    credits: 3
+    section: Lower-Division General Education
+  - id: gened-interpret
+    name: Interpreting the Past
+    gened: interpret
+    credits: 3
+    section: Lower-Division General Education
+  - id: gened-literature
+    name: Literature
+    gened: literature
+    credits: 3
+    section: Lower-Division General Education
+  - id: gened-philosophy
+    name: Philosophy and Ethics
+    gened: philosophy
+    credits: 3
+    section: Lower-Division General Education
+  - id: gened-nature
+    name: The Nature of Science
+    gened: nature
+    credits: 8
+    section: Lower-Division General Education
+    satisfied_by_major: true
+    notes: 'Nature of Science: satisfied by the major'
+  - id: gened-impact
+    name: Impact of Technology
+    gened: impact
+    credits: 3
+    section: Lower-Division General Education
+  - id: upper-division-gened
+    name: Upper-Division General Education
+    section: Upper-Division General Education
+    options:
+    - Option A. Approved Disciplinary Minor (a minimum of 12 hours determined by the department), or second degree
+      or second major.
+    - 'Option B: Interdisciplinary Minor (specifically 12 hours, 3 of which may be in the major)'
+    - Option C. An approved Certification Program such as teaching licensure
+    - Option D. Two Upper-Division Courses from outside the College of Sciences and not required by the major (6
+      hours)
+  - id: complete-lower-division-requirements
+    name: Complete lower-division requirements
+    notes: Complete lower-division requirements
+    credits: 30-36
+    section: Physics Major
+    area: General Education
+  - id: complete-upper-division-requirements-minimum-of
+    name: Complete upper-division requirements (minimum of 6 credit hours)
+    notes: Complete upper-division requirements (minimum of 6 credit hours)
+    credits: 6
+    section: Physics Major
+    area: General Education
+  - id: physics-major-required
+    name: Physics Major Required Courses
+    all_of: [MATH 211, MATH 212, CHEM 121N, CHEM 122N, CHEM 123N, CHEM 124N, PHYS 303, PHYS 319, PHYS 323, PHYS
+        355, PHYS 413, PHYS 420, PHYS 425, PHYS 452, PHYS 453, PHYS 454, PHYS 456]
+    section: Physics Major
+    credits: 49
+  - id: math-312-or
+    name: MATH 312 or MATH 285
+    one_of: [MATH 312, MATH 285]
+    credits: 4
+    section: Physics Major
+  - id: math-307-or
+    name: MATH 307 or MATH 280
+    one_of: [MATH 307, MATH 280]
+    credits: 3
+    section: Physics Major
+  - id: physics-major-select
+    name: 'Select one of the following:'
+    one_of: [MATH 316, MATH 401, MATH 421, MATH 422]
+    credits: 3
+    section: Physics Major
+  - id: phys-261n-or
+    name: PHYS 261N or PHYS 231N or PHYS 226N
+    one_of: [PHYS 261N, PHYS 231N, PHYS 226N]
+    credits: 4
+    section: Physics Major
+  - id: cs-151-or
+    name: CS 151 or CS 153
+    one_of: [CS 151, CS 153]
+    credits: 4
+    section: Physics Major
+  - id: phys-262n-or
+    name: PHYS 262N or PHYS 232N or PHYS 227N
+    one_of: [PHYS 262N, PHYS 232N, PHYS 227N]
+    credits: 4
+    section: Physics Major
+  - id: phys-499w-or
+    name: PHYS 499W or PHYS 489W & PHYS 490W
+    one_of: [PHYS 499W, {all_of: [PHYS 489W, PHYS 490W]}]
+    credits: 3
+    section: Physics Major
+    footnote_refs: ['*']
+  - id: phys-120-or
+    name: PHYS 120 or PHYS 309
+    one_of: [PHYS 120, PHYS 309]
+    credits: 1
+    section: Physics Major
+  - id: physics-major-select-2
+    name: 'Select two of the following:'
+    one_of: [ASTP 313, PHYS 411, ASTP 414, PHYS 415, PHYS 416, PHYS 417, ASTP 495]
+    credits: 6
+    section: Physics Major
+  double_counts:
+  - {satisfies: math, source: 'Mathematics: satisfied by the major'}
+  - {satisfies: nature, source: 'Nature of Science: satisfied by the major'}
+  policies:
+  - All majors for the BS degree in physics require completion of a minimum of 120 credit hours (150 credit hours
+    for the dual degree in physics and electrical engineering and the dual degree in physics and the Master of Business
+    Administration), which must include both a minimum of 30 credit hours overall and 12 credit hours in upper-level
+    courses in the major program from Old Dominion University, completion of ENGL 110C, ENGL 211C or ENGL 231C,
+    and the writing intensive (W) course in the major with a grade of C or better, and Senior Assessment.
+  - Additionally, physics majors require completion of the Physics Exit Exam with a minimum score of 20th percentile,
+    and the astrophysics major requires completion of the Astrophysics Exit Exam with a minimum score of 20th percentile.
+  - Additional hours may be required to meet the foreign language requirement.
+  - All majors require a minimum grade of C in PHYS 261N-PHYS 262N, PHYS 231N-PHYS 232N, or PHYS 226N-PHYS 227N.
+  - Except for the secondary physics education major, physics majors require a minimum cumulative grade point average
+    of 2.00 overall and in the major.
+  - The secondary physics education major requires a minimum 2.75 grade point average overall, in the major, and
+    in the professional education core, with no grade less than a C- in the major and professional education core.
+  - The professional education core satisfies the upper-level general education requirement.
+  - Elective credit may be needed to meet the minimum requirement of 120 credit hours.
+  - Qualified students may receive the BS degree with honors (to be noted on their diplomas) by completing specified
+    additional requirements.
+  - At the time of application for this designation, a student must have a GPA of 3.50 or higher in physics, a GPA
+    of 3.25 or higher overall, must have completed two contract honors courses, and must have completed 60 credit
+    hours (of which at least 54 must be in grade-point graded courses) at Old Dominion University.
+  - (Contract honors courses are specialized courses of individual study under the direct supervision of a professor.
+    Permission to take these courses is granted jointly by the Department of Physics and the Honors College.).
+  footnotes:
+  - {marker: '*', text: Grade of C or better required in PHYS 499W or both PHYS 489W and PHYS 490W}
+  - {marker: '**', text: At least one three-credit course must be at the 400-level.}
+  plan_notes:
+  - '*PHYS 120 and PHYS 420 are offered fall semester only. ASTP 313, PHYS 309, PHYS 453, and PHYS 456 are offered
+    spring semester only.'
+  plan_of_study:
+  - year: Freshman
+    term: Fall
+    credits: 14-17
+    items:
+    - {course: ENGL 110C, notes: Grade of C or better required, credits: 3}
+    - {course: MATH 211, credits: 4}
+    - {one_of: [CHEM 121N, CHEM 122N], notes: CHEM 121N and CHEM 122N, credits: 4}
+    - {placeholder: Oral Communication, category: oral, credits: 3}
+    - {placeholder: Language & Culture I (May be waived; See requirement details), category: language, credits: 0-3}
+  - year: Freshman
+    term: Spring
+    credits: 15-18
+    items:
+    - {course: MATH 212, credits: 4}
+    - {one_of: [PHYS 261N, PHYS 231N, PHYS 226N], credits: 4}
+    - {one_of: [CHEM 123N, CHEM 124N], notes: CHEM 123N and CHEM 124N, credits: 4}
+    - {placeholder: Philosophy and Ethics, category: philosophy, credits: 3}
+    - {placeholder: Language & Culture II (May be waived; See requirement details), category: language, credits: 0-3}
+  - year: Sophomore
+    term: Fall
+    credits: 17
+    items:
+    - {one_of: [MATH 312, MATH 285], notes: MATH 312 or MATH 285, credits: 4}
+    - {one_of: [PHYS 262N, PHYS 232N, PHYS 227N], credits: 4}
+    - {one_of: [ENGL 211C, ENGL 231C], notes: ENGL 211C or ENGL 231C (Grade of C or better required), credits: 3}
+    - {placeholder: Impact of Technology, category: impact, credits: 3}
+    - {one_of: [CS 120G, CS 121G, OEAS 130G], credits: 3}
+  - year: Sophomore
+    term: Spring
+    credits: 14-15
+    items:
+    - {course: PHYS 319, credits: 3}
+    - {one_of: [CS 151, CS 153], notes: CS 151 or CS 153, credits: 4}
+    - {one_of: [MATH 307, MATH 280], notes: MATH 307 or MATH 280, credits: 3}
+    - {one_of: [PHYS 120, PHYS 309], credits: 1-2}
+    - {placeholder: Human Creativity, category: creativity, credits: 3}
+  - year: Junior
+    term: Fall
+    credits: 15
+    items:
+    - {course: PHYS 355, credits: 3}
+    - {course: PHYS 303, credits: 3}
+    - {course: PHYS 323, credits: 3}
+    - {course: PHYS 425, credits: 3}
+    - {placeholder: Literature, category: literature, credits: 3}
+  - year: Junior
+    term: Spring
+    credits: 15
+    items:
+    - {course: PHYS 413, credits: 3}
+    - {course: PHYS 453, credits: 3, footnote_refs: ['*']}
+    - {one_of: [ASTP 313, PHYS 411, PHYS 415, PHYS 416, PHYS 417], credits: 3}
+    - {one_of: [MATH 316, MATH 401, MATH 421, MATH 422], credits: 3}
+    - {placeholder: Human Behavior, category: behavior, credits: 3}
+  - year: Senior
+    term: Fall
+    credits: 16-18
+    items:
+    - {course: PHYS 420, credits: 3}
+    - {course: PHYS 452, credits: 3}
+    - {one_of: [PHYS 489W, PHYS 499W], notes: PHYS 489W or PHYS 499W, credits: 1-3}
+    - {placeholder: Interpreting the Past, category: interpret, credits: 3}
+    - {placeholder: Upper-Division General Education Course (Option D), credits: 3}
+    - {placeholder: Elective (if needed), credits: 3}
+  - year: Senior
+    term: Spring
+    credits: 14-15
+    items:
+    - {course: PHYS 456, credits: 3, footnote_refs: ['*']}
+    - {course: PHYS 454, credits: 3}
+    - {one_of: [ASTP 414, PHYS 411, PHYS 415, PHYS 416, PHYS 417], credits: 3}
+    - {one_of: [PHYS 490W, PHYS 499W], notes: PHYS 490W or PHYS 499W, credits: 2-3}
+    - {placeholder: Upper-Division General Education Course (Option D), credits: 3}
+  plan_total_credits: 120-130

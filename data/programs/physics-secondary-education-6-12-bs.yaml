@@ -1,0 +1,306 @@
+meta:
+  source: https://catalog.odu.edu/undergraduate/sciences/physics/physics-secondary-education-6-12-bs/
+  scraped_at: "2026-08-09"
+  catalog_year: "2026-2027"
+program:
+  id: physics-secondary-education-6-12-bs
+  name: Physics with a Major in Secondary Physics Education (6-12) (BS)
+  degree: BS
+  department: Physics
+  total_credits: 120
+  credits_listed: [26, 117-123]
+  description: The secondary physics education major is designed for students who are preparing to be high school
+    physics teachers. This curriculum provides a solid foundation in both contemporary physics and in education
+    pedagogy.
+  requirements:
+  - id: gened-written
+    name: Written Communication
+    gened: written
+    credits: 6
+    section: Lower-Division General Education
+  - id: gened-oral
+    name: Oral Communication
+    gened: oral
+    credits: 3
+    section: Lower-Division General Education
+  - id: gened-math
+    name: Mathematics
+    gened: math
+    credits: 3
+    section: Lower-Division General Education
+    satisfied_by_major: true
+    notes: 'Mathematics: satisfied by the major'
+  - id: gened-language
+    name: Language and Culture
+    gened: language
+    credits: 0-6
+    section: Lower-Division General Education
+  - id: gened-information
+    name: Information Literacy and Research
+    gened: information
+    credits: 3
+    section: Lower-Division General Education
+    one_of: [CS 120G, CS 121G, OEAS 130G]
+    notes: 'Information Literacy and Research: CS 120G, CS 121G or OEAS 130G'
+  - id: gened-behavior
+    name: Human Behavior
+    gened: behavior
+    credits: 3
+    section: Lower-Division General Education
+  - id: gened-creativity
+    name: Human Creativity
+    gened: creativity
+    credits: 3
+    section: Lower-Division General Education
+  - id: gened-interpret
+    name: Interpreting the Past
+    gened: interpret
+    credits: 3
+    section: Lower-Division General Education
+  - id: gened-literature
+    name: Literature
+    gened: literature
+    credits: 3
+    section: Lower-Division General Education
+  - id: gened-philosophy
+    name: Philosophy and Ethics
+    gened: philosophy
+    credits: 3
+    section: Lower-Division General Education
+  - id: gened-nature
+    name: The Nature of Science
+    gened: nature
+    credits: 8
+    section: Lower-Division General Education
+    satisfied_by_major: true
+    notes: 'Nature of Science: satisfied by the major'
+  - id: gened-impact
+    name: Impact of Technology
+    gened: impact
+    credits: 3
+    section: Lower-Division General Education
+  - id: upper-division-gened
+    name: Upper-Division General Education
+    section: Upper-Division General Education
+    notes: The professional education core satisfies the Upper-Division General Education requirement.
+  - id: professional-education-core-required
+    name: Professional Education Core Required Courses
+    all_of: [STEM 103, STEM 201, STEM 202, STEM 401, STEM 485, SPED 400, TLED 408]
+    section: Professional Education Core
+    credits: 26
+  - id: complete-lower-division-requirements
+    name: Complete lower-division requirements
+    notes: Complete lower-division requirements
+    credits: 30-36
+    section: Secondary Physics Education Major
+    area: General Education
+  - id: complete-upper-division-requirements-met-by-the
+    name: Complete upper-division requirements (met by the professional education core)
+    notes: Complete upper-division requirements (met by the professional education core)
+    section: Secondary Physics Education Major
+    area: General Education
+  - id: complete-the-professional-education-core-require
+    name: Complete the professional education core requirements
+    notes: Complete the professional education core requirements
+    credits: 26
+    section: Secondary Physics Education Major
+    area: Professional Education Core
+  - id: secondary-physics-education-required
+    name: Secondary Physics Education Required Courses
+    all_of: [MATH 211, MATH 212, CHEM 121N, CHEM 122N, CHEM 123N, CHEM 124N, PHYS 323, PHYS 319, PHYS 303, PHYS
+        355, PHYS 413, PHYS 425]
+    section: Secondary Physics Education Major
+    area: Secondary Physics Education
+    credits: 34
+  - id: math-307-or
+    name: MATH 307 or MATH 280
+    one_of: [MATH 307, MATH 280]
+    credits: 3
+    section: Secondary Physics Education Major
+    area: Secondary Physics Education
+  - id: math-312-or
+    name: MATH 312 or MATH 285
+    one_of: [MATH 312, MATH 285]
+    credits: 4
+    section: Secondary Physics Education Major
+    area: Secondary Physics Education
+  - id: cs-151-or
+    name: CS 151 or CS 153
+    one_of: [CS 151, CS 153]
+    credits: 4
+    section: Secondary Physics Education Major
+    area: Secondary Physics Education
+  - id: astp-103n-or
+    name: ASTP 103N or ASTP 104N
+    one_of: [ASTP 103N, ASTP 104N]
+    credits: 4
+    section: Secondary Physics Education Major
+    area: Secondary Physics Education
+  - id: phys-261n-or
+    name: PHYS 261N or PHYS 231N or PHYS 226N
+    one_of: [PHYS 261N, PHYS 231N, PHYS 226N]
+    credits: 4
+    section: Secondary Physics Education Major
+    area: Secondary Physics Education
+  - id: phys-262n-or
+    name: PHYS 262N or PHYS 232N or PHYS 227N
+    one_of: [PHYS 262N, PHYS 232N, PHYS 227N]
+    credits: 4
+    section: Secondary Physics Education Major
+    area: Secondary Physics Education
+  - id: phys-120-or
+    name: PHYS 120 or PHYS 309
+    one_of: [PHYS 120, PHYS 309]
+    credits: 1
+    section: Secondary Physics Education Major
+    area: Secondary Physics Education
+  - id: phys-499w-or
+    name: PHYS 499W or PHYS 489W & PHYS 490W
+    one_of: [PHYS 499W, {all_of: [PHYS 489W, PHYS 490W]}]
+    credits: 3
+    section: Secondary Physics Education Major
+    area: Secondary Physics Education
+    footnote_refs: ['*']
+  double_counts:
+  - {satisfies: math, source: 'Mathematics: satisfied by the major'}
+  - {satisfies: nature, source: 'Nature of Science: satisfied by the major'}
+  policies:
+  - Requirements for graduation include completion of ENGL 110C, ENGL 211C or ENGL 231C, and the writing intensive
+    (W) course in the major with a grade of C or better, completion of the Senior Assessment, completion of the
+    Physics Exit Exam with a minimum score of 20th percentile, a minimum cumulative 2.75 GPA, in the major area,
+    and in the professional education core, with no grade less than a C- in the major and the professional education
+    core; successful completion of the Teacher Candidate Internship and a minimum of 120 credit hours, which must
+    include both a minimum of 30 credit hours overall and 12 credit hours in upper-level courses in the major program
+    from Old Dominion University.
+  - Licensure requirements also include certificate of completion in First Aid/AED/CPR, Dyslexia Awareness Training,
+    Child Abuse and Neglect Recognition and Intervention Training, and Regulations Governing the Use of Restraint
+    and Seclusion in Elementary and Secondary Schools, and Cultural Competence Training.
+  - Elective credit may be needed to meet the minimum requirement of 120 credit hours.
+  - Qualified students may receive the BS degree with honors (to be noted on their diplomas) by completing specified
+    additional requirements.
+  - At the time of application for this designation, a student must have a GPA of 3.50 or higher in physics, a GPA
+    of 3.25 or higher overall, must have completed two contract honors courses, and must have completed 60 credit
+    hours (of which at least 54 must be in grade-point graded courses) at Old Dominion University.
+  - (Contract honors courses are specialized courses of individual study under the direct supervision of a professor.
+    Permission to take these courses is granted jointly by the Department of Physics and the Honors College.).
+  - Due to changing University requirements, national accreditation standards, and the Virginia Board of Education
+    licensure regulations, the teacher preparation programs in the College of Sciences are under constant revision.
+  - Any changes resulting from these factors supersede the program requirements described in this Catalog.
+  - Students are encouraged to obtain current program information from their advisors and the Office of Clinical
+    Experiences website at https://www.odu.edu/oce.
+  - Students must first declare secondary physics education as their major with the physics departmental advisor.
+  - All students must apply for and be admitted into the approved secondary physics education program.
+  - Students must meet the required criteria for admission by earning the minimum required grade point averages
+    (GPA).
+  - A cumulative GPA of 2.75 is required.
+  - A major/content GPA of 2.75 is required - all physics courses and all other science content courses must be
+    passed with a grade of C- or higher.
+  - A professional education GPA of 2.75 is required – all professional education courses must be passed with a
+    grade of C- or higher.
+  - Although students may enroll in a limited number of education courses, students must be admitted into the approved
+    physics teacher preparation program prior to enrolling in any instructional strategies practicum education course.
+  - Students must also meet with an education advisor in the Office of Clinical Experiences.
+  - Students must maintain a cumulative GPA of 2.75, a major/content GPA of 2.75 and a professional education GPA
+    of 2.75.
+  - Physics courses must be passed with a grade of C- or higher.
+  - The remaining courses required for the major and in the professional education core must be completed with a
+    grade of C- or higher for continuance.
+  - A professional education GPA of 2.75 is required for continuance.
+  - Students must take and pass the Praxis Subject Assessment, Physics content knowledge (formerly Praxis II) prior
+    to or while enrolled in the instructional strategies course.
+  - All assessments must be passed prior to the start of the Teacher Candidate Internship Orientation session.
+  - Old Dominion University requires a background clearance check of candidates interested in many of the professional
+    education programs.
+  - Professional education programs have several field experiences that are required for continuance and graduation
+    from the program.
+  - The background clearance must be successfully completed prior to a field experience placement.
+  - Candidates will be provided a field experience placement when the background check process is completed with
+    resolution of any issues.
+  - 'The process to complete the ODU clearance background check is located at: http://www.odu.edu/success/academic/teacher-education/placement/background-checks.'
+  - 'The ODU clearance process includes: an FBI fingerprint, a child protective service/social service review, and
+    a Virginia State Police sex offender registry review.'
+  - Candidates interested in the professional education programs are advised to complete this clearance process
+    immediately upon entry into the program since the clearance process takes a minimum of eight weeks to complete.
+  - 'Praxis Subject Assessment, Physics content knowledge (test code: 5266) – passing score of 145 is required.'
+  - 'Students are encouraged to complete the following courses (or their approved equivalents) prior to taking the
+    Praxis content knowledge licensure tests:'
+  - CHEM 121N, CHEM 122N, CHEM 123N, and CHEM 124N PHYS 231N and PHYS 232N PHYS 323.
+  - Please consult with your academic advisor with any questions and before registering for your licensure test.
+  - To review more information on the Virginia Board of Education prescribed assessments visit the Office of Clinical
+    Experiences website, www.odu.edu/oce.
+  footnotes:
+  - {marker: '*', text: Grade of C or better required in PHYS 499W or both PHYS 489W and PHYS 490W}
+  plan_notes:
+  - Language and Culture I & II may be met in HS and are not included in this 4-year plan. Please see requirement
+    details.
+  - '*PHYS 120 is offered fall semester only. PHYS 309 is offered spring semester only.'
+  plan_of_study:
+  - year: Freshman
+    term: Fall
+    credits: 13
+    items:
+    - {course: ENGL 110C, notes: Grade of C or better required, credits: 3}
+    - {course: MATH 211, credits: 4}
+    - {placeholder: Human Creativity, category: creativity, credits: 3}
+    - {placeholder: Human Behavior, category: behavior, credits: 3}
+  - year: Freshman
+    term: Spring
+    credits: 16
+    items:
+    - {one_of: [ENGL 211C, ENGL 231C], notes: ENGL 211C or ENGL 231C (Grade of C or better required), credits: 3}
+    - {course: MATH 212, credits: 4}
+    - {one_of: [CS 151, CS 153], notes: CS 151 or CS 153, credits: 4}
+    - {placeholder: Literature, category: literature, credits: 3}
+    - {course: STEM 103, credits: 2}
+  - year: Sophomore
+    term: Fall
+    credits: 14
+    items:
+    - {one_of: [CHEM 121N, CHEM 122N], notes: CHEM 121N and CHEM 122N, credits: 4}
+    - {one_of: [PHYS 261N, PHYS 231N, PHYS 226N], credits: 4}
+    - {one_of: [CS 120G, CS 121G, OEAS 130G], credits: 3}
+    - {course: STEM 201, credits: 3}
+  - year: Sophomore
+    term: Spring
+    credits: 14
+    items:
+    - {one_of: [CHEM 123N, CHEM 124N], notes: CHEM 123N and CHEM 124N, credits: 4}
+    - {one_of: [PHYS 262N, PHYS 232N, PHYS 227N], credits: 4}
+    - {placeholder: Interpreting the Past, category: interpret, credits: 3}
+    - {course: STEM 202, credits: 3}
+  - year: Junior
+    term: Fall
+    credits: 16
+    items:
+    - {one_of: [MATH 312, MATH 285], notes: MATH 312 or MATH 285, credits: 4}
+    - {course: PHYS 303, credits: 3}
+    - {course: PHYS 323, credits: 3}
+    - {course: PHYS 355, credits: 3}
+    - {placeholder: Oral Communication, category: oral, credits: 3}
+  - year: Junior
+    term: Spring
+    credits: 16
+    items:
+    - {one_of: [MATH 307, MATH 280], notes: MATH 307 or MATH 280, credits: 3}
+    - {course: PHYS 319, credits: 3}
+    - {one_of: [ASTP 103N, ASTP 104N], notes: ASTP 103N or ASTP 104N, credits: 4}
+    - {course: SPED 400, credits: 3}
+    - {placeholder: Philosophy and Ethics, category: philosophy, credits: 3}
+  - year: Senior
+    term: Fall
+    credits: 16
+    items:
+    - {course: PHYS 425, credits: 3}
+    - {course: PHYS 413, credits: 3}
+    - {one_of: [PHYS 499W, PHYS 489W, PHYS 490W], credits: 3}
+    - {one_of: [PHYS 120, PHYS 309], notes: PHYS 120* or PHYS 309*, credits: 1, footnote_refs: ['*']}
+    - {placeholder: Impact of Technology, category: impact, credits: 3}
+    - {course: STEM 401, credits: 3}
+  - year: Senior
+    term: Spring
+    credits: 15
+    items:
+    - {course: STEM 485, credits: 9}
+    - {course: TLED 408, credits: 3}
+    - {placeholder: Elective or Language and Culture course if needed, category: language, credits: 3}
+  plan_total_credits: 120

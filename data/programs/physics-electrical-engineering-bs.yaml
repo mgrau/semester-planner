@@ -1,0 +1,352 @@
+meta:
+  source: https://catalog.odu.edu/undergraduate/sciences/physics/physics-electrical-engineering-bs/
+  scraped_at: "2026-08-09"
+  catalog_year: "2026-2027"
+program:
+  id: physics-electrical-engineering-bs
+  name: Physics with a Major in Physics and Electrical Engineering (BS, BSEE)
+  degree: Bachelor of Science
+  department: Physics
+  total_credits: 150
+  credits_listed: 154-160
+  description: The dual degree program in physics and electrical engineering is a five-year program. Students will
+    receive a BS degree and a BSEE degree upon graduation. The dual degree program provides the highest level of
+    preparation for both graduate school and positions in industry.
+  requirements:
+  - id: gened-written
+    name: Written Communication
+    gened: written
+    credits: 6
+    section: Lower-Division General Education
+  - id: gened-oral
+    name: Oral Communication
+    gened: oral
+    credits: 3
+    section: Lower-Division General Education
+  - id: gened-math
+    name: Mathematics
+    gened: math
+    credits: 3
+    section: Lower-Division General Education
+    satisfied_by_major: true
+    notes: General education requirements for mathematics, nature of science, information literacy and research,
+      impact of technology, and philosophy and ethics are met through the major.
+  - id: gened-language
+    name: Language and Culture
+    gened: language
+    credits: 0-6
+    section: Lower-Division General Education
+  - id: gened-information
+    name: Information Literacy and Research
+    gened: information
+    credits: 3
+    section: Lower-Division General Education
+    satisfied_by_major: true
+    notes: General education requirements for mathematics, nature of science, information literacy and research,
+      impact of technology, and philosophy and ethics are met through the major.
+  - id: gened-behavior
+    name: Human Behavior
+    gened: behavior
+    credits: 3
+    section: Lower-Division General Education
+  - id: gened-creativity
+    name: Human Creativity
+    gened: creativity
+    credits: 3
+    section: Lower-Division General Education
+  - id: gened-interpret
+    name: Interpreting the Past
+    gened: interpret
+    credits: 3
+    section: Lower-Division General Education
+  - id: gened-literature
+    name: Literature
+    gened: literature
+    credits: 3
+    section: Lower-Division General Education
+  - id: gened-philosophy
+    name: Philosophy and Ethics
+    gened: philosophy
+    credits: 3
+    section: Lower-Division General Education
+    satisfied_by_major: true
+    notes: General education requirements for mathematics, nature of science, information literacy and research,
+      impact of technology, and philosophy and ethics are met through the major.
+  - id: gened-nature
+    name: The Nature of Science
+    gened: nature
+    credits: 8
+    section: Lower-Division General Education
+    satisfied_by_major: true
+    notes: General education requirements for mathematics, nature of science, information literacy and research,
+      impact of technology, and philosophy and ethics are met through the major.
+  - id: gened-impact
+    name: Impact of Technology
+    gened: impact
+    credits: 3
+    section: Lower-Division General Education
+    satisfied_by_major: true
+    notes: General education requirements for mathematics, nature of science, information literacy and research,
+      impact of technology, and philosophy and ethics are met through the major.
+  - id: upper-division-gened
+    name: Upper-Division General Education
+    section: Upper-Division General Education
+    notes: The Upper-Division General Education requirement is met by the dual degree requirements.
+  - id: complete-lower-division-requirements
+    name: Complete lower-division requirements
+    notes: Complete lower-division requirements
+    credits: 21-27
+    section: Dual Degree in Physics and Electrical Engineering
+    area: General Education
+  - id: complete-upper-division-requirements-met-by-dual
+    name: Complete upper-division requirements (met by dual degree requirements)
+    notes: Complete upper-division requirements (met by dual degree requirements)
+    section: Dual Degree in Physics and Electrical Engineering
+    area: General Education
+  - id: common-course-requirements-required
+    name: Common Course Requirements Required Courses
+    all_of: [CHEM 121N, CHEM 122N, MATH 211, MATH 212]
+    section: Dual Degree in Physics and Electrical Engineering
+    area: Common Course Requirements
+    credits: 12
+  - id: math-312-or
+    name: MATH 312 or MATH 285
+    one_of: [MATH 312, MATH 285]
+    credits: 4
+    section: Dual Degree in Physics and Electrical Engineering
+    area: Common Course Requirements
+  - id: math-307-or
+    name: MATH 307 or MATH 280
+    one_of: [MATH 307, MATH 280]
+    credits: 3
+    section: Dual Degree in Physics and Electrical Engineering
+    area: Common Course Requirements
+  - id: engn-122-or
+    name: ENGN 122 or ENGN 123
+    one_of: [ENGN 122, ENGN 123]
+    credits: 4
+    section: Dual Degree in Physics and Electrical Engineering
+    area: Common Course Requirements
+  - id: phys-261n-or
+    name: PHYS 261N or PHYS 231N or PHYS 226N
+    one_of: [PHYS 261N, PHYS 231N, PHYS 226N]
+    credits: 4
+    section: Dual Degree in Physics and Electrical Engineering
+    area: Common Course Requirements
+  - id: phys-262n-or
+    name: PHYS 262N or PHYS 232N or PHYS 227N
+    one_of: [PHYS 262N, PHYS 232N, PHYS 227N]
+    credits: 4
+    section: Dual Degree in Physics and Electrical Engineering
+    area: Common Course Requirements
+  - id: physics-course-requirements-required
+    name: Physics Course Requirements Required Courses
+    all_of: [CHEM 123N, CHEM 124N, PHYS 319, PHYS 323, PHYS 355, PHYS 413, PHYS 420, PHYS 425, PHYS 452, PHYS 454,
+      PHYS 456]
+    section: Dual Degree in Physics and Electrical Engineering
+    area: Physics Course Requirements
+    credits: 31
+  - id: phys-453-or
+    name: PHYS 453 or ECE 323
+    one_of: [PHYS 453, ECE 323]
+    credits: 3
+    section: Dual Degree in Physics and Electrical Engineering
+    area: Physics Course Requirements
+  - id: phys-499w-or
+    name: PHYS 499W or PHYS 489W & PHYS 490W
+    one_of: [PHYS 499W, {all_of: [PHYS 489W, PHYS 490W]}]
+    credits: 3
+    section: Dual Degree in Physics and Electrical Engineering
+    area: Physics Course Requirements
+    footnote_refs: ['*']
+  - id: physics-course-requirements-select
+    name: 'Select one of the following:'
+    one_of: [PHYS 411, PHYS 415, PHYS 416, PHYS 417]
+    credits: 3
+    section: Dual Degree in Physics and Electrical Engineering
+    area: Physics Course Requirements
+  - id: engineering-course-requirements-required
+    name: Engineering Course Requirements Required Courses
+    all_of: [ENGN 121, ECE 201, ECE 202, ECE 241, ECE 287, ECE 302, ECE 303, ECE 304, ECE 313, ECE 332, ECE 381,
+      ECE 451, ECE 461, ECE 481W, ECE 482, ENMA 480]
+    section: Dual Degree in Physics and Electrical Engineering
+    area: Engineering Course Requirements
+    credits: 50
+  - id: ece-tech-elective-i-ii-iii-iv
+    name: ECE Tech Elective I, II, III, IV
+    notes: ECE Tech Elective I, II, III, IV
+    credits: 12
+    section: Dual Degree in Physics and Electrical Engineering
+    area: Engineering Course Requirements
+  double_counts:
+  - {satisfies: math, source: 'General education requirements for mathematics, nature of science, information literacy
+      and research, impact of technology, and philosophy and ethics are met through the major.'}
+  - {satisfies: nature, source: 'General education requirements for mathematics, nature of science, information
+      literacy and research, impact of technology, and philosophy and ethics are met through the major.'}
+  - {satisfies: information, source: 'General education requirements for mathematics, nature of science, information
+      literacy and research, impact of technology, and philosophy and ethics are met through the major. / The General
+      Education requirements in information literacy and research, impact of technology, and philosophy and ethics
+      are met through the Electrical Engineering major/degree.'}
+  - {satisfies: impact, source: 'General education requirements for mathematics, nature of science, information
+      literacy and research, impact of technology, and philosophy and ethics are met through the major. / The General
+      Education requirements in information literacy and research, impact of technology, and philosophy and ethics
+      are met through the Electrical Engineering major/degree.'}
+  - {satisfies: philosophy, source: 'General education requirements for mathematics, nature of science, information
+      literacy and research, impact of technology, and philosophy and ethics are met through the major. / The General
+      Education requirements in information literacy and research, impact of technology, and philosophy and ethics
+      are met through the Electrical Engineering major/degree.'}
+  - {course: ENMA 480, satisfies: philosophy, source: ENMA 480 — Ethics and Philosophy in Engineering Applications
+      (meets philosophy and ethics requirement) / ENMA 480 satisfies the PHYS Philosophy & Ethics requirement in
+      the Physics curriculum.}
+  - {course: ENGN 121, satisfies_requirement: Physics Approved Seminar requirement, source: ENGN 121 satisfies both
+      the Physics Approved Seminar requirement and the PHYS Information Literacy and Research requirement in the
+      Physics curriculum.}
+  - {course: ENGN 121, satisfies: information, source: ENGN 121 satisfies both the Physics Approved Seminar requirement
+      and the PHYS Information Literacy and Research requirement in the Physics curriculum.}
+  - {course: ECE 287, satisfies_requirement: PHYS 303 requirement, source: ECE 287 satisfies the PHYS 303 requirement
+      in the Physics curriculum.}
+  - {course: PHYS 425, satisfies_requirement: Nonmajor Engineering Elective requirement, source: PHYS 425 satisfies
+      the Nonmajor Engineering Elective requirement in the Electrical Engineering curriculum.}
+  policies:
+  - General education requirements for mathematics, nature of science, information literacy and research, impact
+    of technology, and philosophy and ethics are met through the major.
+  - Additional information can be found in the Electrical and Computer Engineering section of the College of Engineering
+    and Technology.
+  - All majors for the BS degree in physics require completion of a minimum of 120 credit hours (150 credit hours
+    for the dual degree in physics and electrical engineering and the dual degree in physics and the Master of Business
+    Administration), which must include both a minimum of 30 credit hours overall and 12 credit hours in upper-level
+    courses in the major program from Old Dominion University, completion of ENGL 110C, ENGL 211C or ENGL 231C,
+    and the writing intensive (W) course in the major with a grade of C or better, and Senior Assessment.
+  - Additionally, physics majors require completion of the Physics Exit Exam with a minimum score of 20th percentile,
+    and the astrophysics major requires completion of the Astrophysics Exit Exam with a minimum score of 20th percentile.
+  - Additional hours may be required to meet the foreign language requirement.
+  - All majors require a minimum grade of C in PHYS 261N-PHYS 262N, PHYS 231N-PHYS 232N, or PHYS 226N-PHYS 227N.
+  - Except for the secondary physics education major, physics majors require a minimum cumulative grade point average
+    of 2.00 overall and in the major.
+  - The secondary physics education major requires a minimum 2.75 grade point average overall, in the major, and
+    in the professional education core, with no grade less than a C- in the major and professional education core.
+  - The professional education core satisfies the upper-level general education requirement.
+  - Students in this major must earn a minimum of 150 credit hours.
+  - Qualified students may receive the BS degree with honors (to be noted on their diplomas) by completing specified
+    additional requirements.
+  - At the time of application for this designation, a student must have a GPA of 3.50 or higher in physics, a GPA
+    of 3.25 or higher overall, must have completed two contract honors courses, and must have completed 60 credit
+    hours (of which at least 54 must be in grade-point graded courses) at Old Dominion University.
+  - (Contract honors courses are specialized courses of individual study under the direct supervision of a professor.
+    Permission to take these courses is granted jointly by the Department of Physics and the Honors College.).
+  footnotes:
+  - {marker: '*', text: Grade of C or better required in PHYS 499W or both PHYS 489W and PHYS 490W}
+  plan_notes:
+  - The General Education requirements in information literacy and research, impact of technology, and philosophy
+    and ethics are met through the Electrical Engineering major/degree. The upper-division General Education requirement
+    is met through the completion of a second major/degree.
+  - Electrical engineering majors must earn a grade of C or better in all 200-level ECE courses prior to taking
+    the next course in the sequence.
+  - Any ECE course registration issues are to be resolved with the ECE Academic Coordinator and Program Manager.
+  plan_footnotes:
+  - {marker: '*', text: Does not include the University's General Education language and culture requirement. Additional
+      hours may be required.}
+  - {marker: '1', text: ENGN 121 satisfies both the Physics Approved Seminar requirement and the PHYS Information
+      Literacy and Research requirement in the Physics curriculum.}
+  - {marker: '2', text: ECE 287 satisfies the PHYS 303 requirement in the Physics curriculum.}
+  - {marker: '3', text: PHYS 425 satisfies the Nonmajor Engineering Elective requirement in the Electrical Engineering
+      curriculum.}
+  - {marker: '4', text: PHYS 453 and PHYS 456 offered spring semester only.}
+  - {marker: '5', text: 'Electrical Engineering students need four technical elective courses selected from one
+      of two options: (1) four 400-level ECE technical elective courses; (2) three 400-level ECE technical elective
+      courses and one 300-level ECE technical elective course or one approved 300- or 400-level CS/MATH/Engineering
+      course.'}
+  - {marker: '6', text: ENMA 480 satisfies the PHYS Philosophy & Ethics requirement in the Physics curriculum.}
+  plan_of_study:
+  - year: Freshman
+    term: Fall
+    credits: 15
+    items:
+    - {course: ENGN 121, credits: 4, footnote_refs: ['1']}
+    - {course: CHEM 121N, credits: 3}
+    - {course: CHEM 122N, credits: 1}
+    - {course: MATH 211, notes: Grade of C or better required, credits: 4}
+    - {course: ENGL 110C, notes: Grade of C or better required, credits: 3}
+  - year: Freshman
+    term: Spring
+    credits: 15
+    items:
+    - {one_of: [ENGN 122, ENGN 123], notes: ENGN 122 or ENGN 123, credits: 4}
+    - {course: MATH 212, notes: Grade of C or better required, credits: 4}
+    - {one_of: [PHYS 261N, PHYS 231N, PHYS 226N], notes: PHYS 261N or PHYS 231N or PHYS 226N, credits: 4}
+    - {course: COMM 101R, credits: 3}
+  - year: Sophomore
+    term: Fall
+    credits: 17
+    items:
+    - {one_of: [MATH 307, MATH 280], notes: MATH 307 or MATH 280, credits: 3}
+    - {course: CHEM 123N, credits: 3}
+    - {course: CHEM 124N, credits: 1}
+    - {course: ECE 201, credits: 3}
+    - {one_of: [ENGL 231C, ENGL 211C], notes: ENGL 231C or ENGL 211C, credits: 3}
+    - {one_of: [PHYS 262N, PHYS 232N, PHYS 227N], notes: PHYS 262N or PHYS 232N or PHYS 227N, credits: 4}
+  - year: Sophomore
+    term: Spring
+    credits: 16
+    items:
+    - {course: ECE 202, credits: 3}
+    - {course: ECE 287, credits: 2, footnote_refs: ['2']}
+    - {course: ECE 241, credits: 4}
+    - {course: PHYS 319, credits: 3}
+    - {one_of: [MATH 312, MATH 285], notes: MATH 312 or MATH 285, credits: 4}
+  - year: Junior
+    term: Fall
+    credits: 15
+    items:
+    - {course: ECE 302, credits: 3}
+    - {course: ECE 303, credits: 3}
+    - {course: PHYS 323, credits: 3}
+    - {course: PHYS 355, credits: 3}
+    - {course: PHYS 425, credits: 3, footnote_refs: ['3']}
+  - year: Junior
+    term: Spring
+    credits: 16
+    items:
+    - {course: ECE 313, credits: 4}
+    - {course: ECE 381, credits: 3}
+    - {one_of: [ECE 323, PHYS 453], notes: ECE 323 or PHYS 453, credits: 3, footnote_refs: ['4']}
+    - {one_of: [PHYS 411, PHYS 415, PHYS 416, PHYS 417], notes: PHYS 411 or PHYS 415 or PHYS 416 or PHYS 417, credits: 3}
+    - {placeholder: Literature Way of Knowing, category: literature, credits: 3}
+  - year: Senior
+    term: Fall
+    credits: 15
+    items:
+    - {course: ECE 304, credits: 3}
+    - {course: ECE 461, credits: 3}
+    - {placeholder: ECE Technical Elective I, credits: 3, footnote_refs: ['5']}
+    - {course: PHYS 452, credits: 3}
+    - {course: ENMA 480, credits: 3, footnote_refs: ['6']}
+  - year: Senior
+    term: Spring
+    credits: 15
+    items:
+    - {course: ECE 451, credits: 3}
+    - {course: PHYS 413, credits: 3}
+    - {course: PHYS 456, credits: 3, footnote_refs: ['4']}
+    - {one_of: [PHYS 499W, {all_of: [PHYS 489W, PHYS 490W]}], notes: PHYS 499W or PHYS 489W and PHYS 490W, credits: 3}
+    - {placeholder: Human Behavior Way of Knowing, category: behavior, credits: 3}
+  - year: Fifth Year
+    term: Fall
+    credits: 15
+    items:
+    - {course: ECE 332, credits: 3}
+    - {course: ECE 481W, notes: Grade of C or better required to meet the University Writing Intensive requirement,
+      credits: 3}
+    - {placeholder: ECE Technical Elective II, credits: 3, footnote_refs: ['5']}
+    - {course: PHYS 420, credits: 3}
+    - {placeholder: Human Creativity Way of Knowing, category: creativity, credits: 3}
+  - year: Fifth Year
+    term: Spring
+    credits: 15
+    items:
+    - {course: ECE 482, credits: 3}
+    - {placeholder: ECE Technical elective III, credits: 3, footnote_refs: ['5']}
+    - {placeholder: ECE Technical elective IV, credits: 3, footnote_refs: ['5']}
+    - {course: PHYS 454, credits: 3}
+    - {placeholder: Interpreting the Past Way of Knowing, category: interpret, credits: 3}
+  plan_total_credits: 154

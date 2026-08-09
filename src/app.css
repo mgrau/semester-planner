@@ -1,0 +1,52 @@
+@import 'tailwindcss';
+
+@theme {
+	--color-odu-blue: #003057;
+	--color-odu-silver: #7c878e;
+	--color-odu-light: #eef2f6;
+}
+
+html {
+	color-scheme: light;
+}
+
+body {
+	@apply bg-slate-100 text-slate-900 antialiased;
+}
+
+/* Course chips carry the drag affordance everywhere they appear. */
+.chip-grab {
+	cursor: grab;
+}
+.chip-grab:active {
+	cursor: grabbing;
+}
+
+.drop-active {
+	@apply ring-2 ring-blue-500 ring-offset-1 bg-blue-50;
+}
+
+/* ---- Print / PDF export -------------------------------------------------
+   The printable plan is a normal route styled for paper: the browser's
+   "Save as PDF" produces real vector text, which beats a canvas rasterization
+   and keeps course codes selectable in the resulting file. */
+@media print {
+	.no-print {
+		display: none !important;
+	}
+	body {
+		background: white;
+	}
+	.print-page {
+		break-inside: avoid;
+	}
+	/* Supplementary detail starts its own sheet, so the plan and the requirement
+	   checklists stay together on page one. */
+	.print-break-before {
+		break-before: page;
+	}
+	@page {
+		margin: 0.5in;
+		size: letter portrait;
+	}
+}

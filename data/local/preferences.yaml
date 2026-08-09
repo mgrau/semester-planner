@@ -1,0 +1,198 @@
+# Departmental advising preferences.
+#
+# NOT scraped — this file is maintained by hand and is safe from `--refresh`. It records how the
+# ODU Physics department actually advises, where that differs from (or is not stated by) the
+# catalog. The planner consults it when a requirement offers a genuine choice.
+#
+# Edit freely. Codes must match catalog codes exactly, e.g. "PHYS 489W".
+
+meta:
+  maintained_by: ODU Physics chief departmental advisor
+  note: Advising practice, not catalog fact. The catalog remains the authority on what is required.
+
+# Courses the planner should reach for first when a requirement offers a choice.
+# Earlier entries win over later ones.
+prefer:
+  # The department prefers the two-semester senior thesis sequence over the one-semester
+  # capstone. Both satisfy the same 3-credit requirement.
+  - PHYS 489W
+  - PHYS 490W
+
+# Courses the planner should choose only when nothing preferred fits.
+avoid:
+  - PHYS 499W
+
+# Short program names for the roster and student header. The catalog's official names
+# ("Physics with a Major in Astrophysics (BS)") are too long to scan in a list, and the degree
+# letters are not what distinguishes one advisee from another.
+program_labels:
+  physics-bs: Physics
+  physics-astrophysics-bs: Astrophysics
+  physics-professional-bs: Physics (Professional)
+  physics-electrical-engineering-bs: Physics & Electrical Eng.
+  physics-business-administration-bs-mba: Physics & MBA
+  physics-secondary-education-6-12-bs: Physics Education
+  physics-minor: Physics Minor
+
+# Gen-ed categories the catalog defines by a rule rather than an enumerated course list.
+# `attributes: [W]` matches any Writing Intensive course.
+category_filters:
+  upper-division-writing-intensive:
+    attributes: [W]
+    note: >-
+      Satisfied by any Writing Intensive (W) course. The catalog additionally requires it be
+      taken in the major, with a grade of C or better — verify that when choosing the course.
+
+# What an incoming student already brings, offered as checkboxes when creating one.
+#
+# These are the entry conditions the catalog assumes but does not record as ODU credit — a
+# placement result, a high-school course. Declaring them up front means the planner does not
+# have to guess, and the advisor is not asked to confirm an assumption the app invented.
+#
+# `grants` may contain:
+#   - {course: CODE, credits: N}  an ODU course equivalency that counts toward the degree.
+#   - {places_past: CODE}         satisfies CODE as a prerequisite but awards NO credit. This is
+#                                 placement, not coursework, so it never appears as earned credit.
+#   - {satisfies: "text"}         silences prerequisite prose matching that text, e.g. the
+#                                 writing placement note on ENGL 110C.
+#   - {satisfies_category: id}    marks a gen-ed category satisfied outright, e.g. a Language
+#                                 and Culture waiver earned in high school.
+starting_preparation:
+  # --- Entry conditions: true of a typical incoming major, and carrying no credit -----------
+  - id: writing-placement
+    group: Placement and background
+    label: Passed the Writing Success Placement Tool
+    detail: Required before registering for ENGL 110C.
+    default: true
+    grants:
+      - { satisfies: Writing Success Placement Tool }
+
+  - id: hs-chemistry
+    group: Placement and background
+    label: High school chemistry
+    detail: Satisfies the background CHEM 121N expects.
+    default: true
+    grants:
+      - { satisfies: High school chemistry }
+
+  - id: language-requirement
+    group: Placement and background
+    label: Language and Culture requirement fulfilled
+    detail: Usually met by high school coursework. Frees the 6 credits it would otherwise reserve.
+    default: true
+    grants:
+      - { satisfies_category: language }
+
+  - id: calculus-ready
+    group: Placement and background
+    label: Ready for Calculus I
+    detail: >-
+      Placed past precalculus. Satisfies MATH 211's prerequisite without awarding credit —
+      tick a course below instead if the student actually earned the credit.
+    default: true
+    grants:
+      - { places_past: MATH 163 }
+      - { places_past: MATH 166 }
+      - { places_past: MATH 162M }
+
+  # --- Credit actually earned: transfer, AP, or dual enrollment. Highest first. -------------
+  # ODU's ladder is MATH 162M -> MATH 163 (or MATH 166, the two combined) -> 211 -> 212.
+  # There is no MATH 161. Each entry also places past everything below it, so prerequisites
+  # resolve without inventing credit the student does not hold.
+  - id: math-212
+    group: Mathematics already earned
+    label: MATH 212 — Calculus II (4 cr)
+    grants:
+      - { course: MATH 212, credits: 4 }
+      - { places_past: MATH 211 }
+      - { places_past: MATH 163 }
+      - { places_past: MATH 166 }
+      - { places_past: MATH 162M }
+
+  - id: math-211
+    group: Mathematics already earned
+    label: MATH 211 — Calculus I (4 cr)
+    grants:
+      - { course: MATH 211, credits: 4 }
+      - { places_past: MATH 163 }
+      - { places_past: MATH 166 }
+      - { places_past: MATH 162M }
+
+  - id: math-163
+    group: Mathematics already earned
+    label: MATH 163 — Precalculus II (3 cr)
+    grants:
+      - { course: MATH 163, credits: 3 }
+      - { places_past: MATH 162M }
+
+  - id: math-166
+    group: Mathematics already earned
+    label: MATH 166 — Precalculus I and II (4 cr)
+    detail: The combined course; an alternative to 162M plus 163.
+    grants:
+      - { course: MATH 166, credits: 4 }
+      - { places_past: MATH 162M }
+      - { places_past: MATH 163 }
+
+  - id: math-162m
+    group: Mathematics already earned
+    label: MATH 162M — Precalculus I (3 cr)
+    grants:
+      - { course: MATH 162M, credits: 3 }
+
+# Readable names for requirement groups. The catalog labels many of them from the table row
+# they came from — "Select two of the following:" — which says nothing on its own.
+#
+# A key is either a bare requirement id (applies to every program) or "<programId>:<requirementId>"
+# (that program only, and it wins over the bare key). Requirement ids are the `id:` fields in
+# data/programs/*.yaml.
+requirement_labels:
+  phys-499w-or: Senior Thesis
+  phys-120-or: Seminar
+  approved-physics-seminar: Seminar
+
+  physics-astrophysics-bs:astrophysics-select-3: Electives
+  physics-bs:physics-major-select-2: Electives
+  physics-professional-bs:physics-professional-major-select-3: Electives
+
+# How to present the major requirements to an advisor.
+#
+# The catalog lists a flat wall of ~26 requirement rows per program. This regroups the SAME
+# courses into the shape the department actually thinks in. Nothing is added or dropped: every
+# course a group claims comes out of the program's own requirements, and whatever no group
+# claims still appears under "Other requirements".
+#
+# Groups are applied in order; the first one to claim a course wins.
+major_view:
+  applies_to:
+    - physics-bs
+    - physics-professional-bs
+    - physics-astrophysics-bs
+    - physics-electrical-engineering-bs
+    - physics-business-administration-bs-mba
+    - physics-secondary-education-6-12-bs
+
+  groups:
+    # `sequences` are whole alternatives. The first listed is the department's preference and is
+    # what the planner schedules and what the progress bar sizes itself against.
+    - id: intro-physics
+      name: Physics 1 & 2
+      sequences:
+        - [PHYS 261N, PHYS 262N]
+        - [PHYS 231N, PHYS 232N]
+        - [PHYS 226N, PHYS 227N]
+      note: Department strongly prefers PHYS 261N/262N. A grade of C or better is required.
+
+    - id: physics-300
+      name: Physics 300-level
+      filter:
+        subject: [PHYS, ASTP]
+        level_min: 300
+        level_max: 399
+
+    - id: physics-400
+      name: Physics 400-level
+      filter:
+        subject: [PHYS, ASTP]
+        level_min: 400
+        level_max: 499

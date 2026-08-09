@@ -1,0 +1,278 @@
+<script lang="ts">
+	import { catalog, majorView, programLabel } from '$lib/catalog';
+	import { roster, fullName } from '$lib/stores/roster.svelte';
+	import { sortSemesters, termLabel, validatePlan } from '$lib/engine/validate';
+	import type { Semester } from '$lib/types';
+	import {
+		genEdProgress,
+		satisfiedCategoriesFrom,
+		takenFrom,
+		totalCredits,
+		reservedByCategory,
+		reservedCredits
+	} from '$lib/engine/requirements';
+	import { majorViewProgress } from '$lib/engine/majorView';
+	import { buildKindIndex, kindOf, KIND_STYLES } from '$lib/courseKind';
+	import { base } from '$app/paths';
+	import { poolOptions } from '$lib/engine/requirements';
+	import { requirementLabel } from '$lib/catalog';
+	import type { Requirement } from '$lib/types';
+
+	let student = $derived(roster.selected);
+	let program = $derived(student ? catalog.programs.get(student.programId) : undefined);
+	let semesters = $derived(student ? sortSemesters(student.semesters) : []);
+
+	/**
+	 * Group terms into academic years so Fall 2026 and Spring 2027 print side by side.
+	 * Chronological order alone gets this right only by accident — it breaks as soon as a plan
+	 * includes summers or starts in the spring.
+	 */
+	const TERM_SLOT: Record<string, number> = { fall: 0, spring: 1, summer: 2 };
+
+	let academicYears = $derived.by(() => {
+		const groups = new Map<number, (Semester | null)[]>();
+		for (const sem of semesters) {
+			// An academic year runs Fall YYYY → Summer YYYY+1.
+			const ay = sem.term === 'fall' ? sem.year : sem.year - 1;
+			if (!groups.has(ay)) groups.set(ay, [null, null, null]);
+			groups.get(ay)![TERM_SLOT[sem.term] ?? 2] = sem;
+		}
+		return [...groups.entries()]
+			.sort((a, b) => a[0] - b[0])
+			.map(([year, terms]) => ({ year, terms }));
+	});
+
+	/** Only widen to three columns when the plan actually uses summer terms. */
+	let hasSummer = $derived(semesters.some((s) => s.term === 'summer'));
+
+	let planned = $derived(
+		student
+			? student.semesters.flatMap((s) =>
+					s.courses.filter((c) => !c.placeholder).map((c) => ({ code: c.code, credits: c.credits }))
+				)
+			: []
+	);
+	let taken = $derived(student ? takenFrom(student.priorCredits, planned) : []);
+	let major = $derived(program ? majorViewProgress(program, taken, catalog, majorView) : []);
+
+	let reserved = $derived(reservedByCategory(student?.semesters ?? []));
+
+	let gened = $derived(
+		student
+			? genEdProgress(
+					catalog.genEd,
+					taken,
+					catalog.courses,
+					new Set([
+						...satisfiedCategoriesFrom(student.priorCredits),
+						...(program?.categoriesSatisfiedByMajor ?? [])
+					]),
+					program?.courseDoubleCounts ?? [],
+					reserved
+				)
+			: []
+	);
+	let issues = $derived(student ? validatePlan(student, catalog) : []);
+	let errors = $derived(issues.filter((i) => i.severity === 'error'));
+
+	let kindIndex = $derived(buildKindIndex(program, catalog));
+
+	/**
+	 * The requirement set in full, straight from the program definition rather than from the
+	 * student's progress — a printed plan should stand on its own as a statement of what the
+	 * degree demands, not only of what this student has done about it.
+	 */
+	function describeRequirement(req: Requirement): string {
+		const parts: string[] = [];
+		if (req.all_of?.length) parts.push(req.all_of.join(', '));
+
+		const options = poolOptions(req);
+		if (options.length) {
+			const rendered = options.map((g) => g.join(' & '));
+			const need = req.count
+				? `${req.count} of`
+				: req.credits
+					? `${req.credits} credits from`
+					: 'one of';
+			parts.push(`${need}: ${rendered.join('; ')}`);
+		}
+
+		if (req.filter) {
+			const bits: string[] = [];
+			if (req.filter.subject) bits.push(req.filter.subject.join('/'));
+			if (req.filter.level_min) bits.push(`${req.filter.level_min}-level or above`);
+			if (req.filter.attributes) bits.push(`${req.filter.attributes.join(', ')} courses`);
+			parts.push(`${req.credits ?? 3} credits of ${bits.join(' ')}`);
+		}
+		return parts.join('; ');
+	}
+
+	/** Includes credits reserved for requirements whose course is not chosen yet. */
+	let placeholderCredits = $derived(reservedCredits(student?.semesters ?? []));
+</script>
+
+<div class="mx-auto max-w-4xl bg-white p-6 text-slate-900">
+	<div class="no-print mb-4 flex gap-2">
+		<a href="{base}/" class="rounded border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-50">
+			← Back to planner
+		</a>
+		<button
+			type="button"
+			class="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+			onclick={() => window.print()}
+		>
+			Print / Save as PDF
+		</button>
+	</div>
+
+	{#if !student}
+		<p class="text-sm text-slate-500">No student selected.</p>
+	{:else}
+		<!-- One compact line: the sheet's value is the plan, not the letterhead. -->
+		<header class="mb-2 flex items-baseline justify-between gap-3 border-b border-slate-800 pb-1">
+			<h1 class="text-base font-bold">{fullName(student)}</h1>
+			<p class="text-[10px] text-slate-600">
+				{programLabel(student.programId)} · Catalog {student.catalogYear}{#if student.studentId}
+					· {student.studentId}{/if} ·
+				{totalCredits(taken) + placeholderCredits}/{program?.total_credits ?? 120} cr ·
+				{new Date().toLocaleDateString()}
+			</p>
+		</header>
+
+		{#if errors.length}
+			<div class="mb-2 rounded border border-red-300 bg-red-50 px-2 py-1 text-[10px] text-red-900">
+				<strong>{errors.length} unresolved conflict(s):</strong>
+				<ul class="list-inside list-disc">
+					{#each errors as e}<li>{e.message}</li>{/each}
+				</ul>
+			</div>
+		{/if}
+
+		<div class="mb-3 space-y-2">
+			{#each academicYears as group (group.year)}
+				<div
+					class="print-page grid gap-2 {hasSummer ? 'grid-cols-3' : 'grid-cols-2'}"
+				>
+					{#each group.terms.slice(0, hasSummer ? 3 : 2) as sem}
+						{#if sem}
+							<table class="w-full border-collapse text-[9.5px] leading-tight">
+								<thead>
+									<tr class="border-b border-slate-400">
+										<th colspan="2" class="pb-0.5 text-left font-bold">{termLabel(sem)}</th>
+										<th class="pb-0.5 text-right font-bold">
+											{sem.courses.reduce((s, c) => s + c.credits, 0)} cr
+										</th>
+									</tr>
+								</thead>
+								<tbody>
+									{#each sem.courses as c}
+										{@const kind = kindOf(c.code, Boolean(c.placeholder), kindIndex)}
+										<tr class="border-b border-slate-100">
+											<td
+												class="w-16 border-l-4 py-0 pl-1 font-mono font-medium {KIND_STYLES[kind]
+													.accent}"
+											>
+												{c.placeholder ? '—' : c.code}
+											</td>
+											<td class="py-0">
+												{c.placeholder
+													? `${c.placeholder.label} (choose)`
+													: (catalog.courses.get(c.code)?.title ?? '')}
+											</td>
+											<td class="py-0 text-right">{c.credits}</td>
+										</tr>
+									{:else}
+										<tr
+											><td colspan="3" class="py-1 text-slate-400 italic">No courses planned</td></tr
+										>
+									{/each}
+								</tbody>
+							</table>
+						{:else}
+							<div></div>
+						{/if}
+					{/each}
+				</div>
+			{/each}
+		</div>
+
+		<div class="grid grid-cols-2 gap-4 text-[9.5px] leading-tight">
+			<section class="print-page">
+				<h2 class="mb-1 border-b border-slate-400 font-bold">Major requirements</h2>
+				<ul>
+					{#each major as m}
+						<li class="flex justify-between border-b border-slate-100 py-0">
+							<span>{m.satisfied ? '☑' : '☐'} {m.name}</span>
+							<span class="text-slate-500">{m.earnedCredits}/{m.requiredCredits}</span>
+						</li>
+					{/each}
+				</ul>
+			</section>
+			<section class="print-page">
+				<h2 class="mb-1 border-b border-slate-400 font-bold">General education</h2>
+				<ul>
+					{#each gened as g}
+						<li class="flex justify-between border-b border-slate-100 py-0">
+							<span>
+								{g.satisfied ? (g.plannedCredits > 0 ? '◐' : '☑') : '☐'}
+								{g.name}
+								{#if g.plannedCredits > 0}<span class="text-slate-400">(course not chosen)</span
+									>{/if}
+							</span>
+							<span class="text-slate-500"
+								>{g.earnedCredits + g.plannedCredits}/{g.requiredCredits}</span
+							>
+						</li>
+					{/each}
+				</ul>
+			</section>
+		</div>
+
+
+		{#if program}
+			<section class="print-break-before mt-6 border-t border-slate-300 pt-3 text-[10px] leading-snug">
+				<h2 class="mb-1 text-xs font-bold">
+					{programLabel(student.programId)} — degree requirements, {catalog.catalogYear} catalog
+				</h2>
+				<p class="mb-2 text-slate-500">
+					Minimum {program.total_credits} credits. Every requirement below must be satisfied.
+				</p>
+
+				<dl class="mb-2">
+					{#each program.requirements as req (req.id)}
+						{@const text = describeRequirement(req)}
+						{#if text}
+							<div class="flex gap-2 border-b border-slate-100 py-0.5">
+								<dt class="w-40 shrink-0 font-semibold">
+									{requirementLabel(program.id, req.id, req.name)}
+								</dt>
+								<dd class="flex-1">{text}</dd>
+							</div>
+						{/if}
+					{/each}
+				</dl>
+
+				<h3 class="mb-1 text-xs font-bold">General education</h3>
+				<dl>
+					{#each catalog.genEd as cat (cat.id)}
+						<div class="flex gap-2 border-b border-slate-100 py-0.5">
+							<dt class="w-40 shrink-0 font-semibold">{cat.name}</dt>
+							<dd class="flex-1">
+								{cat.credits ? `${cat.credits} credits` : 'See catalog'}{program.categoriesSatisfiedByMajor.includes(
+									cat.id
+								)
+									? ' — satisfied by the major'
+									: ''}
+							</dd>
+						</div>
+					{/each}
+				</dl>
+			</section>
+		{/if}
+
+		<p class="mt-4 text-[10px] text-slate-400">
+			Advising aid only. Verify against DegreeWorks and the official ODU catalog before
+			registration.
+		</p>
+	{/if}
+</div>

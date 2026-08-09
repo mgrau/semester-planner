@@ -1,0 +1,11 @@
+# Dependencies for scripts/scrape_courses.py and scripts/prereq_parser.py
+#
+#   python3 -m pip install -r scripts/requirements.txt
+#
+# prereq_parser.py itself is pure stdlib and has no dependencies.
+beautifulsoup4>=4.9
+PyYAML>=5.4
+
+# Optional: the test suite runs standalone (python3 scripts/test_prereq_parser.py)
+# but also works under pytest if you have it.
+# pytest>=6.0

@@ -1,0 +1,34 @@
+meta:
+  source: https://catalog.odu.edu/undergraduate/sciences/physics/physics-minor/
+  scraped_at: "2026-08-09"
+  catalog_year: "2026-2027"
+program:
+  id: physics-minor
+  name: Physics Minor
+  degree: Minor
+  department: Physics
+  total_credits: 12
+  credits_listed: 12
+  requirements:
+  - id: required
+    name: Required Courses
+    all_of: [PHYS 319, PHYS 323]
+    section: Requirements
+    credits: 6
+  - id: two-300-or-400-level-phys-courses
+    name: Two 300 or 400-level PHYS courses
+    notes: Two 300 or 400-level PHYS courses
+    credits: 6
+    filter: {level_min: 300, subject: [PHYS]}
+    needs_review: true
+    section: Requirements
+  policies:
+  - PHYS 231N-PHYS 232N or PHYS 261N-PHYS 262N or PHYS 226N-PHYS 227N must be completed as prerequisites for the
+    minor in physics and are not included in the calculation of the grade point average for the minor.
+  - The minor in physics requires completion of all courses specified as a requirement for the minor, with an overall
+    cumulative grade point average of 2.00 or better in these courses exclusive of 100/200 level courses and prerequisite
+    courses.
+  - Students must complete a minimum of six credit hours of 300-level or 400-level PHYS courses in the minor requirement
+    through courses offered by Old Dominion University.
+  - Up to three credits can be in Independent Study courses, with approval of the chief departmental advisor.
+  - Any substitutions must be approved in writing by the chief departmental advisor.
