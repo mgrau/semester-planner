@@ -12,7 +12,7 @@ import type {
 import { coursesIn, evaluate, minimalAdditions, type CreditState } from './expr';
 import { creditsOf, poolOptions, satisfiedCategoriesFrom } from './requirements';
 import { sortSemesters } from './validate';
-import { avoidedCourses, preferredCourses } from '$lib/catalog';
+import { avoidedCourses, earliestYear, preferredCourses } from '$lib/catalog';
 
 /**
  * Greedy critical-path planner.
@@ -334,15 +334,27 @@ export function generatePlan(req: PlanRequest): PlanResult {
 
 		const before: CreditState = { completed: new Set(completed), grades };
 
+		// Class standing, which the catalog does not encode. Senior Thesis lists only ENGL 211C
+		// as a prerequisite, so without this it lands in the sophomore year.
+		const yearOfStudy = Math.floor(semesters.length / termsPerYear) + 1;
+
 		// Eligible now, hardest-blocking first.
 		const eligible = [...needed]
 			.filter((code) => {
 				const course = catalog.courses.get(code);
 				if (!course) return false;
 				if (!offeredIn(course, term)) return false;
+				if (yearOfStudy < (earliestYear.get(code) ?? 0)) return false;
 				return evaluate(course.prereq, before).satisfied;
 			})
 			.sort((a, b) => {
+				// A course gated to the senior year has few terms left to fit in, and nothing
+				// depends on it, so the critical-path score would sort it last and strand it past
+				// the horizon. Once its year arrives, it goes first.
+				const gated = (c: string) => (earliestYear.has(c) ? 1 : 0);
+				const g = gated(b) - gated(a);
+				if (g !== 0) return g;
+
 				const d = (depth.get(b) ?? 0) - (depth.get(a) ?? 0);
 				if (d !== 0) return d;
 				return parseInt(a.replace(/\D+/g, ''), 10) - parseInt(b.replace(/\D+/g, ''), 10);

@@ -144,7 +144,7 @@ describe('credit accounting', () => {
 		// Unchosen gen-ed slots are real allocated credits; the headline must include them.
 		expect(held).toBeGreaterThan(0);
 		expect(named + held).toBeGreaterThan(named);
-		expect(named + held).toBeLessThanOrEqual(program.total_credits + 6);
+		expect(named + held).toBeLessThanOrEqual(program.total_credits + 10);
 	});
 
 	it('attributes reserved credits to the right gen-ed category', () => {

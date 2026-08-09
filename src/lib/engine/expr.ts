@@ -32,6 +32,34 @@ export function isCourseLeaf(e: Expr): e is { course: string; min_grade?: Grade 
 }
 
 /**
+ * Prose that names a case-by-case override rather than something the student can hold.
+ * Deliberately narrow: it must match an override, not merely any text we cannot check.
+ */
+const OVERRIDE = /\b(permission|consent|approval|approved by)\b/i;
+
+/**
+ * True when a branch offers an instructor override rather than a real alternative.
+ *
+ * PHYS 456 reads "PHYS 323 and PHYS 452 or permission of the instructor". Letting the
+ * permission branch satisfy the `or` erases the requirement entirely, which is how PHYS 456
+ * ended up scheduled before PHYS 452.
+ *
+ * The test is narrow on purpose. Plenty of prose branches ARE genuine alternatives the student
+ * plausibly meets — "MATH 102M or MATH 103M **or higher**", "**High school chemistry**, CHEM
+ * 103, or CHEM 105N" — and treating those as overrides would force remedial courses into every
+ * plan. Only permission-style wording is discounted.
+ */
+export function isEscapeHatch(expr: Expr): boolean {
+	if (isCourseLeaf(expr)) return false;
+	if ('placement' in expr) return false;
+	if ('note' in expr) return OVERRIDE.test(expr.note);
+	if ('all_of' in expr) return expr.all_of.some(isEscapeHatch);
+	if ('one_of' in expr) return expr.one_of.every(isEscapeHatch);
+	if ('n_of' in expr) return expr.n_of.options.every(isEscapeHatch);
+	return false;
+}
+
+/**
  * Evaluate a prerequisite expression against completed credit.
  *
  * Unresolvable clauses (`note`, `placement`) evaluate as SATISFIED but are surfaced in
@@ -65,11 +93,24 @@ export function evaluate(expr: Expr | null | undefined, state: CreditState): Eva
 
 	if ('one_of' in expr) {
 		const parts = expr.one_of.map((e) => evaluate(e, state));
-		const satisfied = parts.some((p) => p.satisfied);
+
+		// "PHYS 323 and PHYS 452, or permission of the instructor" must not resolve to "no
+		// prerequisites at all". An instructor override is an exception a human grants, not the
+		// default reading, so a branch that is only prose does not get to decide the clause.
+		//
+		// A *placement* branch is different — "a qualifying SAT score, or MATH 102M" is a real
+		// alternative that most students meet — so those still count.
+		const real = expr.one_of
+			.map((e, i) => ({ expr: e, result: parts[i] }))
+			.filter(({ expr: e }) => !isEscapeHatch(e));
+
+		const deciding = real.length ? real.map((c) => c.result) : parts;
+		const satisfied = deciding.some((p) => p.satisfied);
+
 		return {
 			satisfied,
 			// Any one of the alternatives closes the gap; show them all as options.
-			missing: satisfied ? [] : parts.flatMap((p) => p.missing),
+			missing: satisfied ? [] : deciding.flatMap((p) => p.missing),
 			notes: parts.flatMap((p) => p.notes)
 		};
 	}
@@ -113,7 +154,10 @@ export function minimalAdditions(
 	}
 
 	if ('one_of' in expr) {
-		const options = expr.one_of
+		// Mirror `evaluate`: a bare "or permission of the instructor" is not a free pass, so it
+		// must not be picked as the zero-cost way to satisfy the clause.
+		const branches = expr.one_of.filter((e) => !isEscapeHatch(e));
+		const options = (branches.length ? branches : expr.one_of)
 			.map((e) => minimalAdditions(e, state, prefer))
 			.sort((a, b) => cost(a, prefer) - cost(b, prefer));
 		return options[0] ?? [];

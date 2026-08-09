@@ -1,5 +1,5 @@
 import { describe as suite, expect, it } from 'vitest';
-import { coursesIn, describe, evaluate, type CreditState } from './expr';
+import { coursesIn, describe, evaluate, minimalAdditions, type CreditState } from './expr';
 import type { Expr } from '$lib/types';
 
 const state = (codes: string[], grades: Record<string, 'A' | 'B' | 'C' | 'D'> = {}): CreditState => ({
@@ -108,5 +108,63 @@ suite('describe', () => {
 			]
 		};
 		expect(describe(e)).toBe('(PHYS 232N or PHYS 262N) and MATH 212 (C or better)');
+	});
+});
+
+suite('instructor permission is not a free pass', () => {
+	// PHYS 456: "PHYS 323 and PHYS 452 or permission of the instructor". Reading the permission
+	// branch as satisfying the clause erases the requirement, and the planner scheduled PHYS 456
+	// before PHYS 452.
+	const phys456: Expr = {
+		one_of: [
+			{ all_of: [{ course: 'PHYS 323' }, { course: 'PHYS 452' }] },
+			{ note: 'permission of the instructor' }
+		]
+	};
+
+	it('still requires the courses when permission is the only alternative', () => {
+		const r = evaluate(phys456, state([]));
+		expect(r.satisfied).toBe(false);
+		expect(r.missing.sort()).toEqual(['PHYS 323', 'PHYS 452']);
+	});
+
+	it('is satisfied once the courses are done', () => {
+		expect(evaluate(phys456, state(['PHYS 323', 'PHYS 452'])).satisfied).toBe(true);
+	});
+
+	it('is not satisfied by half the conjunction', () => {
+		expect(evaluate(phys456, state(['PHYS 323'])).satisfied).toBe(false);
+	});
+
+	it('still surfaces the override as a note the advisor can act on', () => {
+		expect(evaluate(phys456, state([])).notes).toContain('permission of the instructor');
+	});
+
+	it('leaves a permission-only prerequisite satisfied, since nothing is checkable', () => {
+		expect(evaluate({ note: 'Permission of the instructor' }, state([])).satisfied).toBe(true);
+	});
+
+	it('treats a placement score as a genuine alternative, not an override', () => {
+		// MATH 162M: "qualifying score on SAT ... or a grade of C or better in MATH 102M".
+		// Discounting the score would force precalculus-for-precalculus into every plan.
+		const math162m: Expr = {
+			one_of: [
+				{ placement: 'qualifying score on SAT' },
+				{ course: 'MATH 102M', min_grade: 'C' }
+			]
+		};
+		expect(evaluate(math162m, state([])).satisfied).toBe(true);
+	});
+
+	it('treats non-permission prose as a genuine alternative', () => {
+		// CHEM 121N: "High school chemistry, CHEM 103, or CHEM 105N".
+		const chem: Expr = {
+			one_of: [{ note: 'High school chemistry' }, { course: 'CHEM 103' }]
+		};
+		expect(evaluate(chem, state([])).satisfied).toBe(true);
+	});
+
+	it('does not pick the override branch as the cheapest way to satisfy a clause', () => {
+		expect(minimalAdditions(phys456, state([])).sort()).toEqual(['PHYS 323', 'PHYS 452']);
 	});
 });

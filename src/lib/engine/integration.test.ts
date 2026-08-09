@@ -191,6 +191,24 @@ describe('departmental preferences', () => {
 		expect(reserved.get('upper-division-writing-intensive')).toBeUndefined();
 	});
 
+	it('holds Senior Thesis to the senior year', () => {
+		// The catalog asks only for ENGL 211C, so nothing but class standing keeps PHYS 489W out
+		// of the sophomore year.
+		const ready = generatePlan({
+			program: astro,
+			catalog,
+			settings: { ...DEFAULT_SETTINGS },
+			startTerm: 'fall',
+			startYear: 2026,
+			priorCredits: [],
+			placements: ['MATH 163', 'MATH 166', 'MATH 162M']
+		});
+		const termIndex = (code: string) =>
+			ready.semesters.findIndex((s) => s.courses.some((c) => c.code === code));
+		expect(termIndex('PHYS 489W')).toBeGreaterThanOrEqual(6); // term 7, 0-indexed
+		expect(termIndex('PHYS 490W')).toBeGreaterThan(termIndex('PHYS 489W'));
+	});
+
 	it('fits four years for a student ready for calculus', () => {
 		// The default new student declares calculus readiness, which is the normal case.
 		const ready = generatePlan({
@@ -273,6 +291,16 @@ describe('the planner schedules prerequisites rather than assuming them', () => 
 		const codes = result.semesters.flatMap((s) => s.courses.map((c) => c.code));
 		expect(codes).not.toContain('MATH 102M');
 		expect(codes).not.toContain('MATH 103M');
+	});
+
+	it('does not force a remedial course when the prose names a real alternative', () => {
+		// CHEM 121N reads "MATH 102M or MATH 103M or higher" and "High school chemistry,
+		// CHEM 103, or CHEM 105N". Neither remedial branch belongs in a physics plan.
+		const result = planFor('physics-astrophysics-bs');
+		const codes = result.semesters.flatMap((s) => s.courses.map((c) => c.code));
+		expect(codes).toContain('CHEM 121N');
+		expect(codes).not.toContain('CHEM 103');
+		expect(codes).not.toContain('CHEM 105N');
 	});
 
 	it('reports a genuine ordering mistake as an error', () => {

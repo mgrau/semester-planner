@@ -35,6 +35,7 @@ interface PreferencesDoc {
 	program_labels?: Record<string, string>;
 	requirement_labels?: Record<string, string>;
 	starting_preparation?: PreparationOption[];
+	earliest_year?: Record<string, number>;
 }
 
 /** A checkbox offered when creating a student: what they already bring with them. */
@@ -66,6 +67,14 @@ export const preferences = (preferencesDoc ?? {}) as PreferencesDoc;
 
 export const preferredCourses = new Set(preferences.prefer ?? []);
 export const avoidedCourses = new Set(preferences.avoid ?? []);
+
+/**
+ * Earliest year of study a course may be scheduled in, by course code. Encodes class standing,
+ * which the catalog's prerequisites do not capture.
+ */
+export const earliestYear = new Map<string, number>(
+	Object.entries(preferences.earliest_year ?? {})
+);
 
 /** Entry conditions offered when creating a student. See data/local/preferences.yaml. */
 export const startingPreparation: PreparationOption[] = preferences.starting_preparation ?? [];

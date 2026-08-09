@@ -140,6 +140,19 @@ starting_preparation:
     grants:
       - { course: MATH 162M, credits: 3 }
 
+# Courses that should not be scheduled before a given year of study.
+#
+# The catalog's prerequisites are necessary but not sufficient for good advising: PHYS 489W
+# lists only ENGL 211C and instructor permission, so a purely prerequisite-driven planner will
+# happily put Senior Thesis I in the sophomore year. Class standing is the real constraint, and
+# the catalog does not encode it.
+#
+# 4 = senior year (terms 7-8 of a standard fall/spring plan), 3 = junior year, and so on.
+earliest_year:
+  PHYS 489W: 4 # Senior Thesis I
+  PHYS 490W: 4 # Senior Thesis II
+  PHYS 499W: 4 # Senior Thesis (the one-semester alternative)
+
 # Readable names for requirement groups. The catalog labels many of them from the table row
 # they came from — "Select two of the following:" — which says nothing on its own.
 #

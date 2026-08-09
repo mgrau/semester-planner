@@ -12,7 +12,7 @@ localStorage and travel as YAML files.
 ```sh
 npm install
 npm run dev          # http://localhost:5173
-npm test             # 95 tests, incl. end-to-end against the real catalog
+npm test             # 105 tests, incl. end-to-end against the real catalog
 npm run build        # static site in build/
 ```
 
@@ -102,6 +102,9 @@ it. Three things live there:
   "PHYS 120 or PHYS 309" → "Seminar", "PHYS 499W or PHYS 489W & PHYS 490W" → "Senior Thesis").
   A key is either a bare requirement id (all programs) or `<programId>:<requirementId>`, which
   wins. Ids are the `id:` fields in `data/programs/*.yaml`.
+- **`earliest_year`** — the year of study a course may first be scheduled in. The catalog asks
+  only for ENGL 211C before Senior Thesis, so nothing but class standing keeps PHYS 489W out of
+  the sophomore year; this puts the thesis sequence in terms 7 and 8 where it belongs.
 - **`major_view`** — how the major requirements are grouped for the advisor. The catalog gives a
   flat wall of ~26 rows; this regroups the *same* courses into Physics 1 & 2 (with the preferred
   261N/262N sequence first), Physics 300-level, Physics 400-level, and then everything else under
@@ -155,10 +158,12 @@ knowing:
 - **884 of 7,813 courses (11%) are flagged `needs_review`** — their prerequisite text did not
   fully parse. The app marks these with an info-level notice when they appear in a plan. Nothing
   was silently dropped; unparsed text is preserved as a note.
-- **Unresolvable prerequisite clauses pass rather than block.** "Permission of the instructor"
-  cannot be checked mechanically, so it is surfaced as a note instead of failing the plan. A
-  side effect: a clause like `MATH 102M or higher` parses to `MATH 102M or {note: "higher"}`,
-  and the note makes the whole clause pass. There are ~51 of these.
+- **Unresolvable prerequisite clauses pass rather than block** — but an instructor override is
+  not treated as a free pass. "PHYS 323 and PHYS 452 **or permission of the instructor**" still
+  requires both courses; the permission branch is reported as a note for a human to act on.
+  Only permission-style wording is discounted this way: prose that names a real alternative
+  ("MATH 102M or higher", "High school chemistry, CHEM 103, or CHEM 105N") still satisfies its
+  clause, since treating those as overrides would force remedial courses into every plan.
 - **Gen-ed pairs that must be taken together** (CHEM 121N & CHEM 122N) are listed individually in
   `gened.yaml`'s `approved` list, with the pairing recorded separately in `combinations`. The
   requirement engine does not yet enforce the pairing, so it would let CHEM 121N alone count.
