@@ -14,9 +14,6 @@
 	import { majorViewProgress } from '$lib/engine/majorView';
 	import { buildKindIndex, kindOf, KIND_STYLES } from '$lib/courseKind';
 	import { base } from '$app/paths';
-	import { poolOptions } from '$lib/engine/requirements';
-	import { requirementLabel } from '$lib/catalog';
-	import type { Requirement } from '$lib/types';
 
 	let student = $derived(roster.selected);
 	let program = $derived(student ? catalog.programs.get(student.programId) : undefined);
@@ -77,35 +74,6 @@
 
 	let kindIndex = $derived(buildKindIndex(program, catalog));
 
-	/**
-	 * The requirement set in full, straight from the program definition rather than from the
-	 * student's progress — a printed plan should stand on its own as a statement of what the
-	 * degree demands, not only of what this student has done about it.
-	 */
-	function describeRequirement(req: Requirement): string {
-		const parts: string[] = [];
-		if (req.all_of?.length) parts.push(req.all_of.join(', '));
-
-		const options = poolOptions(req);
-		if (options.length) {
-			const rendered = options.map((g) => g.join(' & '));
-			const need = req.count
-				? `${req.count} of`
-				: req.credits
-					? `${req.credits} credits from`
-					: 'one of';
-			parts.push(`${need}: ${rendered.join('; ')}`);
-		}
-
-		if (req.filter) {
-			const bits: string[] = [];
-			if (req.filter.subject) bits.push(req.filter.subject.join('/'));
-			if (req.filter.level_min) bits.push(`${req.filter.level_min}-level or above`);
-			if (req.filter.attributes) bits.push(`${req.filter.attributes.join(', ')} courses`);
-			parts.push(`${req.credits ?? 3} credits of ${bits.join(' ')}`);
-		}
-		return parts.join('; ');
-	}
 
 	/** Includes credits reserved for requirements whose course is not chosen yet. */
 	let placeholderCredits = $derived(reservedCredits(student?.semesters ?? []));
@@ -129,9 +97,9 @@
 		<p class="text-sm text-slate-500">No student selected.</p>
 	{:else}
 		<!-- One compact line: the sheet's value is the plan, not the letterhead. -->
-		<header class="mb-2 flex items-baseline justify-between gap-3 border-b border-slate-800 pb-1">
-			<h1 class="text-base font-bold">{fullName(student)}</h1>
-			<p class="text-[10px] text-slate-600">
+		<header class="mb-3 flex items-baseline justify-between gap-3 border-b-2 border-slate-800 pb-1.5">
+			<h1 class="text-lg font-bold">{fullName(student)}</h1>
+			<p class="text-xs text-slate-600">
 				{programLabel(student.programId)} · Catalog {student.catalogYear}{#if student.studentId}
 					· {student.studentId}{/if} ·
 				{totalCredits(taken) + placeholderCredits}/{program?.total_credits ?? 120} cr ·
@@ -140,7 +108,7 @@
 		</header>
 
 		{#if errors.length}
-			<div class="mb-2 rounded border border-red-300 bg-red-50 px-2 py-1 text-[10px] text-red-900">
+			<div class="mb-3 rounded border border-red-300 bg-red-50 px-2 py-1.5 text-xs text-red-900">
 				<strong>{errors.length} unresolved conflict(s):</strong>
 				<ul class="list-inside list-disc">
 					{#each errors as e}<li>{e.message}</li>{/each}
@@ -148,14 +116,14 @@
 			</div>
 		{/if}
 
-		<div class="mb-3 space-y-2">
+		<div class="mb-4 space-y-3">
 			{#each academicYears as group (group.year)}
 				<div
-					class="print-page grid gap-2 {hasSummer ? 'grid-cols-3' : 'grid-cols-2'}"
+					class="print-page grid gap-4 {hasSummer ? 'grid-cols-3' : 'grid-cols-2'}"
 				>
 					{#each group.terms.slice(0, hasSummer ? 3 : 2) as sem}
 						{#if sem}
-							<table class="w-full border-collapse text-[9.5px] leading-tight">
+							<table class="w-full border-collapse text-[11px] leading-snug">
 								<thead>
 									<tr class="border-b border-slate-400">
 										<th colspan="2" class="pb-0.5 text-left font-bold">{termLabel(sem)}</th>
@@ -169,17 +137,17 @@
 										{@const kind = kindOf(c.code, Boolean(c.placeholder), kindIndex)}
 										<tr class="border-b border-slate-100">
 											<td
-												class="w-16 border-l-4 py-0 pl-1 font-mono font-medium {KIND_STYLES[kind]
+												class="w-[4.5rem] border-l-4 py-0.5 pl-1.5 font-mono font-medium {KIND_STYLES[kind]
 													.accent}"
 											>
 												{c.placeholder ? '—' : c.code}
 											</td>
-											<td class="py-0">
+											<td class="py-0.5">
 												{c.placeholder
 													? `${c.placeholder.label} (choose)`
 													: (catalog.courses.get(c.code)?.title ?? '')}
 											</td>
-											<td class="py-0 text-right">{c.credits}</td>
+											<td class="py-0.5 text-right">{c.credits}</td>
 										</tr>
 									{:else}
 										<tr
@@ -196,12 +164,12 @@
 			{/each}
 		</div>
 
-		<div class="grid grid-cols-2 gap-4 text-[9.5px] leading-tight">
+		<div class="grid grid-cols-2 gap-6 text-[11px] leading-snug">
 			<section class="print-page">
-				<h2 class="mb-1 border-b border-slate-400 font-bold">Major requirements</h2>
+				<h2 class="mb-1 border-b border-slate-400 text-sm font-bold">Major requirements</h2>
 				<ul>
 					{#each major as m}
-						<li class="flex justify-between border-b border-slate-100 py-0">
+						<li class="flex justify-between border-b border-slate-100 py-0.5">
 							<span>{m.satisfied ? '☑' : '☐'} {m.name}</span>
 							<span class="text-slate-500">{m.earnedCredits}/{m.requiredCredits}</span>
 						</li>
@@ -209,10 +177,10 @@
 				</ul>
 			</section>
 			<section class="print-page">
-				<h2 class="mb-1 border-b border-slate-400 font-bold">General education</h2>
+				<h2 class="mb-1 border-b border-slate-400 text-sm font-bold">General education</h2>
 				<ul>
 					{#each gened as g}
-						<li class="flex justify-between border-b border-slate-100 py-0">
+						<li class="flex justify-between border-b border-slate-100 py-0.5">
 							<span>
 								{g.satisfied ? (g.plannedCredits > 0 ? '◐' : '☑') : '☐'}
 								{g.name}
@@ -229,48 +197,7 @@
 		</div>
 
 
-		{#if program}
-			<section class="print-break-before mt-6 border-t border-slate-300 pt-3 text-[10px] leading-snug">
-				<h2 class="mb-1 text-xs font-bold">
-					{programLabel(student.programId)} — degree requirements, {catalog.catalogYear} catalog
-				</h2>
-				<p class="mb-2 text-slate-500">
-					Minimum {program.total_credits} credits. Every requirement below must be satisfied.
-				</p>
-
-				<dl class="mb-2">
-					{#each program.requirements as req (req.id)}
-						{@const text = describeRequirement(req)}
-						{#if text}
-							<div class="flex gap-2 border-b border-slate-100 py-0.5">
-								<dt class="w-40 shrink-0 font-semibold">
-									{requirementLabel(program.id, req.id, req.name)}
-								</dt>
-								<dd class="flex-1">{text}</dd>
-							</div>
-						{/if}
-					{/each}
-				</dl>
-
-				<h3 class="mb-1 text-xs font-bold">General education</h3>
-				<dl>
-					{#each catalog.genEd as cat (cat.id)}
-						<div class="flex gap-2 border-b border-slate-100 py-0.5">
-							<dt class="w-40 shrink-0 font-semibold">{cat.name}</dt>
-							<dd class="flex-1">
-								{cat.credits ? `${cat.credits} credits` : 'See catalog'}{program.categoriesSatisfiedByMajor.includes(
-									cat.id
-								)
-									? ' — satisfied by the major'
-									: ''}
-							</dd>
-						</div>
-					{/each}
-				</dl>
-			</section>
-		{/if}
-
-		<p class="mt-4 text-[10px] text-slate-400">
+		<p class="mt-5 text-[10px] text-slate-400">
 			Advising aid only. Verify against DegreeWorks and the official ODU catalog before
 			registration.
 		</p>

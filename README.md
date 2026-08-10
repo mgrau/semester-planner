@@ -95,8 +95,9 @@ letterbox.
 - **Transcript paste**: drop in DegreeWorks or transcript text and confirm the rows it finds.
 - **Exports**: a formatted paste for Google Sheets **with live formulas** — term totals are
   `=SUM(...)` over their courses and the grand total sums the term totals, so the numbers follow
-  an edit instead of going stale; TSV; a re-importable student YAML; and a print view whose
-  "Save as PDF" produces real selectable text.
+  an edit instead of going stale; TSV; a re-importable student YAML; and a one-page print view whose
+  "Save as PDF" produces real selectable text — the plan, both requirement checklists and any
+  unresolved conflicts, sized to fill a single sheet.
 
 ## Layout
 

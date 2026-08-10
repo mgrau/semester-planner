@@ -40,11 +40,6 @@ body {
 	.print-page {
 		break-inside: avoid;
 	}
-	/* Supplementary detail starts its own sheet, so the plan and the requirement
-	   checklists stay together on page one. */
-	.print-break-before {
-		break-before: page;
-	}
 	@page {
 		margin: 0.5in;
 		size: letter portrait;
