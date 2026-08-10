@@ -21,7 +21,8 @@ npm run build        # static site in build/
 One page, three full-height columns that scroll independently — the page itself never scrolls.
 Below 1024px it reflows to a single column; see **On a phone** below.
 
-- **Left** — credit already earned, then notes at the bottom filling the remaining height. The
+- **Left** — credit already earned, advisor notes, then the notes pane at the bottom filling the
+  remaining height. The
   student's identity lives in the header; the planner's constraints (credit cap, target years,
   rebuild) live in the Edit dialog, since they are set once and rarely touched.
 - **Centre** — the semester grid, four across so two academic years share a row. With summers
@@ -95,6 +96,7 @@ letterbox.
   all on by default) and **Mathematics already earned** (MATH 212 / 211 / 163 / 166 / 162M, off
   by default). With the defaults, the planner has to assume nothing at all.
 - **Transcript paste**: drop in DegreeWorks or transcript text and confirm the rows it finds.
+- **Advisor notes**: free text kept with the student and printed at the foot of the plan.
 - **Exports**: a formatted paste for Google Sheets **with live formulas** — term totals are
   `=SUM(...)` over their courses and the grand total sums the term totals, so the numbers follow
   an edit instead of going stale; TSV; a re-importable student YAML; and a one-page print view whose

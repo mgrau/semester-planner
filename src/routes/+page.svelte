@@ -241,11 +241,26 @@
 	}
 
 	/**
-	 * Summers are added and removed rather than merely shown and hidden — a checkbox that
-	 * revealed nothing on a fall/spring plan would do nothing at all. Turning it off keeps any
-	 * summer that holds courses, so nothing disappears silently.
+	 * Summers are added and removed, not merely shown and hidden — a toggle that revealed
+	 * nothing on a fall/spring plan would do nothing at all. Turning it off drops the terms and
+	 * whatever was scheduled in them, which is destructive, so it asks first when there is
+	 * actually something to lose.
 	 */
 	function toggleSummers(on: boolean) {
+		if (!on && student) {
+			const losing = student.semesters
+				.filter((x) => x.term === 'summer')
+				.reduce((n, x) => n + x.courses.length, 0);
+			if (
+				losing > 0 &&
+				!confirm(
+					`Removing the summer terms also removes ${losing} course${losing === 1 ? '' : 's'} scheduled in them. Continue?`
+				)
+			) {
+				return;
+			}
+		}
+
 		roster.update((s) => {
 			s.settings.includeSummers = on;
 			if (on) {
@@ -258,7 +273,7 @@
 					}
 				}
 			} else {
-				s.semesters = s.semesters.filter((x) => x.term !== 'summer' || x.courses.length > 0);
+				s.semesters = s.semesters.filter((x) => x.term !== 'summer');
 			}
 		});
 	}
@@ -493,6 +508,25 @@
 					<div class="order-7 min-w-0 lg:order-none lg:min-h-0 lg:shrink-0 lg:overflow-y-auto">
 						<PriorCreditsPanel {student} onchange={touch} />
 					</div>
+
+					<!-- Called "advisor notes" rather than "notes" because the pane below already
+					     carries that name for what the app found. This is what the advisor says. -->
+					<section
+						class="order-8 min-w-0 shrink-0 rounded-lg border border-slate-200 bg-white shadow-sm lg:order-none"
+					>
+						<header class="border-b border-slate-100 px-3 py-2">
+							<h3 class="text-sm font-semibold text-slate-800">Advisor notes</h3>
+							<p class="text-xs text-slate-400">Printed at the foot of the plan.</p>
+						</header>
+						<textarea
+							rows="3"
+							placeholder="Anything the student should read alongside this plan…"
+							aria-label="Advisor notes"
+							class="w-full resize-y rounded-b-lg px-3 py-2 text-xs outline-none focus:bg-blue-50/40"
+							value={student.notes ?? ''}
+							onchange={(e) => roster.update((s) => (s.notes = e.currentTarget.value))}
+						></textarea>
+					</section>
 
 					<!-- Notes sit at the bottom of the desktop column and take the remaining height;
 					     on a phone they collapse to a header that still shows the count. Called notes

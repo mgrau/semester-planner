@@ -205,6 +205,13 @@
 		</div>
 
 
+		{#if student.notes?.trim()}
+			<section class="mt-3 border-t border-slate-300 pt-2">
+				<h2 class="mb-0.5 text-xs font-bold">Advisor notes</h2>
+				<p class="text-[10px] leading-snug whitespace-pre-line text-slate-700">{student.notes}</p>
+			</section>
+		{/if}
+
 		<p class="mt-3 text-[9px] text-slate-400">
 			Advising aid only. Verify against DegreeWorks and the official ODU catalog before
 			registration.
