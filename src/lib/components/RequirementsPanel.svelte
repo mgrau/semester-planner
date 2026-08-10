@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import type { Progress } from '$lib/engine/requirements';
 	import Icon from './Icon.svelte';
 
@@ -10,21 +11,15 @@
 		fill?: boolean;
 		/** Collapse to a tappable header below `lg`. Always open on a wide screen. */
 		collapsible?: boolean;
-		/** Named under the title — the major these requirements belong to. */
-		subtitle?: string;
-		/** Shows a pencil beside the subtitle when the subtitle is something you can change. */
-		onedit?: () => void;
+		/**
+		 * Rendered on its own row under the title — the major these requirements belong to.
+		 * A snippet rather than a string because it holds an interactive control, and it has to
+		 * sit outside the mobile disclosure button rather than inside it.
+		 */
+		subtitle?: Snippet;
 	}
 
-	let {
-		title,
-		items,
-		onpick,
-		fill = false,
-		collapsible = false,
-		subtitle,
-		onedit
-	}: Props = $props();
+	let { title, items, onpick, fill = false, collapsible = false, subtitle }: Props = $props();
 
 	let done = $derived(items.filter((i) => i.satisfied).length);
 
@@ -40,30 +35,23 @@
 		? 'lg:flex lg:min-h-0 lg:flex-1 lg:flex-col'
 		: ''}"
 >
-	<!-- One definition of the heading, rendered in a disclosure button below `lg` and as plain
-	     text above it. The edit control has to sit outside that button — a button inside a
-	     button is invalid and would swallow the tap. -->
-	{#snippet heading()}
-		<span class="flex min-w-0 flex-1 items-center justify-between gap-2">
-			<span class="min-w-0">
-				<span class="block text-sm font-semibold text-slate-800">{title}</span>
-				{#if subtitle}
-					<span class="block truncate text-xs text-slate-500">{subtitle}</span>
-				{/if}
-			</span>
-			<span class="shrink-0 text-xs text-slate-500">{done}/{items.length} met</span>
-		</span>
+	<!-- The title row is the disclosure control below `lg`; the subtitle sits on its own row
+	     outside it, because a control nested inside a button is invalid and would swallow the
+	     tap that should reach it. -->
+	{#snippet titleRow()}
+		<span class="min-w-0 truncate text-sm font-semibold text-slate-800">{title}</span>
+		<span class="shrink-0 text-xs text-slate-500">{done}/{items.length} met</span>
 	{/snippet}
 
-	<div class="flex shrink-0 items-center gap-1 border-b border-slate-100 px-3 py-2">
+	<div class="shrink-0 border-b border-slate-100 px-3 py-2">
 		{#if collapsible}
 			<button
 				type="button"
-				class="flex min-w-0 flex-1 items-center gap-2 text-left lg:hidden"
+				class="flex w-full items-center gap-2 text-left lg:hidden"
 				aria-expanded={isOpen}
 				onclick={() => (isOpen = !isOpen)}
 			>
-				{@render heading()}
+				{@render titleRow()}
 				<Icon
 					name={isOpen ? 'chevron-down' : 'chevron-right'}
 					class="h-4 w-4 shrink-0 text-slate-400"
@@ -71,18 +59,12 @@
 			</button>
 		{/if}
 
-		<div class="min-w-0 flex-1 {collapsible ? 'hidden lg:flex' : 'flex'}">
-			{@render heading()}
+		<div class="items-center gap-2 {collapsible ? 'hidden lg:flex' : 'flex'}">
+			{@render titleRow()}
 		</div>
 
-		{#if onedit}
-			<button
-				type="button"
-				class="shrink-0 rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-blue-700"
-				title="Change the major"
-				aria-label="Change the major"
-				onclick={onedit}><Icon name="pencil" /></button
-			>
+		{#if subtitle}
+			<div class="mt-1">{@render subtitle()}</div>
 		{/if}
 	</div>
 

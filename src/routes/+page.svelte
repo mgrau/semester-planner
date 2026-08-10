@@ -25,6 +25,7 @@
 	import CoursePicker from '$lib/components/CoursePicker.svelte';
 	import PriorCreditsPanel from '$lib/components/PriorCreditsPanel.svelte';
 	import StudentPicker from '$lib/components/StudentPicker.svelte';
+	import MajorSelect from '$lib/components/MajorSelect.svelte';
 	import StudentEditor from '$lib/components/StudentEditor.svelte';
 	import CourseActions from '$lib/components/CourseActions.svelte';
 	import Icon from '$lib/components/Icon.svelte';
@@ -783,14 +784,14 @@
 			>
 				{#if student && program}
 					<div class="order-2 min-w-0 lg:order-none lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
-						<RequirementsPanel
-							title="Major requirements"
-							subtitle={programLabel(student.programId)}
-							items={majorProgress}
-							onedit={() => (editing = student)}
-							fill
-							collapsible
-						/>
+						<RequirementsPanel title="Major requirements" items={majorProgress} fill collapsible>
+							{#snippet subtitle()}
+								<MajorSelect
+									value={student.programId}
+									onchange={(id) => roster.update((s) => (s.programId = id))}
+								/>
+							{/snippet}
+						</RequirementsPanel>
 					</div>
 					<div class="order-3 min-w-0 lg:order-none lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
 						<RequirementsPanel title="General education" items={genedProgress} fill collapsible />
