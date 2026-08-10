@@ -889,6 +889,7 @@
 								onactivate={openActions}
 								ondelete={deleteSemester}
 								addNextLabel={next ? termLabel(next) : undefined}
+								addNextTerm={next?.term}
 								onaddnext={next ? () => addTerm(next) : undefined}
 								addSummerLabel={summer ? termLabel(summer) : undefined}
 								onaddsummer={summer ? () => addTerm(summer) : undefined}

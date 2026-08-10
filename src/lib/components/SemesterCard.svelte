@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { flip } from 'svelte/animate';
 	import { cubicOut } from 'svelte/easing';
-	import type { Catalog, Issue, PlannedCourse, Semester } from '$lib/types';
+	import type { Catalog, Issue, PlannedCourse, Semester, Term } from '$lib/types';
 	import { drag } from '$lib/stores/dnd.svelte';
 	import { termLabel } from '$lib/engine/validate';
 	import { kindOf, type CourseKind } from '$lib/courseKind';
 	import CourseChip from './CourseChip.svelte';
 	import Icon from './Icon.svelte';
+	import type { IconName } from './Icon.svelte';
 
 	interface Props {
 		semester: Semester;
@@ -23,6 +24,7 @@
 		ondelete: (semesterId: string) => void;
 		/** Set when the term that follows this one is missing from the plan. */
 		addNextLabel?: string;
+		addNextTerm?: Term;
 		onaddnext?: () => void;
 		/** Spring only: the summer of the same academic year, when the plan has no term for it. */
 		addSummerLabel?: string;
@@ -43,6 +45,7 @@
 		onactivate,
 		ondelete,
 		addNextLabel,
+		addNextTerm,
 		onaddnext,
 		addSummerLabel,
 		onaddsummer
@@ -127,6 +130,14 @@
 		while (i < mids.length && clientY > mids[i]) i++;
 		return i;
 	}
+
+	/** A season each, so a tab says which term it opens without needing a word. */
+	const TERM_ICON: Record<Term, IconName> = {
+		fall: 'leaf',
+		spring: 'sprout',
+		summer: 'sun',
+		winter: 'circle'
+	};
 
 	function drop(e: DragEvent) {
 		e.preventDefault();
@@ -225,36 +236,38 @@
 	</button>
 
 	<!--
-		A tab on the edge where the next term would go. It appears only when that term is missing,
+		Tabs on the edge where the next term would go. They appear only when that term is missing,
 		which puts "add a term" at the seam it would fill rather than in a toolbar that gives no
 		clue where the term will land.
-	-->
-	{#if onaddnext}
-		<button
-			type="button"
-			class="no-print absolute top-1/2 -right-2.5 z-10 flex h-8 w-5 -translate-y-1/2 items-center justify-center rounded-r border border-l-0 border-slate-200 bg-white text-slate-300 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
-			title="Add {addNextLabel}"
-			aria-label="Add {addNextLabel}"
-			onclick={onaddnext}
-		>
-			<Icon name="plus" />
-		</button>
-	{/if}
 
-	<!--
-		Summer hangs off the bottom rather than the right, because the right edge already leads to
-		the next autumn. A spring term is the only one with two possible successors, and this is
-		the one that is usually not wanted — so it asks quietly, from its own edge.
+		Spring is the only term with two possible successors — the next autumn, and the summer
+		between — so it shows both, stacked. Each carries the season it opens rather than a bare
+		plus, which is what tells them apart at this size.
 	-->
-	{#if onaddsummer}
-		<button
-			type="button"
-			class="no-print absolute -bottom-2.5 left-1/2 z-10 flex h-5 -translate-x-1/2 items-center gap-1 rounded-b border border-t-0 border-slate-200 bg-white px-1.5 text-[10px] text-slate-300 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
-			title="Add {addSummerLabel}"
-			aria-label="Add {addSummerLabel}"
-			onclick={onaddsummer}
-		>
-			<Icon name="sun" class="h-3 w-3" />summer
-		</button>
+	{#if onaddnext || onaddsummer}
+		<div class="no-print absolute top-1/2 -right-2.5 z-10 flex -translate-y-1/2 flex-col gap-1">
+			{#if onaddnext}
+				<button
+					type="button"
+					class="flex h-8 w-5 items-center justify-center rounded-r border border-l-0 border-slate-200 bg-white text-slate-400 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+					title="Add {addNextLabel}"
+					aria-label="Add {addNextLabel}"
+					onclick={onaddnext}
+				>
+					<Icon name={TERM_ICON[addNextTerm ?? 'fall']} class="h-3.5 w-3.5" />
+				</button>
+			{/if}
+			{#if onaddsummer}
+				<button
+					type="button"
+					class="flex h-8 w-5 items-center justify-center rounded-r border border-l-0 border-slate-200 bg-white text-slate-400 shadow-sm transition-colors hover:border-amber-300 hover:bg-amber-50 hover:text-amber-600"
+					title="Add {addSummerLabel}"
+					aria-label="Add {addSummerLabel}"
+					onclick={onaddsummer}
+				>
+					<Icon name="sun" class="h-3.5 w-3.5" />
+				</button>
+			{/if}
+		</div>
 	{/if}
 </div>
