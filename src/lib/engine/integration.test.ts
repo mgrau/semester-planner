@@ -51,9 +51,11 @@ describe('catalog data', () => {
 		expect(astro.requirements.length).toBeGreaterThan(0);
 	});
 
-	it('records that the major covers Mathematics and Nature of Science', () => {
-		expect(astro.categoriesSatisfiedByMajor).toContain('math');
-		expect(astro.categoriesSatisfiedByMajor).toContain('nature');
+	it('names the courses that cover Mathematics rather than waiving it outright', () => {
+		// The page says "Mathematics: satisfied by the major" without naming a course. Applied
+		// literally that marks it satisfied before the student has taken anything.
+		expect(astro.categoriesSatisfiedByMajor).toEqual([]);
+		expect(astro.courseDoubleCounts).toContainEqual({ course: 'MATH 211', satisfies: 'math' });
 	});
 });
 

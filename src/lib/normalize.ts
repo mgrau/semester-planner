@@ -27,7 +27,11 @@ function isRollup(r: Requirement): boolean {
 	return /^complete-(lower|upper)-division-requirements/.test(r.id);
 }
 
-export function normalizeProgram(raw: Program): NormalizedProgram {
+export function normalizeProgram(
+	raw: Program,
+	/** Category -> the courses that actually satisfy it; see data/local/preferences.yaml. */
+	majorSatisfies: Record<string, string[]> = {}
+): NormalizedProgram {
 	const categoriesSatisfiedByMajor: string[] = [];
 	const courseDoubleCounts: { course: string; satisfies: string }[] = [];
 
@@ -36,8 +40,21 @@ export function normalizeProgram(raw: Program): NormalizedProgram {
 		: never)[]) {
 		const entry = dc as { course?: string; satisfies?: string };
 		if (!entry.satisfies) continue; // satisfies_requirement entries are program-internal notes
-		if (entry.course) courseDoubleCounts.push({ course: entry.course, satisfies: entry.satisfies });
-		else categoriesSatisfiedByMajor.push(entry.satisfies);
+		if (entry.course) {
+			courseDoubleCounts.push({ course: entry.course, satisfies: entry.satisfies });
+			continue;
+		}
+
+		// "Satisfied by the major" with no course named. Where we know which courses do it, say
+		// so, and the category then tracks the plan instead of being satisfied from the start.
+		const named = majorSatisfies[entry.satisfies];
+		if (named === undefined) {
+			categoriesSatisfiedByMajor.push(entry.satisfies);
+		} else {
+			for (const course of named) {
+				courseDoubleCounts.push({ course, satisfies: entry.satisfies });
+			}
+		}
 	}
 
 	const untrackable: { name: string; notes?: string }[] = [];

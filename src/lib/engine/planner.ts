@@ -234,6 +234,12 @@ function genEdSlots(
 	for (const cat of categories) {
 		if (satisfiedCats.has(cat.id) || !cat.credits) continue;
 
+		// Never reserve a slot that cannot be filled. "Upper-Division Studies Outside the Major"
+		// is a choice between a minor, a certification programme and six hours of outside
+		// coursework — the catalog lists no approved courses for it, so a placeholder would be a
+		// dead square in the plan. It still shows as outstanding in the requirement panel.
+		if (!cat.approved?.length && !cat.filter) continue;
+
 		const approved = new Set(cat.approved ?? []);
 		/**
 		 * Does this course land in the category? Includes rule-based categories — Writing

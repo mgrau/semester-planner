@@ -8,6 +8,7 @@
 		shortTermLabel
 	} from '$lib/stores/roster.svelte';
 	import { validatePlan, sortSemesters, termLabel, nextTerm, termOrdinal } from '$lib/engine/validate';
+	import { evaluate } from '$lib/engine/expr';
 	import { generatePlan } from '$lib/engine/planner';
 	import {
 		genEdProgress,
@@ -113,7 +114,8 @@
 
 	// --- UI state -----------------------------------------------------------
 	let pickerOpen = $state(false);
-	let pickerTarget = $state<{ semesterId: string; replaceCode?: string } | null>(null);
+	/** A null semester means "put it in the first term that can take it". */
+	let pickerTarget = $state<{ semesterId: string | null; replaceCode?: string } | null>(null);
 	let pickerPool = $state<string[] | undefined>(undefined);
 	let pickerTitle = $state('Add a course');
 	/** Mobile-only disclosure; the pane is always shown at desktop width. */
@@ -198,9 +200,51 @@
 		pickerOpen = true;
 	}
 
+	/**
+	 * The earliest term that can actually take this course: prerequisites met by the terms
+	 * before it, offered that term, and room under the credit cap. Falls back to the last term
+	 * so a pick is never silently dropped.
+	 */
+	function firstAvailableSemester(course: Course): string | null {
+		if (!student) return null;
+		const terms = sortSemesters(student.semesters);
+		if (!terms.length) return null;
+
+		const done = new Set<string>(student.placements ?? []);
+		for (const p of student.priorCredits) if (p.course) done.add(p.course);
+
+		const need = creditsOf(course);
+		for (const sem of terms) {
+			const load = sem.courses.reduce((n, c) => n + c.credits, 0);
+			const cap =
+				sem.term === 'summer' ? student.settings.summerMaxCredits : student.settings.maxCreditsPerTerm;
+			const offered = !course.terms || course.terms.includes(sem.term);
+
+			if (offered && load + need <= cap && evaluate(course.prereq, { completed: done }).satisfied) {
+				return sem.id;
+			}
+			for (const c of sem.courses) if (!c.placeholder) done.add(c.code);
+		}
+		return terms[terms.length - 1].id;
+	}
+
+	/** Open the picker from a requirement rather than from a term. */
+	function openRequirementPicker(requirementId: string) {
+		const item =
+			majorProgress.find((p) => p.id === requirementId) ??
+			genedProgress.find((p) => p.id === requirementId);
+		if (!item?.options?.length) return;
+		pickerTarget = { semesterId: null };
+		pickerPool = item.options;
+		pickerTitle = `Choose a course for ${item.name}`;
+		pickerOpen = true;
+	}
+
 	function pickCourse(course: Course) {
 		if (!pickerTarget) return;
-		const { semesterId, replaceCode } = pickerTarget;
+		const { replaceCode } = pickerTarget;
+		const semesterId = pickerTarget.semesterId ?? firstAvailableSemester(course);
+		if (!semesterId) return;
 		roster.update((s) => {
 			const sem = s.semesters.find((x) => x.id === semesterId);
 			if (!sem) return;
@@ -893,7 +937,13 @@
 			>
 				{#if student && program}
 					<div class="order-2 min-w-0 lg:order-none lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
-						<RequirementsPanel title="Major requirements" items={majorProgress} fill collapsible>
+						<RequirementsPanel
+							title="Major requirements"
+							items={majorProgress}
+							onpick={openRequirementPicker}
+							fill
+							collapsible
+						>
 							{#snippet subtitle()}
 								<MajorSelect
 									value={student.programId}
@@ -903,7 +953,13 @@
 						</RequirementsPanel>
 					</div>
 					<div class="order-3 min-w-0 lg:order-none lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
-						<RequirementsPanel title="General education" items={genedProgress} fill collapsible />
+						<RequirementsPanel
+							title="General education"
+							items={genedProgress}
+							onpick={openRequirementPicker}
+							fill
+							collapsible
+						/>
 					</div>
 				{/if}
 			</aside>

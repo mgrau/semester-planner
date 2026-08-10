@@ -43,6 +43,22 @@ category_filters:
       Satisfied by any Writing Intensive (W) course. The catalog additionally requires it be
       taken in the major, with a grade of C or better — verify that when choosing the course.
 
+  # The catalog gives four options rather than one number: A and B are 12-hour minors, C is an
+  # approved certification programme, D is six hours of upper-division work. Six is the floor,
+  # so that is what the panel asks for.
+  #
+  # No filter, deliberately. Option D requires work "from outside of and not required by the
+  # student's major *and college*", which for a physics major rules out the mathematics courses
+  # the plan already contains — they are in the same college. Deciding whether a given course
+  # counts needs judgement the app does not have, so mark this satisfied by hand.
+  upper-division-outside-major:
+    credits: 6
+    note: >-
+      Met by a minor or second major (Option A), an interdisciplinary minor (Option B), an
+      approved certification programme such as teaching licensure (Option C), or six hours of
+      upper-division work outside the major and college (Option D). Not tracked automatically —
+      mark it satisfied once the route is settled.
+
 # What an incoming student already brings, offered as checkboxes when creating one.
 #
 # These are the entry conditions the catalog assumes but does not record as ODU credit — a
@@ -181,6 +197,19 @@ term_offerings:
   # The upper-division electives (PHYS 411, 415, 416, 417) run sporadically rather than on a
   # fixed rotation, so no term can be recorded truthfully. Leaving them unconstrained lets the
   # planner place them anywhere; confirm availability with the department before registration.
+
+# Which courses actually satisfy a category the program says is "satisfied by the major".
+#
+# The physics pages state that in prose without naming a course. Applied literally it marks the
+# category satisfied before the student has taken anything, which is wrong — the category is
+# satisfied *by completing the major*, not by declaring one. Naming the courses lets the
+# requirement track the plan.
+#
+# An empty list means no waiver is needed at all: the major's own courses are already on that
+# category's approved list, so the ordinary gen-ed accounting covers it.
+major_satisfies_gened:
+  math: [MATH 211] # calculus is not on the gen-ed mathematics list, so it has to be named
+  nature: [] # PHYS 261N/262N and CHEM 121N/122N are already approved for Nature of Science
 
 # What a transfer associate degree waives.
 #

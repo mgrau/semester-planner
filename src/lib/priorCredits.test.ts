@@ -6,7 +6,7 @@ import {
 	preparationToRecords,
 	startingPreparation
 } from './catalog';
-import { satisfiedCategoriesFrom } from './engine/requirements';
+import { genEdProgress, satisfiedCategoriesFrom, takenFrom } from './engine/requirements';
 import type { PriorCredit } from './types';
 
 const view = (p: PriorCredit) => describePriorCredit(p, catalog.genEd, catalog.courses);
@@ -145,5 +145,48 @@ describe('transfer associate degree', () => {
 		expect(v.name).toBe('Associate degree (transfer)');
 		expect(v.detail).toBe('11 general education categories waived');
 		expect(v.credits).toBe('');
+	});
+})
+
+describe('categories that depend on the plan, not the declaration', () => {
+	const astro = catalog.programs.get('physics-astrophysics-bs')!;
+
+	const gened = (planned: { code: string; credits: number }[]) =>
+		genEdProgress(
+			catalog.genEd,
+			takenFrom([], planned),
+			catalog.courses,
+			new Set(astro.categoriesSatisfiedByMajor),
+			astro.courseDoubleCounts
+		);
+
+	it('leaves Mathematics and Nature of Science unmet on an empty schedule', () => {
+		// "Satisfied by the major" means satisfied by completing it, not by declaring it.
+		const p = gened([]);
+		expect(p.find((x) => x.id === 'math')?.satisfied).toBe(false);
+		expect(p.find((x) => x.id === 'nature')?.satisfied).toBe(false);
+	});
+
+	it('satisfies Mathematics once calculus is in the plan', () => {
+		// MATH 211 is not on the gen-ed mathematics list, so it has to be named as a double count.
+		const p = gened([{ code: 'MATH 211', credits: 4 }]);
+		expect(p.find((x) => x.id === 'math')?.satisfied).toBe(true);
+	});
+
+	it('satisfies Nature of Science from the approved list, with no waiver needed', () => {
+		expect(astro.categoriesSatisfiedByMajor).toEqual([]);
+		const p = gened([
+			{ code: 'PHYS 261N', credits: 4 },
+			{ code: 'PHYS 262N', credits: 4 }
+		]);
+		expect(p.find((x) => x.id === 'nature')?.satisfied).toBe(true);
+	});
+
+	it('asks for six credits of upper-division study outside the major', () => {
+		// The catalog gives four options; six is the floor (Option D).
+		const cat = catalog.genEd.find((c) => c.id === 'upper-division-outside-major')!;
+		expect(cat.credits).toBe(6);
+		// No filter: whether a course counts needs judgement the app does not have.
+		expect(cat.filter).toBeUndefined();
 	});
 })

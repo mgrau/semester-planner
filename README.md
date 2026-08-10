@@ -12,7 +12,7 @@ localStorage and travel as YAML files.
 ```sh
 npm install
 npm run dev          # http://localhost:5173
-npm test             # 159 tests, incl. end-to-end against the real catalog
+npm test             # 163 tests, incl. end-to-end against the real catalog
 npm run build        # static site in build/
 ```
 
@@ -172,6 +172,12 @@ it. Three things live there:
 - **`earliest_year`** — the year of study a course may first be scheduled in. The catalog asks
   only for ENGL 211C before Senior Thesis, so nothing but class standing keeps PHYS 489W out of
   the sophomore year; this puts the thesis sequence in terms 7 and 8 where it belongs.
+- **`major_satisfies_gened`** — which courses actually satisfy a category the program calls
+  "satisfied by the major". The physics pages say that in prose without naming a course, and
+  applied literally it marked Mathematics and Nature of Science satisfied before the student had
+  taken anything. Mathematics names MATH 211 (calculus is not on the gen-ed mathematics list);
+  Nature of Science names nothing, because PHYS 261N/262N and CHEM 121N/122N are already on its
+  approved list and the ordinary accounting covers it.
 - **`major_view`** — how the major requirements are grouped for the advisor. The catalog gives a
   flat wall of ~26 rows; this regroups the *same* courses into Physics 1 & 2 (with the preferred
   261N/262N sequence first), Physics 300-level, Physics 400-level, and then everything else under

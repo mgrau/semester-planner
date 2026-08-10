@@ -32,7 +32,7 @@ interface GenEdDoc {
 interface PreferencesDoc {
 	prefer?: string[];
 	avoid?: string[];
-	category_filters?: Record<string, RequirementFilter & { note?: string }>;
+	category_filters?: Record<string, RequirementFilter & { note?: string; credits?: number }>;
 	major_view?: MajorView;
 	program_labels?: Record<string, string>;
 	requirement_labels?: Record<string, string>;
@@ -42,6 +42,7 @@ interface PreferencesDoc {
 	discontinued?: string[];
 	taken_together?: string[][];
 	associate_degree?: { label?: string; excludes?: string[] };
+	major_satisfies_gened?: Record<string, string[]>;
 }
 
 /** A checkbox offered when creating a student: what they already bring with them. */
@@ -187,10 +188,13 @@ function applyCategoryFilters(categories: GenEdCategory[]): GenEdCategory[] {
 	return categories.map((c) => {
 		const f = filters[c.id];
 		if (!f) return c;
-		const { note, ...filter } = f;
+		const { note, credits, ...filter } = f;
 		return {
 			...c,
-			filter,
+			// A filter is optional: some entries only pin down the credit count, for a category
+			// the catalog states as a choice of options rather than a single number.
+			...(Object.keys(filter).length ? { filter } : {}),
+			...(credits != null ? { credits } : {}),
 			notes: [c.notes, note].filter(Boolean).join('\n\n')
 		};
 	});
@@ -260,7 +264,7 @@ function buildCourseIndex(courses: Course[]): Map<string, Course> {
 const programs = new Map<string, NormalizedProgram>();
 for (const mod of Object.values(programDocs)) {
 	const p = (mod as { default: { program: Program } }).default?.program;
-	if (p?.id) programs.set(p.id, normalizeProgram(p));
+	if (p?.id) programs.set(p.id, normalizeProgram(p, preferences.major_satisfies_gened ?? {}));
 }
 
 export const allCourses: Course[] = applyLocalOverrides(coursesData.courses ?? []);
