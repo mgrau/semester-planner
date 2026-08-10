@@ -28,6 +28,7 @@
 	import MajorSelect from '$lib/components/MajorSelect.svelte';
 	import StudentEditor from '$lib/components/StudentEditor.svelte';
 	import CourseActions from '$lib/components/CourseActions.svelte';
+	import HelpDialog from '$lib/components/HelpDialog.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import type { IconName } from '$lib/components/Icon.svelte';
 	import {
@@ -120,6 +121,7 @@
 	/** Course whose action sheet is open — the touch route to move/lock/remove. */
 	let actionTarget = $state<{ course: PlannedCourse; semesterId: string } | null>(null);
 	let showPicker = $state(false);
+	let showHelp = $state(false);
 	/** The student open in the edit dialog, from either the left pane or the roster list. */
 	let editing = $state<Student | null>(null);
 	let planNotes = $state<string[]>([]);
@@ -521,6 +523,15 @@
 					</span>
 				{/if}
 			{/if}
+
+			<!-- Desktop only; on a phone the header has no room and this lives in the footer. -->
+			<button
+				type="button"
+				class="hidden shrink-0 rounded p-1 text-white/60 hover:bg-white/10 hover:text-white sm:block"
+				title="How this works"
+				aria-label="How this works"
+				onclick={() => (showHelp = true)}><Icon name="help" class="h-4 w-4" /></button
+			>
 		</div>
 	</header>
 
@@ -898,7 +909,24 @@
 			</aside>
 		</div>
 	{/if}
+	<!-- The phone counterpart to the header's help button, where there was no room for it. -->
+	<footer class="no-print flex items-center justify-center gap-4 px-4 py-6 sm:hidden">
+		<button
+			type="button"
+			class="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-blue-700"
+			onclick={() => (showHelp = true)}><Icon name="help" />How this works</button
+		>
+		<a
+			href="https://github.com/mgrau/semester-planner"
+			target="_blank"
+			rel="noreferrer"
+			class="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-blue-700"
+			><Icon name="switch" />GitHub</a
+		>
+	</footer>
 </div>
+
+<HelpDialog open={showHelp} onclose={() => (showHelp = false)} />
 
 <StudentPicker
 	open={showPicker || !student}

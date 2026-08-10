@@ -39,6 +39,10 @@ then. Everywhere outside that list, students are shown as *First Last*.
 Catalog policy prose is kept out of the requirement rows; a **more** button opens a popover with
 the full wording and the approved-course list.
 
+A **?** at the far right of the header opens a short guide — what the colours mean, why some
+slots have no course in them, what to verify yourself — and links to this repository. On a phone
+the header has no room for it, so it sits in a footer instead.
+
 ## On a phone
 
 Below `lg` the three columns become one, ordered **plan → requirements → notes → student**,
