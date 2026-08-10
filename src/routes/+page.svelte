@@ -406,7 +406,8 @@
 	/** Save any student's full record, re-importable into this app. */
 	function exportStudentFile(target: Student | null = student) {
 		if (!target) return;
-		download(`${slugify(fullName(target))}-student.yaml`, studentToYaml(target), 'text/yaml');
+		// Same name the print page gives the PDF, so a student's plan files sit together.
+		download(`ODU Semester Plan - ${fullName(target)}.yaml`, studentToYaml(target), 'text/yaml');
 	}
 	function exportTsv() {
 		if (!student) return;
