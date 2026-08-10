@@ -279,6 +279,8 @@ requirement_labels:
   phys-120-or: Seminar
   approved-physics-seminar: Seminar
 
+  physics-astrophysics-bs:astrophysics-select: Advanced Mathematics
+  physics-astrophysics-bs:astrophysics-select-2: Introductory Astronomy
   physics-astrophysics-bs:astrophysics-select-3: Electives
   physics-bs:physics-major-select-2: Electives
   physics-professional-bs:physics-professional-major-select-3: Electives

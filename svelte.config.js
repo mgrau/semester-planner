@@ -10,7 +10,10 @@ const config = {
 		prerender: { entries: [] },
 		// A GitHub project page is served from /<repo>/, so the app has to know its prefix.
 		// Set by the deploy workflow; empty for local dev and for a user/organisation site.
-		paths: { base: process.env.BASE_PATH ?? '' }
+		paths: { base: process.env.BASE_PATH ?? '' },
+		// Stamped into the bundle so a long-open tab can tell how old its code is and reload
+		// itself once a newer build exists. See src/lib/selfUpdate.ts.
+		version: { name: new Date().toISOString(), pollInterval: 0 }
 	}
 };
 

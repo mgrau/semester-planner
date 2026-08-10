@@ -7,6 +7,7 @@ import type {
 	Requirement,
 	RequirementFilter
 } from '$lib/types';
+import { countsAs } from '$lib/catalog';
 
 /**
  * Requirement satisfaction, including ODU's double-counting behavior.
@@ -46,6 +47,16 @@ export interface Progress {
 export interface TakenCourse {
 	code: string;
 	credits: number;
+	/**
+	 * Other catalog codes this one may be counted against — an honors section standing in for the
+	 * plain course a requirement names. Always includes `code` itself.
+	 */
+	counts?: string[];
+}
+
+/** Every code a held course can be matched against, the course's own first. */
+function codesOf(t: TakenCourse): string[] {
+	return t.counts ?? [t.code];
 }
 
 export function creditsOf(course: Course | undefined, fallback = 3): number {
@@ -123,9 +134,11 @@ function assignTrack(
 	for (const r of reqs) {
 		const p = progress.get(r.id)!;
 		for (const code of r.all_of ?? []) {
-			const t = taken.find((t) => t.code === code);
+			const t = taken.find((x) => codesOf(x).includes(code));
 			if (t) {
-				p.assigned.push(code);
+				// Record what the student actually took, which may be the honors section rather
+				// than the course the requirement names.
+				p.assigned.push(t.code);
 				p.earnedCredits += t.credits;
 				p.missing = p.missing.filter((m) => m !== code);
 			}
@@ -139,7 +152,10 @@ function assignTrack(
 	const poolReqs = reqs.filter((r) => r.one_of || r.filter);
 	const fitCount = new Map<string, number>();
 	for (const t of remaining) {
-		fitCount.set(t.code, poolReqs.filter((r) => eligible(r, t.code, courses)).length);
+		fitCount.set(
+			t.code,
+			poolReqs.filter((r) => codesOf(t).some((c) => eligible(r, c, courses))).length
+		);
 	}
 	const ordered = [...remaining].sort(
 		(a, b) => (fitCount.get(a.code) ?? 0) - (fitCount.get(b.code) ?? 0)
@@ -149,7 +165,7 @@ function assignTrack(
 		if (!fitCount.get(t.code)) continue;
 		// Prefer the requirement with the largest unmet gap, so nothing starves.
 		const candidates = poolReqs
-			.filter((r) => eligible(r, t.code, courses))
+			.filter((r) => codesOf(t).some((c) => eligible(r, c, courses)))
 			.map((r) => progress.get(r.id)!)
 			.filter((p) => p.earnedCredits < p.requiredCredits)
 			.sort((a, b) => b.requiredCredits - b.earnedCredits - (a.requiredCredits - a.earnedCredits));
@@ -232,12 +248,19 @@ export function takenFrom(
 	priorCredits: PriorCredit[],
 	planned: { code: string; credits: number }[]
 ): TakenCourse[] {
+	// `counts` is left off unless the course actually stands in for another, so an ordinary
+	// record stays the plain { code, credits } pair.
+	const entry = (code: string, credits: number): TakenCourse => {
+		const counts = countsAs(code);
+		return counts.length > 1 ? { code, credits, counts } : { code, credits };
+	};
+
 	const out = new Map<string, TakenCourse>();
 	for (const p of priorCredits) {
-		if (p.kind === 'course' && p.course) out.set(p.course, { code: p.course, credits: p.credits });
+		if (p.kind === 'course' && p.course) out.set(p.course, entry(p.course, p.credits));
 	}
 	for (const c of planned) {
-		if (!out.has(c.code)) out.set(c.code, { code: c.code, credits: c.credits });
+		if (!out.has(c.code)) out.set(c.code, entry(c.code, c.credits));
 	}
 	return [...out.values()];
 }

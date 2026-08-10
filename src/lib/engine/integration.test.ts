@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { catalog, classStanding, programList } from '$lib/catalog';
+import { catalog, classStanding, honorsEquivalents, majorView, programList } from '$lib/catalog';
 import { generatePlan } from './planner';
 import { validatePlan } from './validate';
 import { describe as describeExpr } from './expr';
 import { DEFAULT_SETTINGS } from '$lib/stores/roster.svelte';
 import { genEdProgress, programProgress, satisfiedCategoriesFrom, takenFrom } from './requirements';
+import { majorViewProgress } from './majorView';
 import type { Student } from '$lib/types';
 
 /**
@@ -446,5 +447,54 @@ describe('CHEM 121N parses to what the catalog actually says', () => {
 			(c) => catalog.courses.get(c)?.needs_review
 		);
 		expect(flagged).toEqual([]);
+	});
+});
+
+describe('honors sections stand in for the course a requirement names', () => {
+	/** ODU numbers honors sections separately: PHYS 226N is honors PHYS 231N, ASTP 127N is 104N. */
+	const honorsStudent = [
+		{ id: '1', kind: 'course' as const, course: 'PHYS 226N', credits: 4 },
+		{ id: '2', kind: 'course' as const, course: 'PHYS 232N', credits: 4 },
+		{ id: '3', kind: 'course' as const, course: 'ASTP 127N', credits: 4 }
+	];
+
+	it('pairs an honors course with its twin off the catalog titles', () => {
+		expect(honorsEquivalents.get('PHYS 226N')).toBe('PHYS 231N');
+		expect(honorsEquivalents.get('ASTP 127N')).toBe('ASTP 104N');
+		expect(honorsEquivalents.get('ENGL 126C')).toBe('ENGL 110C');
+		// and nothing pairs with itself or reaches across subjects
+		for (const [honors, plain] of honorsEquivalents) {
+			expect(honors).not.toBe(plain);
+			expect(honors.split(' ')[0]).toBe(plain.split(' ')[0]);
+		}
+	});
+
+	it('counts an honors astronomy course toward the introductory astronomy requirement', () => {
+		// ASTP 127N is not on the catalog's list, which names only ASTP 103N and 104N.
+		const taken = takenFrom(honorsStudent, []);
+		const row = programProgress(astro, taken, catalog.courses).find(
+			(p) => p.id === 'astrophysics-select-2'
+		)!;
+		expect(row.satisfied).toBe(true);
+		// and it credits the course the student actually took
+		expect(row.assigned).toContain('ASTP 127N');
+	});
+
+	it('completes Physics 1 & 2 across a mixed honors and regular pair', () => {
+		// A student may take the honors first semester and the regular second; the sequences are
+		// listed as fixed pairs, so this used to read as incomplete.
+		const view = majorViewProgress(astro, takenFrom(honorsStudent, []), catalog, majorView);
+		const intro = view.find((p) => p.id === 'intro-physics')!;
+		expect(intro.satisfied).toBe(true);
+		expect(intro.assigned).toEqual(['PHYS 226N', 'PHYS 232N']);
+	});
+
+	it('does not schedule a course the student already holds the honors version of', () => {
+		const codes = planFor('physics-astrophysics-bs', honorsStudent).semesters.flatMap((s) =>
+			s.courses.map((c) => c.code)
+		);
+		expect(codes).not.toContain('PHYS 231N');
+		expect(codes).not.toContain('ASTP 104N');
+		expect(codes).not.toContain('ASTP 103N');
 	});
 });

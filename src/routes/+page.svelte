@@ -43,6 +43,8 @@
 		slugify
 	} from '$lib/exports';
 	import { buildKindIndex, kindOf, legendFor, KIND_STYLES } from '$lib/courseKind';
+	import { startSelfUpdate } from '$lib/selfUpdate';
+	import { drag } from '$lib/stores/dnd.svelte';
 	import { base } from '$app/paths';
 
 	let student = $derived(roster.selected);
@@ -133,6 +135,14 @@
 	function touch() {
 		roster.update(() => {});
 	}
+
+	// Reload a tab left open long enough to fall behind the deployed build — but not while a
+	// dialog is holding something the advisor has typed and not yet saved.
+	$effect(() =>
+		startSelfUpdate(
+			() => !(pickerOpen || showPicker || showHelp || editing || actionTarget || drag.code)
+		)
+	);
 
 	// --- plan mutations -----------------------------------------------------
 	/**

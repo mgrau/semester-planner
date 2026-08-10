@@ -262,6 +262,34 @@ function applyLocalOverrides(courses: Course[]): Course[] {
 	});
 }
 
+/**
+ * Honors sections are separate courses at ODU — ENGL 126C is the honors ENGL 110C, PHYS 226N the
+ * honors PHYS 231N — and a requirement usually names only the plain one. A student who took the
+ * honors version has met it, so the honors course stands in for its twin wherever one is named.
+ *
+ * The pairing is read off the catalog rather than listed by hand: an honors course carries the
+ * same title as its twin behind an "Honors:" prefix, in the same subject. That covers the whole
+ * catalog, and stays right as courses come and go.
+ *
+ * One-directional on purpose. Honors covers the plain requirement; the reverse is not true.
+ */
+function buildHonorsEquivalents(courses: Course[]): Map<string, string> {
+	const plainByTitle = new Map<string, string>();
+	for (const c of courses) {
+		if (/^Honors:/i.test(c.title)) continue;
+		plainByTitle.set(`${c.subject}\u0000${c.title.trim()}`, c.code);
+	}
+
+	const out = new Map<string, string>();
+	for (const c of courses) {
+		const m = /^Honors:\s*(.+)$/i.exec(c.title.trim());
+		if (!m) continue;
+		const twin = plainByTitle.get(`${c.subject}\u0000${m[1].trim()}`);
+		if (twin && twin !== c.code) out.set(c.code, twin);
+	}
+	return out;
+}
+
 function buildCourseIndex(courses: Course[]): Map<string, Course> {
 	const map = new Map<string, Course>();
 	for (const c of courses) {
@@ -294,6 +322,18 @@ export const programList: NormalizedProgram[] = [...programs.values()].sort((a, 
 );
 
 export const genEdById = new Map<string, GenEdCategory>(catalog.genEd.map((c) => [c.id, c]));
+
+/** Honors course code -> the plain course it stands in for. See buildHonorsEquivalents. */
+export const honorsEquivalents = buildHonorsEquivalents(allCourses);
+
+/**
+ * Every catalog code a held course can be counted against: itself, plus the plain twin if it is
+ * an honors section.
+ */
+export function countsAs(code: string): string[] {
+	const twin = honorsEquivalents.get(code);
+	return twin ? [code, twin] : [code];
+}
 
 /**
  * The categories a transfer associate degree covers.

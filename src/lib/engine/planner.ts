@@ -12,7 +12,13 @@ import type {
 import { coursesIn, evaluate, minimalAdditions, type CreditState } from './expr';
 import { creditsOf, poolOptions, satisfiedCategoriesFrom } from './requirements';
 import { nextTerm, sortSemesters } from './validate';
-import { avoidedCourses, classStanding, earliestYear, preferredCourses } from '$lib/catalog';
+import {
+	avoidedCourses,
+	classStanding,
+	countsAs,
+	earliestYear,
+	preferredCourses
+} from '$lib/catalog';
 
 /**
  * Greedy critical-path planner.
@@ -285,8 +291,12 @@ export function generatePlan(req: PlanRequest): PlanResult {
 	const notes: string[] = [];
 	const unplaced: { code: string; reason: string }[] = [];
 
+	// An honors section counts as the plain course it stands in for, so a prerequisite written
+	// against the plain code is met and the plain course is not scheduled a second time.
 	const held = new Set([
-		...req.priorCredits.filter((p) => p.kind === 'course' && p.course).map((p) => p.course!),
+		...req.priorCredits
+			.filter((p) => p.kind === 'course' && p.course)
+			.flatMap((p) => countsAs(p.course!)),
 		...(req.placements ?? [])
 	]);
 	const grades = new Map(

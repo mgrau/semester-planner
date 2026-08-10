@@ -104,7 +104,20 @@ export function majorViewProgress(
 	const applies = !view?.applies_to || view.applies_to.includes(program.id);
 	if (!applies || !groups.length) return programProgress(program, taken, catalog.courses);
 
-	const held = new Map(taken.map((t) => [t.code, t.credits]));
+	// Keyed by every code a course counts against, so an honors section satisfies a group that
+	// names the plain course — mixing PHYS 226N with PHYS 232N still completes Physics 1 & 2.
+	const held = new Map<string, number>();
+	/** Group code -> the code the student actually holds, which may be the honors section. */
+	const heldAs = new Map<string, string>();
+	for (const t of taken) {
+		for (const code of t.counts ?? [t.code]) {
+			if (held.has(code)) continue;
+			held.set(code, t.credits);
+			heldAs.set(code, t.code);
+		}
+	}
+	/** Report what the student took, not the code the group happens to name. */
+	const asTaken = (codes: string[]) => codes.map((c) => heldAs.get(c) ?? c);
 	const universe = programUniverse(program);
 	const required = requiredCourses(program);
 	const claimed = new Set<string>();
@@ -133,7 +146,7 @@ export function majorViewProgress(
 				earnedCredits: credits(assigned, catalog),
 				plannedCredits: 0,
 				satisfied: Boolean(complete),
-				assigned,
+				assigned: asTaken(assigned),
 				missing: complete ? [] : preferred.filter((c) => !held.has(c)),
 				options: available.flat(),
 				notes: group.note
@@ -156,7 +169,7 @@ export function majorViewProgress(
 				earnedCredits: credits(have, catalog),
 				plannedCredits: 0,
 				satisfied: have.length === members.length,
-				assigned: have,
+				assigned: asTaken(have),
 				missing: members.filter((c) => !held.has(c)),
 				notes: group.note
 			});
