@@ -12,7 +12,7 @@ localStorage and travel as YAML files.
 ```sh
 npm install
 npm run dev          # http://localhost:5173
-npm test             # 163 tests, incl. end-to-end against the real catalog
+npm test             # 167 tests, incl. end-to-end against the real catalog
 npm run build        # static site in build/
 ```
 
@@ -25,9 +25,14 @@ Below 1024px it reflows to a single column; see **On a phone** below.
   remaining height. The
   student's identity lives in the header; the planner's constraints (credit cap, target years,
   rebuild) live in the Edit dialog, since they are set once and rarely touched.
-- **Centre** — the semester grid, four across so two academic years share a row. With summers
-  showing it drops to three across, one academic year per row. Eight terms fit without
-  scrolling; a longer plan scrolls inside this column.
+- **Centre** — the semester grid, laid out by position rather than by sequence: a term always
+  sits in its own column and a missing one leaves a gap, so reading down a column tells you what
+  every autumn looks like. Four across without summers (Fall, Spring, Fall, Spring — two academic
+  years to a row), three across with them (Fall, Spring, Summer — one year to a row). A phone
+  gets the terms in order with no empty columns to scroll past.
+
+  A **+** tab sits on the right edge of any term whose successor is missing, so adding a term
+  happens at the seam it will fill. There is no global "add term" button.
 - **Right** — the requirement checker: major requirements above (named with the student's major,
   with a pencil to change it), general education below.
 

@@ -10,21 +10,17 @@ const sem = (term: Term, year: number): Semester => ({
 });
 
 /**
- * The rule "+ Term" follows, extracted so it can be checked without a component: add the
- * earliest missing term, and only extend past the end once the sequence is unbroken.
+ * The rule behind the add tab on a term's edge: a tab appears exactly when the term that
+ * follows is missing from the plan. Extracted here so it can be checked without a component.
  */
-function nextToAdd(semesters: Semester[], includeSummers: boolean): string | null {
-	const sorted = sortSemesters(semesters);
-	if (!sorted.length) return null;
-	const have = new Set(sorted.map((x) => x.id));
-	const last = sorted[sorted.length - 1];
-	let cur = { term: sorted[0].term, year: sorted[0].year };
-	while (termOrdinal(cur) <= termOrdinal(last)) {
-		if (!have.has(`${cur.term}-${cur.year}`)) return `${cur.term}-${cur.year}`;
-		cur = nextTerm(cur.term, cur.year, includeSummers);
-	}
-	return have.has(`${cur.term}-${cur.year}`) ? null : `${cur.term}-${cur.year}`;
+function needsAddTab(semesters: Semester[], sem: Semester, includeSummers: boolean): string | null {
+	const next = nextTerm(sem.term, sem.year, includeSummers);
+	const id = `${next.term}-${next.year}`;
+	return semesters.some((s) => s.id === id) ? null : id;
 }
+
+/** Which slot a term occupies: its academic year runs Fall Y → Summer Y+1. */
+const academicYear = (s: { term: Term; year: number }) => (s.term === 'fall' ? s.year : s.year - 1);
 
 describe('term arithmetic', () => {
 	it('runs fall to spring of the next calendar year', () => {
@@ -36,6 +32,10 @@ describe('term arithmetic', () => {
 		expect(nextTerm('spring', 2027, true)).toEqual({ term: 'summer', year: 2027 });
 	});
 
+	it('runs summer back to the autumn of the same calendar year', () => {
+		expect(nextTerm('summer', 2027, true)).toEqual({ term: 'fall', year: 2027 });
+	});
+
 	it('orders spring before summer before fall within a year', () => {
 		const o = (t: Term, y: number) => termOrdinal({ term: t, year: y });
 		expect(o('spring', 2027)).toBeLessThan(o('summer', 2027));
@@ -44,42 +44,61 @@ describe('term arithmetic', () => {
 	});
 });
 
-describe('+ Term fills the earliest gap', () => {
-	it('adds the missing middle term rather than extending the end', () => {
+describe('the add tab appears at every seam', () => {
+	it('offers the missing middle term, not just the end', () => {
 		// Fall 2026 and Fall 2027 with no Spring 2027 between them.
-		expect(nextToAdd([sem('fall', 2026), sem('fall', 2027)], false)).toBe('spring-2027');
-	});
-
-	it('extends past the end when the sequence is unbroken', () => {
-		expect(nextToAdd([sem('fall', 2026), sem('spring', 2027)], false)).toBe('fall-2027');
-	});
-
-	it('never offers a summer when summers are off', () => {
 		const plan = [sem('fall', 2026), sem('fall', 2027)];
-		for (let i = 0; i < 6; i++) {
-			const next = nextToAdd(plan, false);
-			if (!next) break;
-			expect(next, 'summer offered with summers off').not.toContain('summer');
-			const [term, year] = next.split('-');
-			plan.push(sem(term as Term, Number(year)));
+		expect(needsAddTab(plan, plan[0], false)).toBe('spring-2027');
+	});
+
+	it('offers nothing when the next term is already there', () => {
+		const plan = [sem('fall', 2026), sem('spring', 2027)];
+		expect(needsAddTab(plan, plan[0], false)).toBeNull();
+	});
+
+	it('always offers something on the last term, so a plan can grow', () => {
+		const plan = [sem('fall', 2026), sem('spring', 2027)];
+		expect(needsAddTab(plan, plan[1], false)).toBe('fall-2027');
+	});
+
+	it('never offers a summer while summers are off', () => {
+		const plan = [sem('fall', 2026), sem('spring', 2027), sem('fall', 2027)];
+		for (const s of plan) {
+			const next = needsAddTab(plan, s, false);
+			if (next) expect(next).not.toContain('summer');
 		}
 	});
 
-	it('offers the summer gap when summers are on', () => {
-		expect(nextToAdd([sem('fall', 2026), sem('spring', 2027), sem('fall', 2027)], true)).toBe(
-			'summer-2027'
-		);
+	it('offers the summer seam once summers are on', () => {
+		const plan = [sem('fall', 2026), sem('spring', 2027), sem('fall', 2027)];
+		expect(needsAddTab(plan, plan[1], true)).toBe('summer-2027');
 	});
 
-	it('fills several gaps one call at a time, earliest first', () => {
+	it('marks every gap at once rather than one per click', () => {
+		// Three autumns and no springs: all three tabs are live together.
 		const plan = [sem('fall', 2026), sem('fall', 2027), sem('fall', 2028)];
-		const added: string[] = [];
-		for (let i = 0; i < 2; i++) {
-			const next = nextToAdd(plan, false)!;
-			added.push(next);
-			const [term, year] = next.split('-');
-			plan.push(sem(term as Term, Number(year)));
-		}
-		expect(added).toEqual(['spring-2027', 'spring-2028']);
+		expect(plan.map((s) => needsAddTab(plan, s, false))).toEqual([
+			'spring-2027',
+			'spring-2028',
+			'spring-2029'
+		]);
+	});
+});
+
+describe('terms sit in their own column', () => {
+	it('groups an academic year from autumn through the following summer', () => {
+		expect(academicYear(sem('fall', 2026))).toBe(2026);
+		expect(academicYear(sem('spring', 2027))).toBe(2026);
+		expect(academicYear(sem('summer', 2027))).toBe(2026);
+		expect(academicYear(sem('fall', 2027))).toBe(2027);
+	});
+
+	it('keeps chronological order within a year for the layout to read', () => {
+		const plan = sortSemesters([
+			sem('summer', 2027),
+			sem('fall', 2026),
+			sem('spring', 2027)
+		]);
+		expect(plan.map((s) => s.id)).toEqual(['fall-2026', 'spring-2027', 'summer-2027']);
 	});
 });

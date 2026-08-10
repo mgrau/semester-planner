@@ -265,40 +265,6 @@
 		pickerTarget = null;
 	}
 
-	/**
-	 * Add the earliest term the plan is missing, rather than always appending to the end.
-	 *
-	 * A plan with Fall 2026 and Fall 2027 but no Spring 2027 has a hole in the middle, and that
-	 * hole is what an advisor is trying to fill. Only once the sequence is unbroken does this
-	 * extend past the last term. Summer is skipped entirely unless the plan includes summers.
-	 */
-	function addSemester() {
-		roster.update((s) => {
-			const sorted = sortSemesters(s.semesters);
-			const add = (t: { term: Term; year: number }) =>
-				s.semesters.push({ id: `${t.term}-${t.year}`, term: t.term, year: t.year, courses: [] });
-
-			if (!sorted.length) {
-				add({ term: s.startTerm, year: s.startYear });
-				return;
-			}
-
-			const have = new Set(sorted.map((x) => x.id));
-			const last = sorted[sorted.length - 1];
-			let cur = { term: sorted[0].term, year: sorted[0].year };
-
-			while (termOrdinal(cur) <= termOrdinal(last)) {
-				if (!have.has(`${cur.term}-${cur.year}`)) {
-					add(cur);
-					return;
-				}
-				cur = nextTerm(cur.term, cur.year, s.settings.includeSummers);
-			}
-
-			// No gaps: carry on past the end.
-			if (!have.has(`${cur.term}-${cur.year}`)) add(cur);
-		});
-	}
 
 	/**
 	 * Summers are added and removed, not merely shown and hidden — a toggle that revealed
@@ -470,6 +436,63 @@
 	]);
 
 	let sortedSemesters = $derived(student ? sortSemesters(student.semesters) : []);
+
+	/**
+	 * A term's academic year: the one that began the preceding autumn, so Fall 2026,
+	 * Spring 2027 and Summer 2027 belong together.
+	 */
+	const academicYear = (s: { term: Term; year: number }) =>
+		s.term === 'fall' ? s.year : s.year - 1;
+
+	/**
+	 * The plan laid out by position rather than by sequence: a term always sits in its own
+	 * column, and a term the plan does not contain leaves a gap. Reading down a column tells you
+	 * what every autumn looks like, which reading a packed list cannot.
+	 *
+	 * Three columns once any summer is in the plan — one academic year per row. Otherwise four,
+	 * fitting two academic years to a row.
+	 */
+	let planGrid = $derived.by(() => {
+		const terms: Term[] = sortedSemesters.some((s) => s.term === 'summer')
+			? ['fall', 'spring', 'summer']
+			: ['fall', 'spring'];
+		const yearsPerRow = terms.length === 3 ? 1 : 2;
+
+		const bySlot = new Map<string, Semester>();
+		for (const sem of sortedSemesters) bySlot.set(`${academicYear(sem)}:${sem.term}`, sem);
+
+		const years = sortedSemesters.map(academicYear);
+		const rows: (Semester | null)[][] = [];
+		if (years.length) {
+			const first = Math.min(...years);
+			const last = Math.max(...years);
+			for (let y = first; y <= last; y += yearsPerRow) {
+				const row: (Semester | null)[] = [];
+				for (let n = 0; n < yearsPerRow; n++) {
+					for (const t of terms) row.push(bySlot.get(`${y + n}:${t}`) ?? null);
+				}
+				rows.push(row);
+			}
+		}
+		return { rows, columns: terms.length * yearsPerRow };
+	});
+
+	/** The term after this one, when the plan does not already contain it. */
+	function missingNextTerm(sem: Semester): { term: Term; year: number } | null {
+		if (!student) return null;
+		const next = nextTerm(sem.term, sem.year, student.settings.includeSummers);
+		const id = `${next.term}-${next.year}`;
+		return student.semesters.some((x) => x.id === id) ? null : next;
+	}
+
+	function addTerm(t: { term: Term; year: number }) {
+		roster.update((s) => {
+			const id = `${t.term}-${t.year}`;
+			if (!s.semesters.some((x) => x.id === id)) {
+				s.semesters.push({ id, term: t.term, year: t.year, courses: [] });
+			}
+		});
+	}
 </script>
 
 <div class="min-h-screen">
@@ -722,14 +745,6 @@
 								onclick={clearPlan}
 								><Icon name="eraser" /><span class="hidden @min-[30rem]:inline">Clear</span></button
 							>
-							<button
-								type="button"
-								class="inline-flex items-center gap-1.5 rounded border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
-								title="Add a term"
-								aria-label="Add a term"
-								onclick={addSemester}
-								><Icon name="plus" /><span class="hidden @min-[30rem]:inline">Term</span></button
-							>
 							<!-- A toggle rather than a checkbox: it changes the plan on the spot, so it
 							     should read as a control that is currently on, not a form field. -->
 							<button
@@ -744,8 +759,8 @@
 									: 'Show summer terms in the plan'}
 								onclick={() => toggleSummers(!student.settings.includeSummers)}
 							>
-								<!-- Its own icon, not a second plus: beside "+ Term" two plus signs would mean
-								     different things, and at narrow widths the icon is all that is left. -->
+								<!-- Its own icon rather than a plus: at narrow widths the icon is all that is
+								     left, and a plus is what the per-term add tabs use. -->
 								<Icon name="sun" />
 								<span class="hidden @min-[30rem]:inline">Summers</span>
 							</button>
@@ -898,15 +913,9 @@
 						</div>
 					{/if}
 
-					<div class="lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-1">
-						<!-- With summers each row is one academic year, so three across; without them four
-						     keeps two years per row. One column on a phone either way. -->
-						<div
-							class="grid min-w-0 gap-3 {student.settings.includeSummers
-								? 'lg:grid-cols-3'
-								: 'sm:grid-cols-2 xl:grid-cols-4'}"
-						>
-						{#each sortedSemesters as sem (sem.id)}
+					<div class="lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-2">
+						{#snippet termCard(sem: Semester)}
+							{@const next = missingNextTerm(sem)}
 							<SemesterCard
 								semester={sem}
 								{catalog}
@@ -922,9 +931,48 @@
 								ontogglelock={toggleLock}
 								onactivate={openActions}
 								ondelete={deleteSemester}
+								addNextLabel={next ? termLabel(next) : undefined}
+								onaddnext={next ? () => addTerm(next) : undefined}
 							/>
+						{/snippet}
+
+						<!-- A phone gets the terms in order, with no empty columns to scroll past. -->
+						<div class="flex flex-col gap-3 lg:hidden">
+							{#each sortedSemesters as sem (sem.id)}
+								{@render termCard(sem)}
 							{/each}
 						</div>
+
+						<!-- Wider than that, each term keeps its own column so a missing one reads as
+						     the gap it is. -->
+						<div class="hidden lg:block">
+							{#each planGrid.rows as row, i (i)}
+								<div
+									class="mb-3 grid gap-x-5 gap-y-3"
+									style="grid-template-columns: repeat({planGrid.columns}, minmax(0, 1fr))"
+								>
+									{#each row as sem, col (col)}
+										{#if sem}
+											{@render termCard(sem)}
+										{:else}
+											<div></div>
+										{/if}
+									{/each}
+								</div>
+							{/each}
+						</div>
+
+						{#if sortedSemesters.length === 0}
+							<div class="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center">
+								<p class="mb-3 text-sm text-slate-500">This plan has no terms.</p>
+								<button
+									type="button"
+									class="inline-flex items-center gap-1.5 rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+									onclick={() => addTerm({ term: student.startTerm, year: student.startYear })}
+									><Icon name="plus" />Add {startTermLabel(student)}</button
+								>
+							</div>
+						{/if}
 					</div>
 				{/if}
 			</main>

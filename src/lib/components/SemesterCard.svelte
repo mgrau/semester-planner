@@ -21,6 +21,9 @@
 		ontogglelock: (semesterId: string, code: string) => void;
 		onactivate: (semesterId: string, code: string) => void;
 		ondelete: (semesterId: string) => void;
+		/** Set when the term that follows this one is missing from the plan. */
+		addNextLabel?: string;
+		onaddnext?: () => void;
 	}
 
 	let {
@@ -35,7 +38,9 @@
 		onchoose,
 		ontogglelock,
 		onactivate,
-		ondelete
+		ondelete,
+		addNextLabel,
+		onaddnext
 	}: Props = $props();
 
 	/**
@@ -128,7 +133,7 @@
 </script>
 
 <div
-	class="print-page flex min-h-32 min-w-0 flex-col rounded-lg border bg-white shadow-sm transition-colors sm:min-h-56 {showGap
+	class="print-page relative flex min-h-32 min-w-0 flex-col rounded-lg border bg-white shadow-sm transition-colors sm:min-h-56 {showGap
 		? 'border-blue-400 ring-1 ring-blue-300'
 		: 'border-slate-200'}"
 	role="list"
@@ -213,4 +218,21 @@
 	>
 		<span class="inline-flex items-center gap-1"><Icon name="plus" />Add course</span>
 	</button>
+
+	<!--
+		A tab on the edge where the next term would go. It appears only when that term is missing,
+		which puts "add a term" at the seam it would fill rather than in a toolbar that gives no
+		clue where the term will land.
+	-->
+	{#if onaddnext}
+		<button
+			type="button"
+			class="no-print absolute top-1/2 -right-3 z-10 flex h-9 w-6 -translate-y-1/2 items-center justify-center rounded-r-md border border-l-0 border-slate-300 bg-white text-slate-400 shadow-sm hover:bg-blue-50 hover:text-blue-700"
+			title="Add {addNextLabel}"
+			aria-label="Add {addNextLabel}"
+			onclick={onaddnext}
+		>
+			<Icon name="plus" />
+		</button>
+	{/if}
 </div>
