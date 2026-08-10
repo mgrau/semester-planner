@@ -131,12 +131,20 @@
 		return i;
 	}
 
-	/** A season each, so a tab says which term it opens without needing a word. */
+	/** A season each, so a tab says which term it opens at a glance. */
 	const TERM_ICON: Record<Term, IconName> = {
 		fall: 'leaf',
 		spring: 'sprout',
 		summer: 'sun',
 		winter: 'circle'
+	};
+
+	/** The season alone; the year is in the tooltip, and would not fit down the edge. */
+	const TERM_WORD: Record<Term, string> = {
+		fall: 'Fall',
+		spring: 'Spring',
+		summer: 'Summer',
+		winter: 'Winter'
 	};
 
 	function drop(e: DragEvent) {
@@ -241,31 +249,35 @@
 		clue where the term will land.
 
 		Spring is the only term with two possible successors — the next autumn, and the summer
-		between — so it shows both, stacked. Each carries the season it opens rather than a bare
-		plus, which is what tells them apart at this size.
+		between — so it shows both, stacked. Each reads down its own edge: a plus, the season it
+		opens, and that season's mark. The year is left to the tooltip, since it would not fit.
 	-->
 	{#if onaddnext || onaddsummer}
-		<div class="no-print absolute top-1/2 -right-2.5 z-10 flex -translate-y-1/2 flex-col gap-1">
+		<div class="no-print absolute top-1/2 -right-3 z-10 flex -translate-y-1/2 flex-col gap-1">
 			{#if onaddnext}
 				<button
 					type="button"
-					class="flex h-8 w-5 items-center justify-center rounded-r border border-l-0 border-slate-200 bg-white text-slate-400 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+					class="flex w-6 items-center justify-center gap-1 rounded-r border border-l-0 border-slate-200 bg-white py-2 text-[10px] font-medium tracking-wide text-slate-500 shadow-sm transition-colors [writing-mode:vertical-rl] hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
 					title="Add {addNextLabel}"
 					aria-label="Add {addNextLabel}"
 					onclick={onaddnext}
 				>
-					<Icon name={TERM_ICON[addNextTerm ?? 'fall']} class="h-3.5 w-3.5" />
+					<Icon name="plus" class="h-3 w-3" />
+					{TERM_WORD[addNextTerm ?? 'fall']}
+					<Icon name={TERM_ICON[addNextTerm ?? 'fall']} class="h-3 w-3" />
 				</button>
 			{/if}
 			{#if onaddsummer}
 				<button
 					type="button"
-					class="flex h-8 w-5 items-center justify-center rounded-r border border-l-0 border-slate-200 bg-white text-slate-400 shadow-sm transition-colors hover:border-amber-300 hover:bg-amber-50 hover:text-amber-600"
+					class="flex w-6 items-center justify-center gap-1 rounded-r border border-l-0 border-slate-200 bg-white py-2 text-[10px] font-medium tracking-wide text-slate-500 shadow-sm transition-colors [writing-mode:vertical-rl] hover:border-amber-300 hover:bg-amber-50 hover:text-amber-600"
 					title="Add {addSummerLabel}"
 					aria-label="Add {addSummerLabel}"
 					onclick={onaddsummer}
 				>
-					<Icon name="sun" class="h-3.5 w-3.5" />
+					<Icon name="plus" class="h-3 w-3" />
+					Summer
+					<Icon name="sun" class="h-3 w-3" />
 				</button>
 			{/if}
 		</div>
