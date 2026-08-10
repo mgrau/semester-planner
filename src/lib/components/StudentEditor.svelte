@@ -7,9 +7,11 @@
 	interface Props {
 		/** The student being edited, or null when the dialog is closed. */
 		student: Student | null;
+		/** Rebuilds the term grid from the start term — destructive, so it lives behind a confirm. */
+		onrebuild: () => void;
 		onclose: () => void;
 	}
-	let { student, onclose }: Props = $props();
+	let { student, onrebuild, onclose }: Props = $props();
 
 	/** Edits apply immediately; the dialog is a place to make them, not a transaction. */
 	function edit(fn: (s: Student) => void) {
@@ -104,8 +106,44 @@
 					</label>
 				</div>
 
-				<!-- Changing the start term does not rewrite an existing plan; that is
-				     "Rebuild empty terms" under Plan settings, which is deliberate. -->
+				<!-- The planner's constraints live here rather than in a pane of their own: they
+				     are set once when a student is created and rarely touched after. -->
+				<fieldset class="mt-1 rounded border border-slate-200 p-2">
+					<legend class="px-1 text-slate-600">Planning</legend>
+					<div class="grid grid-cols-2 gap-2">
+						<label class="block">
+							<span class="text-slate-600">Max credits/term</span>
+							<input
+								type="number"
+								class="mt-0.5 w-full rounded border border-slate-300 px-2 py-1 text-sm"
+								value={student.settings.maxCreditsPerTerm}
+								onchange={(e) => edit((s) => (s.settings.maxCreditsPerTerm = +e.currentTarget.value))}
+							/>
+						</label>
+						<label class="block">
+							<span class="text-slate-600">Target years</span>
+							<input
+								type="number"
+								class="mt-0.5 w-full rounded border border-slate-300 px-2 py-1 text-sm"
+								value={student.settings.targetYears}
+								onchange={(e) => edit((s) => (s.settings.targetYears = +e.currentTarget.value))}
+							/>
+						</label>
+					</div>
+					<!-- Changing the start term does not rewrite an existing plan on its own; that is
+					     this button, which is deliberate because it discards placed courses. -->
+					<button
+						type="button"
+						class="mt-2 w-full rounded border border-slate-300 py-1 hover:bg-slate-50"
+						onclick={() => {
+							if (
+								confirm('Rebuild the terms from the start term? Courses already placed are removed.')
+							)
+								onrebuild();
+						}}>Rebuild empty terms</button
+					>
+				</fieldset>
+
 				<button
 					type="button"
 					class="mt-1 w-full rounded bg-blue-600 py-1.5 text-xs font-medium text-white hover:bg-blue-700"

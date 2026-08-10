@@ -113,7 +113,6 @@
 	let pickerTarget = $state<{ semesterId: string; replaceCode?: string } | null>(null);
 	let pickerPool = $state<string[] | undefined>(undefined);
 	let pickerTitle = $state('Add a course');
-	let showSettings = $state(false);
 	/** Mobile-only disclosure; the pane is always shown at desktop width. */
 	let showNotes = $state(false);
 	/** Course whose action sheet is open — the touch route to move/lock/remove. */
@@ -238,6 +237,29 @@
 			}
 			const id = `${term}-${year}`;
 			if (!s.semesters.some((x) => x.id === id)) s.semesters.push({ id, term, year, courses: [] });
+		});
+	}
+
+	/**
+	 * Summers are added and removed rather than merely shown and hidden — a checkbox that
+	 * revealed nothing on a fall/spring plan would do nothing at all. Turning it off keeps any
+	 * summer that holds courses, so nothing disappears silently.
+	 */
+	function toggleSummers(on: boolean) {
+		roster.update((s) => {
+			s.settings.includeSummers = on;
+			if (on) {
+				for (const year of new Set(
+					s.semesters.filter((x) => x.term === 'spring').map((x) => x.year)
+				)) {
+					const id = `summer-${year}`;
+					if (!s.semesters.some((x) => x.id === id)) {
+						s.semesters.push({ id, term: 'summer', year, courses: [] });
+					}
+				}
+			} else {
+				s.semesters = s.semesters.filter((x) => x.term !== 'summer' || x.courses.length > 0);
+			}
 		});
 	}
 
@@ -468,59 +490,6 @@
 				class="no-print contents lg:order-1 lg:flex lg:min-w-0 lg:flex-col lg:gap-3 lg:sticky lg:top-4 lg:h-[calc(100vh-5.5rem)] lg:self-start"
 			>
 				{#if student}
-					<section
-						class="order-6 min-w-0 shrink-0 rounded-lg border border-slate-200 bg-white shadow-sm lg:order-none"
-					>
-						<button
-							type="button"
-							class="flex w-full items-center justify-between px-3 py-2.5 text-sm font-semibold text-slate-800"
-							onclick={() => (showSettings = !showSettings)}
-						>
-							Plan settings
-						<Icon name={showSettings ? 'chevron-down' : 'chevron-right'} class="h-4 w-4 text-slate-400" />
-						</button>
-						{#if showSettings}
-							<div class="space-y-2 border-t border-slate-100 p-3 text-xs">
-								<div class="grid grid-cols-2 gap-2">
-									<label class="block">
-										<span class="text-slate-600">Max credits/term</span>
-										<input
-											type="number"
-											class="mt-0.5 w-full rounded border border-slate-300 px-2 py-1"
-											value={student.settings.maxCreditsPerTerm}
-											onchange={(e) =>
-												roster.update((s) => (s.settings.maxCreditsPerTerm = +e.currentTarget.value))}
-										/>
-									</label>
-									<label class="block">
-										<span class="text-slate-600">Target years</span>
-										<input
-											type="number"
-											class="mt-0.5 w-full rounded border border-slate-300 px-2 py-1"
-											value={student.settings.targetYears}
-											onchange={(e) =>
-												roster.update((s) => (s.settings.targetYears = +e.currentTarget.value))}
-										/>
-									</label>
-								</div>
-								<label class="flex items-center gap-2">
-									<input
-										type="checkbox"
-										checked={student.settings.includeSummers}
-										onchange={(e) =>
-											roster.update((s) => (s.settings.includeSummers = e.currentTarget.checked))}
-									/>
-									<span class="text-slate-600">Show summer terms</span>
-								</label>
-								<button
-									type="button"
-									class="w-full rounded border border-slate-300 py-1 hover:bg-slate-50"
-									onclick={resetSemesters}>Rebuild empty terms</button
-								>
-							</div>
-						{/if}
-					</section>
-
 					<div class="order-7 min-w-0 lg:order-none lg:min-h-0 lg:shrink-0 lg:overflow-y-auto">
 						<PriorCreditsPanel {student} onchange={touch} />
 					</div>
@@ -638,6 +607,20 @@
 								onclick={addSemester}
 								><Icon name="plus" /><span class="hidden @min-[30rem]:inline">Term</span></button
 							>
+							<label
+								class="inline-flex cursor-pointer items-center gap-1.5 rounded border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
+								title="Show summer terms in the plan"
+							>
+								<input
+									type="checkbox"
+									class="h-3.5 w-3.5"
+									checked={student.settings.includeSummers}
+									onchange={(e) => toggleSummers(e.currentTarget.checked)}
+								/>
+								<span class="hidden @min-[30rem]:inline">Summers</span><span
+									class="@min-[30rem]:hidden">Su</span
+								>
+							</label>
 
 							<div class="flex-1"></div>
 
@@ -752,7 +735,13 @@
 					{/if}
 
 					<div class="lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-1">
-						<div class="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+						<!-- With summers each row is one academic year, so three across; without them four
+						     keeps two years per row. One column on a phone either way. -->
+						<div
+							class="grid min-w-0 gap-3 {student.settings.includeSummers
+								? 'lg:grid-cols-3'
+								: 'sm:grid-cols-2 xl:grid-cols-4'}"
+						>
 						{#each sortedSemesters as sem (sem.id)}
 							<SemesterCard
 								semester={sem}
@@ -811,7 +800,7 @@
 	onedit={(s) => (editing = s)}
 />
 
-<StudentEditor student={editing} onclose={() => (editing = null)} />
+<StudentEditor student={editing} onrebuild={resetSemesters} onclose={() => (editing = null)} />
 
 <CourseActions
 	target={actionTarget}

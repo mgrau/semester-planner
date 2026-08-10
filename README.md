@@ -21,11 +21,12 @@ npm run build        # static site in build/
 One page, three full-height columns that scroll independently — the page itself never scrolls.
 Below 1024px it reflows to a single column; see **On a phone** below.
 
-- **Left** — the current advisee with **Edit** (name, student ID, major, start term) and
-  **Switch**, then plan settings, credit already earned, and notes at the bottom filling the
-  remaining height.
-- **Centre** — the semester grid, four across. Eight terms fit without scrolling; a longer plan
-  scrolls inside this column.
+- **Left** — credit already earned, then notes at the bottom filling the remaining height. The
+  student's identity lives in the header; the planner's constraints (credit cap, target years,
+  rebuild) live in the Edit dialog, since they are set once and rarely touched.
+- **Centre** — the semester grid, four across so two academic years share a row. With summers
+  showing it drops to three across, one academic year per row. Eight terms fit without
+  scrolling; a longer plan scrolls inside this column.
 - **Right** — the requirement checker: major requirements above (named with the student's major,
   with a pencil to change it), general education below.
 
