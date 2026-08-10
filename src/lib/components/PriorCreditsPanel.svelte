@@ -1,8 +1,13 @@
 <script lang="ts">
 	import { catalog } from '$lib/catalog';
 	import { parseTranscript, type ParsedRow } from '$lib/engine/transcript';
-	import type { PriorCredit, Student } from '$lib/types';
+	import type { Student } from '$lib/types';
 	import { roster } from '$lib/stores/roster.svelte';
+	import {
+		courseworkCredits,
+		describePriorCredit,
+		groupOf
+	} from '$lib/priorCredits';
 	import Icon from './Icon.svelte';
 
 	interface Props {
@@ -105,12 +110,18 @@
 		onchange();
 	}
 
-	function label(p: PriorCredit): string {
-		if (p.kind === 'category') {
-			return catalog.genEd.find((c) => c.id === p.category)?.name ?? (p.category ?? '');
-		}
-		return p.course ?? '';
-	}
+	let coursework = $derived(student.priorCredits.filter((p) => groupOf(p) === 'coursework'));
+	let satisfied = $derived(student.priorCredits.filter((p) => groupOf(p) === 'satisfied'));
+	let earned = $derived(courseworkCredits(student.priorCredits));
+
+	let view = $derived((p: (typeof student.priorCredits)[number]) =>
+		describePriorCredit(p, catalog.genEd, catalog.courses)
+	);
+
+	/** Categories not already recorded, so the picker never offers a duplicate. */
+	let availableCategories = $derived(
+		catalog.genEd.filter((c) => !student.priorCredits.some((p) => p.category === c.id))
+	);
 </script>
 
 <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
@@ -204,124 +215,149 @@
 		</div>
 	{/if}
 
+	<!--
+		Three sections rather than one list, because three unlike things were sharing it: credit
+		that counts toward the degree, requirements met without coursework, and prerequisites
+		placed past. Each keeps its own add control directly beneath it, so the control that adds
+		a thing sits with the things it adds.
+	-->
+
+	{#snippet row(name: string, detail: string, credits: string, onremove: () => void)}
+		<li class="flex items-baseline gap-2 px-3 py-1.5">
+			<span class="min-w-0 flex-1">
+				<span class="block truncate text-sm font-medium text-slate-800">{name}</span>
+				{#if detail}
+					<span class="block truncate text-xs text-slate-400">{detail}</span>
+				{/if}
+			</span>
+			{#if credits}
+				<span class="shrink-0 text-xs text-slate-500">{credits}</span>
+			{/if}
+			<button
+				type="button"
+				class="no-print shrink-0 text-slate-300 hover:text-red-600"
+				aria-label="Remove {name}"
+				onclick={onremove}><Icon name="close" /></button
+			>
+		</li>
+	{/snippet}
+
+	{#snippet groupHeader(title: string, trailing: string)}
+		<div class="flex items-baseline justify-between bg-slate-50 px-3 py-1">
+			<span class="text-xs font-semibold tracking-wide text-slate-500 uppercase">{title}</span>
+			{#if trailing}<span class="text-xs text-slate-400">{trailing}</span>{/if}
+		</div>
+	{/snippet}
+
+	<!-- Coursework ------------------------------------------------------------------ -->
+	{@render groupHeader('Coursework', earned ? `${earned} cr` : '')}
 	<ul class="divide-y divide-slate-50">
-		{#each student.priorCredits as p (p.id)}
-			<li class="flex items-center gap-2 px-3 py-1.5 text-sm">
-				<span class="flex-1 truncate">
-					<span class="font-medium {p.kind === 'category' ? 'text-emerald-700' : ''}">
-						{label(p)}
-					</span>
-					{#if p.kind === 'category'}<span class="text-xs text-slate-400"> (requirement waived)</span
-						>{/if}
-					<span class="text-xs text-slate-400">
-						· {p.credits} cr{p.grade ? ` · ${p.grade}` : ''}{p.source ? ` · ${p.source}` : ''}
-					</span>
-				</span>
-				<button
-					type="button"
-					class="no-print text-xs text-slate-300 hover:text-red-600"
-					aria-label="Remove"
-					onclick={() => remove(p.id)}><Icon name="close" /></button
-				>
-			</li>
-		{:else}
-			<li class="px-3 py-3 text-xs text-slate-400">
-				Nothing recorded. Add transfer, AP, or dual-enrollment credit so the planner can skip it.
-			</li>
+		{#each coursework as p (p.id)}
+			{@const v = view(p)}
+			{@render row(v.name, v.detail, v.credits, () => remove(p.id))}
 		{/each}
 	</ul>
-
-	<!-- Placement satisfies prerequisites but awards nothing, so it is kept visibly apart from
-	     earned credit rather than listed as a zero-credit course. -->
-	<div class="border-t border-slate-100 bg-slate-50 px-3 py-2">
-		<p class="mb-1 text-xs font-semibold text-slate-500">Placed past (no credit)</p>
-		{#if student.placements?.length}
-			<ul class="mb-1 flex flex-wrap gap-1">
-				{#each student.placements as code (code)}
-					<li
-						class="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-1.5 py-0.5 text-xs text-slate-600"
-					>
-						{code}
-						<button
-							type="button"
-							class="text-slate-300 hover:text-red-600"
-							aria-label="Remove placement {code}"
-							onclick={() => removePlacement(code)}><Icon name="close" class="h-3 w-3" /></button
-						>
-					</li>
-			{/each}
-			</ul>
-		{/if}
-		<div class="no-print flex gap-1">
+	<div class="no-print px-3 py-2">
+		<div class="flex gap-1">
 			<input
-				bind:value={newPlacement}
-				placeholder="MATH 163"
-				aria-label="Course the student places past"
-				class="w-full min-w-0 flex-1 rounded border border-slate-300 px-2 py-0.5 text-xs uppercase sm:w-28 sm:flex-none"
-				onkeydown={(e) => e.key === 'Enter' && addPlacement()}
+				bind:value={newCode}
+				placeholder="MATH 211"
+				aria-label="Course code"
+				class="w-full min-w-0 flex-1 rounded border border-slate-300 px-2 py-1 text-xs uppercase"
+				onkeydown={(e) => e.key === 'Enter' && addCourse()}
+			/>
+			<input
+				bind:value={creditOverride}
+				type="number"
+				min="0"
+				max="12"
+				placeholder={matched ? String(matched.credits.min) : 'cr'}
+				aria-label="Credit hours"
+				title="Leave blank to use the catalog credit hours"
+				class="w-14 shrink-0 rounded border border-slate-300 px-2 py-1 text-xs"
 			/>
 			<button
 				type="button"
-				class="rounded border border-slate-300 px-2 py-0.5 text-xs hover:bg-white disabled:opacity-40"
-				disabled={!newPlacement.trim()}
-				onclick={addPlacement}
+				class="shrink-0 rounded border border-slate-300 px-2 py-1 text-xs hover:bg-slate-50 disabled:opacity-40"
+				disabled={!normalizedCode}
+				onclick={addCourse}
+				><span class="inline-flex items-center gap-1"><Icon name="plus" />Add</span></button
 			>
-				<span class="inline-flex items-center gap-1"><Icon name="plus" />Placement</span>
-			</button>
 		</div>
+		<!-- Credits come from the catalog; the field is an override for transfer work that does
+		     not carry the ODU hours. -->
+		{#if normalizedCode && matched}
+			<p class="mt-1 text-xs text-slate-500">
+				{matched.title} · {effectiveCredits} cr{creditOverride.trim() !== ''
+					? ' (overridden)'
+					: ' from catalog'}
+			</p>
+		{:else if normalizedCode}
+			<p class="mt-1 text-xs text-amber-700">
+				Not in the catalog — set the credit hours yourself ({effectiveCredits} cr assumed).
+			</p>
+		{/if}
 	</div>
 
-	<div class="no-print space-y-2 border-t border-slate-100 p-3">
-		<div>
-			<div class="flex gap-1">
-				<input
-					bind:value={newCode}
-					placeholder="MATH 211"
-					class="w-full min-w-0 flex-1 rounded border border-slate-300 px-2 py-1 text-xs uppercase sm:w-28 sm:flex-none"
-					onkeydown={(e) => e.key === 'Enter' && addCourse()}
-				/>
-				<input
-					bind:value={creditOverride}
-					type="number"
-					min="0"
-					max="12"
-					placeholder={matched ? String(matched.credits.min) : 'cr'}
-					title="Leave blank to use the catalog credit hours"
-					class="w-14 rounded border border-slate-300 px-2 py-1 text-xs"
-				/>
-				<button
-					type="button"
-					class="rounded border border-slate-300 px-2 py-1 text-xs hover:bg-slate-50 disabled:opacity-40"
-					disabled={!normalizedCode}
-					onclick={addCourse}
-					><span class="inline-flex items-center gap-1"><Icon name="plus" />Add</span></button
-				>
-			</div>
-			<!-- Credits come from the catalog; the field is an override for transfer work that
-			     does not carry the ODU credit hours. -->
-			{#if normalizedCode && matched}
-				<p class="mt-0.5 text-xs text-slate-500">
-					{matched.title} · {effectiveCredits} cr{creditOverride.trim() !== ''
-						? ' (overridden)'
-						: ' from catalog'}
-				</p>
-			{:else if normalizedCode}
-				<p class="mt-0.5 text-xs text-amber-700">
-					Not in the catalog — set the credit hours yourself ({effectiveCredits} cr assumed).
-				</p>
-			{/if}
-		</div>
+	<!-- Satisfied without coursework -------------------------------------------------- -->
+	{@render groupHeader('Satisfied without coursework', '')}
+	<ul class="divide-y divide-slate-50">
+		{#each satisfied as p (p.id)}
+			{@const v = view(p)}
+			{@render row(v.name, v.detail, v.credits, () => remove(p.id))}
+		{/each}
+	</ul>
+	<div class="no-print px-3 py-2">
 		<select
 			class="w-full rounded border border-slate-300 px-2 py-1 text-xs text-slate-600"
+			aria-label="Mark a requirement satisfied"
 			onchange={(e) => {
 				addCategory(e.currentTarget.value);
 				e.currentTarget.value = '';
 			}}
 		>
-			<option value="">Mark a requirement satisfied (e.g. Language &amp; Culture)…</option>
-			{#each catalog.genEd as cat}
+			<option value="">Mark a requirement satisfied…</option>
+			{#each availableCategories as cat (cat.id)}
 				<option value={cat.id}>{cat.name}</option>
 			{/each}
 		</select>
+	</div>
+
+	<!-- Placed past ------------------------------------------------------------------- -->
+	<!-- Placement satisfies a prerequisite and awards nothing, so it is kept apart from earned
+	     credit rather than listed as a zero-credit course. -->
+	{@render groupHeader('Placed past', 'no credit')}
+	{#if student.placements?.length}
+		<ul class="flex flex-wrap gap-1 px-3 py-2">
+			{#each student.placements as code (code)}
+				<li
+					class="inline-flex items-center gap-1 rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-xs text-slate-600"
+				>
+					{code}
+					<button
+						type="button"
+						class="no-print text-slate-300 hover:text-red-600"
+						aria-label="Remove placement {code}"
+						onclick={() => removePlacement(code)}><Icon name="close" class="h-3 w-3" /></button
+					>
+				</li>
+			{/each}
+		</ul>
+	{/if}
+	<div class="no-print flex gap-1 px-3 py-2">
+		<input
+			bind:value={newPlacement}
+			placeholder="MATH 163"
+			aria-label="Course the student places past"
+			class="w-full min-w-0 flex-1 rounded border border-slate-300 px-2 py-1 text-xs uppercase"
+			onkeydown={(e) => e.key === 'Enter' && addPlacement()}
+		/>
+		<button
+			type="button"
+			class="shrink-0 rounded border border-slate-300 px-2 py-1 text-xs hover:bg-slate-50 disabled:opacity-40"
+			disabled={!newPlacement.trim()}
+			onclick={addPlacement}
+			><span class="inline-flex items-center gap-1"><Icon name="plus" />Add</span></button
+		>
 	</div>
 </section>

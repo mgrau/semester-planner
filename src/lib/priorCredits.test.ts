@@ -1,0 +1,81 @@
+import { describe, expect, it } from 'vitest';
+import { courseworkCredits, describePriorCredit, groupOf } from './priorCredits';
+import { catalog, preparationToRecords, startingPreparation } from './catalog';
+import type { PriorCredit } from './types';
+
+const view = (p: PriorCredit) => describePriorCredit(p, catalog.genEd, catalog.courses);
+
+let n = 0;
+const newId = () => `id-${n++}`;
+
+describe('prior credit presentation', () => {
+	it('names a course by its code, with the title alongside', () => {
+		const v = view({ id: '1', kind: 'course', course: 'MATH 211', credits: 4, grade: 'A' });
+		expect(v.name).toBe('MATH 211');
+		expect(v.detail).toContain('Calculus I');
+		expect(v.detail).toContain('grade A');
+		expect(v.credits).toBe('4 cr');
+	});
+
+	it('names a waived requirement by the requirement', () => {
+		const v = view({ id: '1', kind: 'category', category: 'language', credits: 6 });
+		expect(v.name).toBe('Language and Culture');
+		// A waiver is not credit earned, so no credit figure is shown against it.
+		expect(v.credits).toBe('');
+	});
+
+	it('never leaves a declared condition unnamed', () => {
+		// This is what the "High school chemistry" checkbox produces: a record with no course
+		// code at all. It used to render as a blank row.
+		const v = view({
+			id: '1',
+			kind: 'course',
+			credits: 0,
+			source: 'High school chemistry',
+			satisfiesNotes: ['High school chemistry']
+		});
+		expect(v.name).toBe('High school chemistry');
+		expect(v.name).not.toBe('');
+	});
+
+	it('gives every record produced by the default checklist a name', () => {
+		const { priorCredits } = preparationToRecords(
+			startingPreparation.filter((o) => o.default).map((o) => o.id),
+			newId
+		);
+		expect(priorCredits.length).toBeGreaterThan(0);
+		for (const p of priorCredits) {
+			expect(view(p).name.trim(), `record from ${p.source} has no name`).not.toBe('');
+		}
+	});
+});
+
+describe('grouping', () => {
+	it('separates coursework from requirements met without it', () => {
+		expect(groupOf({ id: '1', kind: 'course', course: 'MATH 211', credits: 4 })).toBe('coursework');
+		expect(groupOf({ id: '2', kind: 'category', category: 'language', credits: 6 })).toBe(
+			'satisfied'
+		);
+		// No course code means a declared condition, not coursework.
+		expect(groupOf({ id: '3', kind: 'course', credits: 0, source: 'High school chemistry' })).toBe(
+			'satisfied'
+		);
+	});
+
+	it('counts only real coursework toward the earned total', () => {
+		const records: PriorCredit[] = [
+			{ id: '1', kind: 'course', course: 'MATH 211', credits: 4 },
+			{ id: '2', kind: 'category', category: 'language', credits: 6 },
+			{ id: '3', kind: 'course', credits: 0, source: 'High school chemistry' }
+		];
+		expect(courseworkCredits(records)).toBe(4);
+	});
+
+	it('leaves a default new student with zero earned credits', () => {
+		const { priorCredits } = preparationToRecords(
+			startingPreparation.filter((o) => o.default).map((o) => o.id),
+			newId
+		);
+		expect(courseworkCredits(priorCredits)).toBe(0);
+	});
+});

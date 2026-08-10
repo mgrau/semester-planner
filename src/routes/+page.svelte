@@ -497,7 +497,9 @@
 						: 'credits in named courses'}
 				>
 					{creditTotal}/{program?.total_credits ?? 120}<span class="hidden sm:inline"> credits</span
-					>{placeholderCredits ? ` (${placeholderCredits} res.)` : ''}
+					>{#if placeholderCredits}<span class="hidden md:inline">
+							· {placeholderCredits} reserved</span
+						>{/if}
 				</span>
 				{#if errorCount}
 					<span class="shrink-0 rounded bg-red-500 px-2 py-0.5 text-xs font-medium">

@@ -12,7 +12,7 @@ localStorage and travel as YAML files.
 ```sh
 npm install
 npm run dev          # http://localhost:5173
-npm test             # 135 tests, incl. end-to-end against the real catalog
+npm test             # 142 tests, incl. end-to-end against the real catalog
 npm run build        # static site in build/
 ```
 
@@ -91,8 +91,11 @@ letterbox.
 - **Credit count** in the header covers everything the plan allocates, including credits reserved
   for a requirement whose course is not chosen yet, with the reserved share called out
   separately. Allocated is the number an advisor is asking about; naming the course comes later.
-- **Prior credit**: transfer, AP, and dual-enrollment courses, plus requirements satisfied
-  outright (a Language & Culture waiver is recorded this way rather than as a special flag).
+- **Prior credit**, in three groups because three unlike things were sharing one list:
+  **coursework** that counts toward the 120, **satisfied without coursework** (a Language and
+  Culture waiver, or a declared background like high school chemistry), and **placed past**,
+  which meets a prerequisite and grants nothing. Each group keeps its add control directly
+  beneath it.
 - **Placement, kept separate from credit.** A physics major places into calculus rather than
   taking MATH 163. That satisfies the prerequisite but awards nothing, so it lives in
   `Student.placements` and shows as "Placed past (no credit)" — never in the credit ledger and
