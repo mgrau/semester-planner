@@ -363,7 +363,11 @@
 </script>
 
 <div class="min-h-screen">
-	<header class="no-print border-b border-slate-200 bg-[var(--color-odu-blue)] text-white">
+	<!-- Sticky so the student, credit count and conflict badges stay in view while a long
+	     plan scrolls on a phone. Below the modal layers, above the page content. -->
+	<header
+		class="no-print sticky top-0 z-40 border-b border-slate-200 bg-[var(--color-odu-blue)] text-white"
+	>
 		<div class="mx-auto flex max-w-[1800px] items-center gap-2 px-3 py-2 sm:gap-4 sm:px-4 sm:py-2.5">
 			<!-- The full title and catalog year are context, not identity; on a phone the student
 			     and the credit count are what matter, so the chrome gives way first. -->
@@ -617,88 +621,101 @@
 						<p class="text-sm text-slate-400">Choose an advisee to start planning.</p>
 					</div>
 				{:else}
-					<div class="no-print mb-3 flex shrink-0 flex-wrap items-center gap-2">
-						<button
-							type="button"
-							class="inline-flex items-center gap-1.5 rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
-							onclick={autoPopulate}
-							><Icon name="wand" /><span class="hidden sm:inline">Auto-populate plan</span><span
-								class="sm:hidden">Auto-populate</span
-							></button
-						>
-						<button
-							type="button"
-							class="inline-flex items-center gap-1.5 rounded border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
-							onclick={clearPlan}
-							><Icon name="eraser" /><span class="hidden sm:inline">Clear (keep locked)</span><span
-								class="sm:hidden">Clear</span
-							></button
-						>
-						<button
-							type="button"
-							class="inline-flex items-center gap-1.5 rounded border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
-							onclick={addSemester}><Icon name="plus" />Term</button
-						>
-
-						<div class="flex-1"></div>
-
-						<!-- Six export buttons crowd a phone off the screen. They collapse into one menu
-						     below `sm`, and stay laid out flat where there is room for them. -->
-						<div class="relative sm:hidden">
+					<!-- @container, not a viewport breakpoint: what matters is how much room this column
+					     has, which is also tight on a small laptop with three columns showing. Below
+					     ~30rem the labels drop and the buttons stand on their icons. -->
+					<div class="@container no-print mb-3 shrink-0">
+						<div class="flex flex-wrap items-center gap-2">
+							<button
+								type="button"
+								class="inline-flex items-center gap-1.5 rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+								title="Auto-populate plan"
+								aria-label="Auto-populate plan"
+								onclick={autoPopulate}
+								><Icon name="wand" /><span class="hidden @min-[30rem]:inline">Auto-populate</span></button
+							>
 							<button
 								type="button"
 								class="inline-flex items-center gap-1.5 rounded border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
-								aria-expanded={showExports}
-								onclick={() => (showExports = !showExports)}
-								><Icon name="download" />Export<Icon name="chevron-down" class="h-3 w-3" /></button
+								title="Clear the plan, keeping locked courses"
+								aria-label="Clear the plan, keeping locked courses"
+								onclick={clearPlan}
+								><Icon name="eraser" /><span class="hidden @min-[30rem]:inline">Clear</span></button
 							>
-							{#if showExports}
-								<div
-									class="absolute right-0 z-30 mt-1 w-52 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg"
-								>
-									{#each exportActions as action (action.label)}
-										{#if action.href}
-											<a
-												href={action.href}
-												class="flex items-center gap-2 px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
-												onclick={() => (showExports = false)}
-											>
-												<Icon name={action.icon} />{action.label}
-											</a>
-										{:else}
-											<button
-												type="button"
-												class="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50"
-												onclick={() => {
-													action.run?.();
-													showExports = false;
-												}}
-											>
-												<Icon name={action.icon} />{action.label}
-											</button>
-										{/if}
-									{/each}
-								</div>
-							{/if}
-						</div>
+							<button
+								type="button"
+								class="inline-flex items-center gap-1.5 rounded border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
+								title="Add a term"
+								aria-label="Add a term"
+								onclick={addSemester}
+								><Icon name="plus" /><span class="hidden @min-[30rem]:inline">Term</span></button
+							>
 
-						<div class="hidden flex-wrap items-center gap-2 sm:flex">
-							{#each exportActions as action (action.label)}
-								{#if action.href}
-									<a
-										href={action.href}
-										class="inline-flex items-center gap-1.5 rounded border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
-										><Icon name={action.icon} />{action.short}</a
+							<div class="flex-1"></div>
+
+							<!-- Six export buttons crowd a phone off the screen. They collapse into one menu
+							     below `sm`, and stay laid out flat where there is room for them. -->
+							<div class="relative sm:hidden">
+								<button
+									type="button"
+									class="inline-flex items-center gap-1.5 rounded border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
+									title="Export and print"
+									aria-label="Export and print"
+									aria-expanded={showExports}
+									onclick={() => (showExports = !showExports)}
+									><Icon name="download" /><span class="hidden @min-[30rem]:inline">Export</span><Icon
+										name="chevron-down"
+										class="h-3 w-3"
+									/></button
+								>
+								{#if showExports}
+									<div
+										class="absolute right-0 z-30 mt-1 w-52 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg"
 									>
-								{:else}
-									<button
-										type="button"
-										class="inline-flex items-center gap-1.5 rounded border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
-										title={action.title}
-										onclick={action.run}><Icon name={action.icon} />{action.short}</button
-									>
+										{#each exportActions as action (action.label)}
+											{#if action.href}
+												<a
+													href={action.href}
+													class="flex items-center gap-2 px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
+													onclick={() => (showExports = false)}
+												>
+													<Icon name={action.icon} />{action.label}
+												</a>
+											{:else}
+												<button
+													type="button"
+													class="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50"
+													onclick={() => {
+														action.run?.();
+														showExports = false;
+													}}
+												>
+													<Icon name={action.icon} />{action.label}
+												</button>
+											{/if}
+										{/each}
+									</div>
 								{/if}
-							{/each}
+							</div>
+
+							<div class="hidden flex-wrap items-center gap-2 sm:flex">
+								{#each exportActions as action (action.label)}
+									{#if action.href}
+										<a
+											href={action.href}
+											class="inline-flex items-center gap-1.5 rounded border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
+											><Icon name={action.icon} />{action.short}</a
+										>
+									{:else}
+										<button
+											type="button"
+											class="inline-flex items-center gap-1.5 rounded border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
+											title={action.title}
+											onclick={action.run}><Icon name={action.icon} />{action.short}</button
+										>
+									{/if}
+								{/each}
+							</div>
 						</div>
 					</div>
 

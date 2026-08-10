@@ -52,10 +52,14 @@ sheet instead: move to any term (with the resulting credit load shown per term),
 or choose a course for a placeholder. Drag remains the desktop path; a drag that ends over a
 drop target suppresses the click that follows so the sheet does not open on top of the move.
 
-The header sheds its title and catalog year as width shrinks, keeping the student and the credit
-count. Tapping the student name opens the roster, since the student pane is collapsed at the
+The header is sticky, so the student, credit count and conflict badges stay in view while a long
+plan scrolls. It sheds its title and catalog year as width shrinks, keeping the student and the
+credit count. Tapping the student name opens the roster, since the student pane is collapsed at the
 bottom. The six export buttons collapse into one **Export** menu below `sm`, defined once and
-rendered either as a menu or as a button row. Modals go full-bleed rather than floating in a
+rendered either as a menu or as a button row. The plan toolbar uses a **container query** rather
+than a viewport breakpoint: below `30rem` *of column width* the buttons drop their labels and
+stand on their icons, which is the right trigger because that column is also narrow on a small
+laptop showing all three panes. Modals go full-bleed rather than floating in a
 letterbox.
 
 ## What it does
