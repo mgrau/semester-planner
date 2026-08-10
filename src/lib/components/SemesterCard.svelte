@@ -24,6 +24,9 @@
 		/** Set when the term that follows this one is missing from the plan. */
 		addNextLabel?: string;
 		onaddnext?: () => void;
+		/** Spring only: the summer of the same academic year, when the plan has no term for it. */
+		addSummerLabel?: string;
+		onaddsummer?: () => void;
 	}
 
 	let {
@@ -40,7 +43,9 @@
 		onactivate,
 		ondelete,
 		addNextLabel,
-		onaddnext
+		onaddnext,
+		addSummerLabel,
+		onaddsummer
 	}: Props = $props();
 
 	/**
@@ -227,12 +232,29 @@
 	{#if onaddnext}
 		<button
 			type="button"
-			class="no-print absolute top-1/2 -right-3 z-10 flex h-9 w-6 -translate-y-1/2 items-center justify-center rounded-r-md border border-l-0 border-slate-300 bg-white text-slate-400 shadow-sm hover:bg-blue-50 hover:text-blue-700"
+			class="no-print absolute top-1/2 -right-2.5 z-10 flex h-8 w-5 -translate-y-1/2 items-center justify-center rounded-r border border-l-0 border-slate-200 bg-white text-slate-300 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
 			title="Add {addNextLabel}"
 			aria-label="Add {addNextLabel}"
 			onclick={onaddnext}
 		>
 			<Icon name="plus" />
+		</button>
+	{/if}
+
+	<!--
+		Summer hangs off the bottom rather than the right, because the right edge already leads to
+		the next autumn. A spring term is the only one with two possible successors, and this is
+		the one that is usually not wanted — so it asks quietly, from its own edge.
+	-->
+	{#if onaddsummer}
+		<button
+			type="button"
+			class="no-print absolute -bottom-2.5 left-1/2 z-10 flex h-5 -translate-x-1/2 items-center gap-1 rounded-b border border-t-0 border-slate-200 bg-white px-1.5 text-[10px] text-slate-300 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+			title="Add {addSummerLabel}"
+			aria-label="Add {addSummerLabel}"
+			onclick={onaddsummer}
+		>
+			<Icon name="sun" class="h-3 w-3" />summer
 		</button>
 	{/if}
 </div>

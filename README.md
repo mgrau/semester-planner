@@ -32,7 +32,10 @@ Below 1024px it reflows to a single column; see **On a phone** below.
   gets the terms in order with no empty columns to scroll past.
 
   A **+** tab sits on the right edge of any term whose successor is missing, so adding a term
-  happens at the seam it will fill. There is no global "add term" button.
+  happens at the seam it will fill. Spring is the one term with two possible successors, so it
+  carries a second **summer** tab on its bottom edge; summers are otherwise absent, and a summer
+  term is removed like any other. There is no global "add term" button and no summers toggle —
+  whether the planner uses summers is read off the plan.
 - **Right** — the requirement checker: major requirements above (named with the student's major,
   with a pencil to change it), general education below.
 

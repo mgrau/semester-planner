@@ -266,43 +266,6 @@
 	}
 
 
-	/**
-	 * Summers are added and removed, not merely shown and hidden — a toggle that revealed
-	 * nothing on a fall/spring plan would do nothing at all. Turning it off drops the terms and
-	 * whatever was scheduled in them, which is destructive, so it asks first when there is
-	 * actually something to lose.
-	 */
-	function toggleSummers(on: boolean) {
-		if (!on && student) {
-			const losing = student.semesters
-				.filter((x) => x.term === 'summer')
-				.reduce((n, x) => n + x.courses.length, 0);
-			if (
-				losing > 0 &&
-				!confirm(
-					`Removing the summer terms also removes ${losing} course${losing === 1 ? '' : 's'} scheduled in them. Continue?`
-				)
-			) {
-				return;
-			}
-		}
-
-		roster.update((s) => {
-			s.settings.includeSummers = on;
-			if (on) {
-				for (const year of new Set(
-					s.semesters.filter((x) => x.term === 'spring').map((x) => x.year)
-				)) {
-					const id = `summer-${year}`;
-					if (!s.semesters.some((x) => x.id === id)) {
-						s.semesters.push({ id, term: 'summer', year, courses: [] });
-					}
-				}
-			} else {
-				s.semesters = s.semesters.filter((x) => x.term !== 'summer');
-			}
-		});
-	}
 
 	function deleteSemester(id: string) {
 		roster.update((s) => {
@@ -315,7 +278,9 @@
 		const result = generatePlan({
 			program,
 			catalog,
-			settings: student.settings,
+			// Whether to use summers is read off the plan: if the advisor has added summer terms,
+			// the planner fills them.
+			settings: { ...student.settings, includeSummers: hasSummers },
 			startTerm: student.startTerm,
 			startYear: student.startYear,
 			priorCredits: student.priorCredits,
@@ -344,12 +309,7 @@
 
 	function resetSemesters() {
 		roster.update((s) => {
-			s.semesters = buildEmptySemesters(
-				s.startTerm,
-				s.startYear,
-				s.settings.targetYears,
-				s.settings.includeSummers
-			);
+			s.semesters = buildEmptySemesters(s.startTerm, s.startYear, s.settings.targetYears, false);
 		});
 	}
 
@@ -477,12 +437,28 @@
 		return { rows, columns: terms.length * yearsPerRow };
 	});
 
-	/** The term after this one, when the plan does not already contain it. */
+	/** Whether the plan uses summers at all — read off the plan, not from a setting. */
+	let hasSummers = $derived(sortedSemesters.some((s) => s.term === 'summer'));
+
+	function hasTerm(t: { term: Term; year: number }): boolean {
+		return Boolean(student?.semesters.some((x) => x.id === `${t.term}-${t.year}`));
+	}
+
+	/**
+	 * The next term along the fall/spring spine. Summer is deliberately skipped: it is the
+	 * exception, and a spring term's right edge should lead to the next autumn rather than
+	 * routing every plan through a summer to get there.
+	 */
 	function missingNextTerm(sem: Semester): { term: Term; year: number } | null {
-		if (!student) return null;
-		const next = nextTerm(sem.term, sem.year, student.settings.includeSummers);
-		const id = `${next.term}-${next.year}`;
-		return student.semesters.some((x) => x.id === id) ? null : next;
+		const next = nextTerm(sem.term, sem.year, false);
+		return hasTerm(next) ? null : next;
+	}
+
+	/** The summer belonging to a spring term's academic year, when the plan has no term for it. */
+	function missingSummer(sem: Semester): { term: Term; year: number } | null {
+		if (sem.term !== 'spring') return null;
+		const summer = { term: 'summer' as Term, year: sem.year };
+		return hasTerm(summer) ? null : summer;
 	}
 
 	function addTerm(t: { term: Term; year: number }) {
@@ -745,26 +721,6 @@
 								onclick={clearPlan}
 								><Icon name="eraser" /><span class="hidden @min-[30rem]:inline">Clear</span></button
 							>
-							<!-- A toggle rather than a checkbox: it changes the plan on the spot, so it
-							     should read as a control that is currently on, not a form field. -->
-							<button
-								type="button"
-								class="inline-flex items-center gap-1.5 rounded border px-3 py-1.5 text-sm transition-colors {student
-									.settings.includeSummers
-									? 'border-blue-600 bg-blue-600 text-white hover:bg-blue-700'
-									: 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'}"
-								aria-pressed={student.settings.includeSummers}
-								title={student.settings.includeSummers
-									? 'Hide summer terms'
-									: 'Show summer terms in the plan'}
-								onclick={() => toggleSummers(!student.settings.includeSummers)}
-							>
-								<!-- Its own icon rather than a plus: at narrow widths the icon is all that is
-								     left, and a plus is what the per-term add tabs use. -->
-								<Icon name="sun" />
-								<span class="hidden @min-[30rem]:inline">Summers</span>
-							</button>
-
 							<div class="flex-1"></div>
 
 							<!-- Six export buttons crowd a phone off the screen. They collapse into one menu
@@ -913,9 +869,10 @@
 						</div>
 					{/if}
 
-					<div class="lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-2">
+					<div class="lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:px-1">
 						{#snippet termCard(sem: Semester)}
 							{@const next = missingNextTerm(sem)}
+							{@const summer = missingSummer(sem)}
 							<SemesterCard
 								semester={sem}
 								{catalog}
@@ -933,6 +890,8 @@
 								ondelete={deleteSemester}
 								addNextLabel={next ? termLabel(next) : undefined}
 								onaddnext={next ? () => addTerm(next) : undefined}
+								addSummerLabel={summer ? termLabel(summer) : undefined}
+								onaddsummer={summer ? () => addTerm(summer) : undefined}
 							/>
 						{/snippet}
 
@@ -948,7 +907,7 @@
 						<div class="hidden lg:block">
 							{#each planGrid.rows as row, i (i)}
 								<div
-									class="mb-3 grid gap-x-5 gap-y-3"
+									class="mb-3 grid gap-x-3 gap-y-4"
 									style="grid-template-columns: repeat({planGrid.columns}, minmax(0, 1fr))"
 								>
 									{#each row as sem, col (col)}
