@@ -41,21 +41,21 @@
 			<div class="space-y-2 p-4 text-xs">
 				<div class="grid grid-cols-2 gap-2">
 					<label class="block">
-						<span class="text-slate-600">Last name</span>
+						<span class="text-slate-600">First name</span>
 						<!-- svelte-ignore a11y_autofocus -->
 						<input
 							autofocus
 							class="mt-0.5 w-full rounded border border-slate-300 px-2 py-1 text-sm"
-							value={student.lastName ?? ''}
-							onchange={(e) => edit((s) => (s.lastName = e.currentTarget.value))}
+							value={student.firstName ?? ''}
+							onchange={(e) => edit((s) => (s.firstName = e.currentTarget.value))}
 						/>
 					</label>
 					<label class="block">
-						<span class="text-slate-600">First name</span>
+						<span class="text-slate-600">Last name</span>
 						<input
 							class="mt-0.5 w-full rounded border border-slate-300 px-2 py-1 text-sm"
-							value={student.firstName ?? ''}
-							onchange={(e) => edit((s) => (s.firstName = e.currentTarget.value))}
+							value={student.lastName ?? ''}
+							onchange={(e) => edit((s) => (s.lastName = e.currentTarget.value))}
 						/>
 					</label>
 				</div>

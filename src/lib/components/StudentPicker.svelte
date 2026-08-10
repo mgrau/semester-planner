@@ -179,19 +179,19 @@
 				<div class="border-b border-slate-100 bg-slate-50 p-4">
 					<div class="grid grid-cols-2 gap-2">
 						<label class="text-xs text-slate-600">
-							Last name
+							First name
 							<!-- svelte-ignore a11y_autofocus -->
 							<input
 								autofocus
-								bind:value={last}
+								bind:value={first}
 								class="mt-0.5 w-full rounded border border-slate-300 px-2 py-1 text-sm"
 								onkeydown={(e) => e.key === 'Enter' && create()}
 							/>
 						</label>
 						<label class="text-xs text-slate-600">
-							First name
+							Last name
 							<input
-								bind:value={first}
+								bind:value={last}
 								class="mt-0.5 w-full rounded border border-slate-300 px-2 py-1 text-sm"
 								onkeydown={(e) => e.key === 'Enter' && create()}
 							/>
