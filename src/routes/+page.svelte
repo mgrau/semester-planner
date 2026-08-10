@@ -90,7 +90,7 @@
 			: []
 	);
 
-	let kindIndex = $derived(buildKindIndex(program, catalog));
+	let kindIndex = $derived(buildKindIndex(catalog));
 
 	let legend = $derived(
 		legendFor(

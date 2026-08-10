@@ -73,7 +73,7 @@
 	let issues = $derived(student ? validatePlan(student, catalog) : []);
 	let errors = $derived(issues.filter((i) => i.severity === 'error'));
 
-	let kindIndex = $derived(buildKindIndex(program, catalog));
+	let kindIndex = $derived(buildKindIndex(catalog));
 
 
 	/** Includes credits reserved for requirements whose course is not chosen yet. */

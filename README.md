@@ -12,7 +12,7 @@ localStorage and travel as YAML files.
 ```sh
 npm install
 npm run dev          # http://localhost:5173
-npm test             # 147 tests, incl. end-to-end against the real catalog
+npm test             # 154 tests, incl. end-to-end against the real catalog
 npm run build        # static site in build/
 ```
 
@@ -172,9 +172,15 @@ it. Three things live there:
 
 ## Color coding
 
-Course chips carry a left stripe by role: **blue** physics/major, **violet** mathematics,
-**emerald** lab science, **cyan** computing, **amber** general education, **slate** electives,
-and a dashed grey outline for an unfilled requirement slot. Status keeps the background channel
+Course chips carry a left stripe by subject: **blue** physics (PHYS, ASTP), **violet**
+mathematics (MATH, STAT), **emerald** lab science (CHEM, BIOL, OEAS), **cyan** computing,
+**amber** general education, **slate** electives, and a dashed grey outline for an unfilled
+requirement slot.
+
+Subject decides, not which requirement a course happens to fill. MATH 162M is on the gen-ed
+mathematics list and MATH 163 is neither required nor gen-ed approved, but both are maths
+courses and both are violet. "General education" therefore means the non-technical courses that
+fill those categories. Status keeps the background channel
 (red for a prerequisite conflict, amber for a warning) so a problem never gets lost behind the
 category color. The legend above the grid shows only the kinds present in that plan.
 
