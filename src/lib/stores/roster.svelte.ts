@@ -130,6 +130,18 @@ export function startTermLabel(s: Student): string {
 	return `${s.startTerm[0].toUpperCase()}${s.startTerm.slice(1)} ${s.startYear}`;
 }
 
+const TERM_ABBR: Record<Term, string> = {
+	fall: 'Fa',
+	spring: 'Sp',
+	summer: 'Su',
+	winter: 'Wi'
+};
+
+/** "Fa26" — for the header when there is no room for "Fall 2026". */
+export function shortTermLabel(s: Student): string {
+	return `${TERM_ABBR[s.startTerm]}${String(s.startYear).slice(-2)}`;
+}
+
 function load(): Student[] {
 	if (typeof localStorage === 'undefined') return [];
 	try {

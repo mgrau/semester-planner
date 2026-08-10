@@ -4,7 +4,8 @@
 		roster,
 		buildEmptySemesters,
 		fullName,
-		startTermLabel
+		startTermLabel,
+		shortTermLabel
 	} from '$lib/stores/roster.svelte';
 	import { validatePlan, sortSemesters, termLabel } from '$lib/engine/validate';
 	import { generatePlan } from '$lib/engine/planner';
@@ -371,25 +372,56 @@
 		<div class="mx-auto flex max-w-[1800px] items-center gap-2 px-3 py-2 sm:gap-4 sm:px-4 sm:py-2.5">
 			<!-- The full title and catalog year are context, not identity; on a phone the student
 			     and the credit count are what matter, so the chrome gives way first. -->
+			<!-- The title yields space to the student, who is the more useful thing to see. -->
 			<h1 class="shrink-0 text-sm font-semibold sm:text-base">
-				<span class="hidden sm:inline">ODU Semester Planner</span>
-				<span class="sm:hidden">ODU Planner</span>
+				<span class="hidden md:inline">ODU Semester Planner</span>
+				<span class="hidden sm:inline md:hidden">ODU Planner</span>
+				<span class="sm:hidden">ODU</span>
 			</h1>
 			<span class="hidden shrink-0 rounded bg-white/10 px-2 py-0.5 text-xs lg:inline">
 				Catalog {catalog.catalogYear}
 			</span>
 			{#if student}
-				<!-- Tapping the name is the quickest route to the roster on a phone, where the
-				     student pane is collapsed at the bottom. -->
-				<button
-					type="button"
-					class="min-w-0 truncate text-left text-sm text-white/90 hover:text-white"
-					title="Switch advisee"
-					onclick={() => (showPicker = true)}
-				>
-					<span class="hidden sm:inline">· </span>{fullName(student)}
-					<span class="hidden text-white/50 md:inline">({programLabel(student.programId)})</span>
-				</button>
+				<!-- The student's identity lives here rather than in a side panel: it is the one
+				     thing every pane is about, and the header is the only chrome that never
+				     collapses. Detail sheds as width shrinks — the major goes first, then the term
+				     contracts to "Fa26" — but the name never does. -->
+				<div class="flex min-w-0 items-center gap-1.5">
+					<button
+						type="button"
+						class="min-w-0 truncate text-left text-sm font-medium text-white/95 hover:text-white"
+						title="Switch advisee"
+						onclick={() => (showPicker = true)}
+					>
+						{fullName(student)}
+					</button>
+
+					<span class="shrink-0 text-white/40">·</span>
+					<span class="shrink-0 text-xs text-white/75">
+						<span class="hidden sm:inline">{startTermLabel(student)}</span>
+						<span class="sm:hidden">{shortTermLabel(student)}</span>
+					</span>
+
+					<span class="hidden shrink-0 text-white/40 md:inline">·</span>
+					<span class="hidden shrink-0 truncate text-xs text-white/75 md:inline">
+						{programLabel(student.programId)}
+					</span>
+
+					<button
+						type="button"
+						class="shrink-0 rounded p-1 text-white/60 hover:bg-white/10 hover:text-white"
+						title="Edit name, major, or start term"
+						aria-label="Edit student"
+						onclick={() => (editing = student)}><Icon name="pencil" /></button
+					>
+					<button
+						type="button"
+						class="shrink-0 rounded p-1 text-white/60 hover:bg-white/10 hover:text-white"
+						title="Switch to another advisee"
+						aria-label="Switch advisee"
+						onclick={() => (showPicker = true)}><Icon name="switch" /></button
+					>
+				</div>
 			{/if}
 			<div class="flex-1"></div>
 			{#if student}
@@ -440,47 +472,6 @@
 			<aside
 				class="no-print contents lg:order-1 lg:flex lg:min-w-0 lg:flex-col lg:gap-3 lg:sticky lg:top-4 lg:h-[calc(100vh-5.5rem)] lg:self-start"
 			>
-				<section
-					class="order-5 min-w-0 shrink-0 rounded-lg border border-slate-200 bg-white shadow-sm lg:order-none"
-				>
-					{#if student}
-						<div class="flex items-start justify-between gap-2 px-3 py-2.5">
-							<div class="min-w-0">
-								<h2 class="truncate text-sm font-semibold text-slate-800">{fullName(student)}</h2>
-								<p class="text-xs text-slate-500">
-									{programLabel(student.programId)} · {startTermLabel(student)}
-								</p>
-								{#if student.studentId}
-									<p class="text-xs text-slate-400">{student.studentId}</p>
-								{/if}
-							</div>
-							<div class="flex shrink-0 gap-1">
-								<button
-									type="button"
-									class="inline-flex items-center gap-1 rounded border border-slate-300 px-2 py-0.5 text-xs hover:bg-slate-50"
-									title="Edit name, major, or start term"
-									onclick={() => (editing = student)}><Icon name="pencil" />Edit</button
-								>
-								<button
-									type="button"
-									class="inline-flex items-center gap-1 rounded border border-slate-300 px-2 py-0.5 text-xs hover:bg-slate-50"
-									title="Switch to another advisee"
-									onclick={() => (showPicker = true)}><Icon name="switch" />Switch</button
-								>
-							</div>
-						</div>
-					{:else}
-						<div class="px-3 py-4 text-center">
-							<p class="mb-2 text-xs text-slate-500">No advisee selected.</p>
-							<button
-								type="button"
-								class="inline-flex items-center gap-1 rounded bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-700"
-								onclick={() => (showPicker = true)}><Icon name="user" />Choose a student</button
-							>
-						</div>
-					{/if}
-				</section>
-
 				{#if student}
 					<section
 						class="order-6 min-w-0 shrink-0 rounded-lg border border-slate-200 bg-white shadow-sm lg:order-none"

@@ -52,9 +52,11 @@ sheet instead: move to any term (with the resulting credit load shown per term),
 or choose a course for a placeholder. Drag remains the desktop path; a drag that ends over a
 drop target suppresses the click that follows so the sheet does not open on top of the move.
 
-The header is sticky, so the student, credit count and conflict badges stay in view while a long
-plan scrolls. It sheds its title and catalog year as width shrinks, keeping the student and the
-credit count. Tapping the student name opens the roster, since the student pane is collapsed at the
+The header carries the student's identity — name, start term, major — rather than a side panel,
+since it is the one piece of chrome that never collapses and the one thing every pane is about.
+It is sticky, so that plus the credit count and conflict badges stay in view while a long plan
+scrolls. Detail sheds as width shrinks: the app title contracts to "ODU", the catalog year and
+major drop out, and "Fall 2026" becomes "Fa26". The name never does. Tapping the student name opens the roster, since the student pane is collapsed at the
 bottom. The six export buttons collapse into one **Export** menu below `sm`, defined once and
 rendered either as a menu or as a button row. The plan toolbar uses a **container query** rather
 than a viewport breakpoint: below `30rem` *of column width* the buttons drop their labels and
