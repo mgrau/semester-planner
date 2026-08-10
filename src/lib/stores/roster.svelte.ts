@@ -74,10 +74,6 @@ export function createStudent(
 }
 
 /**
- * Split a legacy single-field name. Records created before names were split, and imported
- * plans, only carry `name`; the last whitespace-separated token is treated as the surname.
- */
-/**
  * Earlier versions recorded planner placement assumptions as zero-credit prior credit, which
  * misreported them as coursework the student had completed. Reclassify them as placements —
  * the information was right, the category was wrong.
@@ -94,6 +90,49 @@ function migratePlacements(s: Student): Student {
 	};
 }
 
+/**
+ * Give every course in a plan a code unique within its term.
+ *
+ * The plan grid renders each term with a keyed {#each} over the course code, and Svelte treats a
+ * repeated key as a fatal error that takes the whole component down — so a single duplicate makes
+ * the plan refuse to display and every button on it appear dead. Placeholders were once coded by
+ * category alone, so two slots of one category in one term collided; plans saved then are still
+ * out there in files and in localStorage. Renumber placeholders, and drop a real course listed
+ * twice in the same term, which is meaningless anyway.
+ */
+function repairDuplicateCodes(s: Student): Student {
+	let seq = 0;
+	let changed = false;
+
+	const semesters = (s.semesters ?? []).map((sem) => {
+		const seen = new Set<string>();
+		const courses = [];
+		let repaired = false;
+		for (const c of sem.courses ?? []) {
+			if (!seen.has(c.code)) {
+				seen.add(c.code);
+				courses.push(c);
+				continue;
+			}
+			changed = repaired = true;
+			// A real course listed twice in one term means nothing; a placeholder is a second
+			// genuine slot that only needs a code of its own.
+			if (!c.placeholder?.category) continue;
+			let code = c.code;
+			while (seen.has(code)) code = `placeholder:${c.placeholder.category}:${seq++}`;
+			seen.add(code);
+			courses.push({ ...c, code });
+		}
+		return repaired ? { ...sem, courses } : sem;
+	});
+
+	return changed ? { ...s, semesters } : s;
+}
+
+/**
+ * Split a legacy single-field name. Records created before names were split, and imported
+ * plans, only carry `name`; the last whitespace-separated token is treated as the surname.
+ */
 function ensureSplitName(s: Student): Student {
 	if (s.lastName != null || s.firstName != null) return s;
 	const parts = (s.name ?? '').trim().split(/\s+/);
@@ -142,15 +181,21 @@ export function shortTermLabel(s: Student): string {
 	return `${TERM_ABBR[s.startTerm]}${String(s.startYear).slice(-2)}`;
 }
 
+/**
+ * Bring a record from storage or an imported file up to what the app expects now. Applied to
+ * everything that enters the roster from outside, so an older plan opens rather than failing.
+ */
+export function normalizeStudent(s: Student): Student {
+	return repairDuplicateCodes(migratePlacements(ensureSplitName(s)));
+}
+
 function load(): Student[] {
 	if (typeof localStorage === 'undefined') return [];
 	try {
 		const raw = localStorage.getItem(STORAGE_KEY);
 		if (!raw) return [];
 		const parsed = JSON.parse(raw);
-		return Array.isArray(parsed)
-			? (parsed as Student[]).map(ensureSplitName).map(migratePlacements)
-			: [];
+		return Array.isArray(parsed) ? (parsed as Student[]).map(normalizeStudent) : [];
 	} catch {
 		// A corrupt blob should not brick the app; start clean and let the advisor re-import.
 		console.warn('Could not read saved roster; starting empty.');
@@ -206,7 +251,8 @@ class Roster {
 
 	/** Replace or add a student from an imported YAML plan. */
 	upsert(raw: Student) {
-		const student = ensureSplitName(raw);
+		// Everything that arrives from outside — an imported file, a PDF — comes through here.
+		const student = normalizeStudent(raw);
 		const i = this.students.findIndex((s) => s.id === student.id);
 		if (i >= 0) this.students[i] = student;
 		else this.students.push(student);

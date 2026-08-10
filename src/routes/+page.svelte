@@ -323,6 +323,53 @@
 
 	// --- roster -------------------------------------------------------------
 	/** Accepts either the exported YAML or a printed PDF, which carries the same record. */
+	/**
+	 * Drop a plan anywhere on the page to open it.
+	 *
+	 * The plan grid already uses HTML5 drag-and-drop to move courses between terms, so every
+	 * handler here bails out unless the drag is carrying files — otherwise dragging a course would
+	 * be read as an import.
+	 */
+	const IMPORTABLE = /\.(ya?ml|pdf)$/i;
+	let fileDragDepth = $state(0);
+
+	function isFileDrag(e: DragEvent): boolean {
+		return Array.from(e.dataTransfer?.types ?? []).includes('Files');
+	}
+
+	function onFileDragEnter(e: DragEvent) {
+		if (!isFileDrag(e)) return;
+		e.preventDefault();
+		fileDragDepth += 1;
+	}
+
+	function onFileDragOver(e: DragEvent) {
+		if (!isFileDrag(e)) return;
+		// Without this the browser navigates away from the app and opens the file itself.
+		e.preventDefault();
+		if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+	}
+
+	function onFileDragLeave(e: DragEvent) {
+		if (!isFileDrag(e)) return;
+		// A null relatedTarget means the pointer left the window, not merely one element for
+		// another, so the count can be dropped outright rather than unwound.
+		fileDragDepth = e.relatedTarget ? Math.max(0, fileDragDepth - 1) : 0;
+	}
+
+	async function onFileDrop(e: DragEvent) {
+		if (!isFileDrag(e)) return;
+		e.preventDefault();
+		fileDragDepth = 0;
+		const file = [...(e.dataTransfer?.files ?? [])].find(
+			(f) => IMPORTABLE.test(f.name) || f.type === 'application/pdf'
+		);
+		// Anything else was not meant for us; let it pass without complaint.
+		if (!file) return;
+		showPicker = false;
+		await importStudent(file);
+	}
+
 	async function importStudent(file: File) {
 		try {
 			const isPdf = /\.pdf$/i.test(file.name) || file.type === 'application/pdf';
@@ -1003,6 +1050,28 @@
 		>
 	</footer>
 </div>
+
+<svelte:window
+	ondragenter={onFileDragEnter}
+	ondragover={onFileDragOver}
+	ondragleave={onFileDragLeave}
+	ondrop={onFileDrop}
+/>
+
+{#if fileDragDepth > 0}
+	<!-- Advisory only; the drop itself is handled on the window, so nothing here takes the event. -->
+	<div
+		class="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-slate-900/30 p-8 print:hidden"
+	>
+		<div
+			class="flex flex-col items-center gap-2 rounded-lg border-2 border-dashed border-blue-400 bg-white/95 px-10 py-8 text-center shadow-lg"
+		>
+			<Icon name="upload" />
+			<p class="text-sm font-medium text-slate-800">Drop a plan to open it</p>
+			<p class="text-xs text-slate-500">A .yaml file, or a PDF printed from this app</p>
+		</div>
+	</div>
+{/if}
 
 <HelpDialog open={showHelp} onclose={() => (showHelp = false)} />
 

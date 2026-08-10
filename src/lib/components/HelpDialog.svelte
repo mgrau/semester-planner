@@ -90,7 +90,8 @@
 					<p class="text-slate-600">
 						In this browser, on this machine — there is no server. Use <strong>.yaml</strong> to move
 						a student to another machine or to keep a copy; a printed PDF carries the plan too, and
-						can be loaded back with <strong>Import</strong>.
+						can be loaded back with <strong>Import</strong> — or by dropping the file anywhere on
+						the page.
 					</p>
 				</section>
 			</div>
