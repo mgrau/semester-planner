@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { courseworkCredits, describePriorCredit, groupOf } from './priorCredits';
-import { catalog, preparationToRecords, startingPreparation } from './catalog';
+import {
+	associateDegreeCategories,
+	catalog,
+	preparationToRecords,
+	startingPreparation
+} from './catalog';
+import { satisfiedCategoriesFrom } from './engine/requirements';
 import type { PriorCredit } from './types';
 
 const view = (p: PriorCredit) => describePriorCredit(p, catalog.genEd, catalog.courses);
@@ -79,3 +85,44 @@ describe('grouping', () => {
 		expect(courseworkCredits(priorCredits)).toBe(0);
 	});
 });
+
+describe('transfer associate degree', () => {
+	it('covers the lower-division categories but not the writing programme', () => {
+		const ids = associateDegreeCategories.map((c) => c.id);
+		// The catalog: lower-division general education is met "except ... requirements for
+		// completion of the undergraduate writing program".
+		expect(ids).not.toContain('written');
+		expect(ids).toContain('oral');
+		expect(ids).toContain('nature');
+		expect(ids).toContain('language');
+	});
+
+	it('never waives an upper-division requirement', () => {
+		const ids = associateDegreeCategories.map((c) => c.id);
+		expect(ids).not.toContain('upper-division-writing-intensive');
+		expect(ids).not.toContain('upper-division-outside-major');
+	});
+
+	it('leaves the writing requirements outstanding after it is applied', () => {
+		const records: PriorCredit[] = associateDegreeCategories.map((c, i) => ({
+			id: String(i),
+			kind: 'category',
+			category: c.id,
+			credits: c.credits
+		}));
+		const satisfied = satisfiedCategoriesFrom(records);
+		expect(satisfied.has('written')).toBe(false);
+		expect(satisfied.has('upper-division-writing-intensive')).toBe(false);
+		expect(satisfied.has('philosophy')).toBe(true);
+	});
+
+	it('awards no credit — a waiver is not coursework', () => {
+		const records: PriorCredit[] = associateDegreeCategories.map((c, i) => ({
+			id: String(i),
+			kind: 'category',
+			category: c.id,
+			credits: c.credits
+		}));
+		expect(courseworkCredits(records)).toBe(0);
+	});
+})

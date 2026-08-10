@@ -182,6 +182,21 @@ term_offerings:
   # fixed rotation, so no term can be recorded truthfully. Leaving them unconstrained lets the
   # planner place them anywhere; confirm availability with the department before registration.
 
+# What a transfer associate degree waives.
+#
+# The catalog's wording: an AA, AS or AA&S from the Virginia Community College System or
+# Richard Bland — or an AAS that includes the general education courses — "meets all
+# lower-division General Education requirements, except those specified as major or college
+# requirements and requirements for completion of the undergraduate writing program".
+#
+# So the bulk option under "Satisfied without coursework" marks every lower-division category
+# except those listed here. The upper-division requirements are never waived by it: the
+# writing-intensive course in the major is taken at ODU regardless.
+associate_degree:
+  label: Associate degree (VCCS or Richard Bland)
+  excludes:
+    - written # the undergraduate writing program — ENGL 110C and ENGL 211C/231C
+
 # Courses that have to be scheduled in the same term.
 #
 # The catalog states this unevenly. CHEM 121N carries a real corequisite on CHEM 122N, so the

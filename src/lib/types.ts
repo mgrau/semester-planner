@@ -57,6 +57,8 @@ export interface Course {
 export interface GenEdCategory {
 	id: string;
 	name: string;
+	/** The catalog's own heading: "Skills", "Ways of Knowing", or the upper-division block. */
+	group?: string;
 	credits: number;
 	notes?: string;
 	waivable?: boolean;

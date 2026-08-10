@@ -41,6 +41,7 @@ interface PreferencesDoc {
 	term_offerings?: Record<string, Term[]>;
 	discontinued?: string[];
 	taken_together?: string[][];
+	associate_degree?: { label?: string; excludes?: string[] };
 }
 
 /** A checkbox offered when creating a student: what they already bring with them. */
@@ -276,6 +277,22 @@ export const programList: NormalizedProgram[] = [...programs.values()].sort((a, 
 );
 
 export const genEdById = new Map<string, GenEdCategory>(catalog.genEd.map((c) => [c.id, c]));
+
+/**
+ * The categories a transfer associate degree covers.
+ *
+ * Lower-division only — the upper-division block (the writing-intensive course in the major,
+ * and upper-division study outside it) is taken at ODU whatever a student transfers in — minus
+ * whatever data/local/preferences.yaml excludes, which is the undergraduate writing program.
+ */
+export const associateDegreeLabel =
+	preferences.associate_degree?.label ?? 'Associate degree (transfer)';
+
+export const associateDegreeCategories: GenEdCategory[] = catalog.genEd.filter(
+	(c) =>
+		!/upper-division/i.test(c.group ?? '') &&
+		!(preferences.associate_degree?.excludes ?? []).includes(c.id)
+);
 
 /** Substring search over code and title, for the catalog picker. */
 export function searchCourses(query: string, limit = 40): Course[] {

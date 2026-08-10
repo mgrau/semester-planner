@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { catalog } from '$lib/catalog';
+	import { catalog, associateDegreeCategories, associateDegreeLabel } from '$lib/catalog';
 	import { parseTranscript, type ParsedRow } from '$lib/engine/transcript';
 	import type { Student } from '$lib/types';
 	import { roster } from '$lib/stores/roster.svelte';
@@ -48,18 +48,36 @@
 		onchange();
 	}
 
-	function addCategory(categoryId: string) {
-		if (!categoryId) return;
+	function satisfy(categoryId: string, source: string) {
+		if (student.priorCredits.some((p) => p.category === categoryId)) return;
 		const cat = catalog.genEd.find((c) => c.id === categoryId);
 		student.priorCredits.push({
 			id: roster.newId(),
 			kind: 'category',
 			category: categoryId,
 			credits: cat?.credits ?? 3,
-			source: 'Satisfied by prior credit'
+			source
 		});
+	}
+
+	function addCategory(value: string) {
+		if (!value) return;
+		if (value === ASSOCIATE_DEGREE) {
+			// One action for the common transfer case, rather than fourteen trips through the
+			// picker. Each category still lands as its own record, so any of them can be undone.
+			for (const cat of associateDegreeCategories) satisfy(cat.id, associateDegreeLabel);
+		} else {
+			satisfy(value, 'Satisfied by prior credit');
+		}
 		onchange();
 	}
+
+	const ASSOCIATE_DEGREE = '__associate_degree__';
+
+	/** True once every category the degree covers is already recorded. */
+	let associateDegreeApplied = $derived(
+		associateDegreeCategories.every((c) => student.priorCredits.some((p) => p.category === c.id))
+	);
 
 	function remove(id: string) {
 		student.priorCredits = student.priorCredits.filter((p) => p.id !== id);
@@ -317,10 +335,21 @@
 			}}
 		>
 			<option value="">Mark a requirement satisfied…</option>
+			{#if !associateDegreeApplied}
+				<option value={ASSOCIATE_DEGREE}>
+					{associateDegreeLabel} — waives {associateDegreeCategories.length} categories
+				</option>
+			{/if}
 			{#each availableCategories as cat (cat.id)}
 				<option value={cat.id}>{cat.name}</option>
 			{/each}
 		</select>
+		<!-- The catalog waives lower-division general education for these degrees, but not the
+		     undergraduate writing program, and never the upper-division requirements. -->
+		<p class="mt-1 text-xs text-slate-400">
+			An associate degree does not waive Written Communication or the writing-intensive course
+			in the major.
+		</p>
 	</div>
 
 	<!-- Placed past ------------------------------------------------------------------- -->

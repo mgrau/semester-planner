@@ -12,7 +12,7 @@ localStorage and travel as YAML files.
 ```sh
 npm install
 npm run dev          # http://localhost:5173
-npm test             # 154 tests, incl. end-to-end against the real catalog
+npm test             # 158 tests, incl. end-to-end against the real catalog
 npm run build        # static site in build/
 ```
 
@@ -152,6 +152,11 @@ it. Three things live there:
   from the department; courses that genuinely run every semester (the intro sequences, the senior
   thesis courses, introductory astronomy) and the sporadic upper-division electives are
   deliberately left unconstrained rather than given invented terms.
+- **`associate_degree`** — what a transfer associate degree waives. The catalog says an AA, AS
+  or AA&S from the VCCS or Richard Bland meets lower-division general education *"except those
+  specified as major or college requirements and requirements for completion of the undergraduate
+  writing program"*, so the bulk option waives 11 categories and leaves Written Communication and
+  the upper-division block alone.
 - **`taken_together`** — courses that must share a term. The catalog states this unevenly:
   CHEM 121N carries a real corequisite on CHEM 122N, but CHEM 123N has none and CHEM 124N lists
   123N only as a *pre-or-corequisite*, which would permit taking the lab a term later. Each entry
