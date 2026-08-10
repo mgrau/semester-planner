@@ -429,15 +429,15 @@
 			</div>
 		</div>
 	{:else}
-		<div class="mx-auto grid max-w-[1800px] gap-4 p-4 lg:grid-cols-[260px_1fr_320px]">
+		<div class="mx-auto grid max-w-[1800px] gap-3 p-3 sm:gap-4 sm:p-4 lg:grid-cols-[260px_1fr_320px]">
 			<!-- Student, settings, earned credit, conflicts ------------------------- -->
 			<!-- `contents` below lg lets these sections become grid children in their own right,
 			     so the plan can come first on a phone without rendering the DOM twice. -->
 			<aside
-				class="no-print contents lg:order-1 lg:flex lg:flex-col lg:gap-3 lg:sticky lg:top-4 lg:h-[calc(100vh-5.5rem)] lg:self-start"
+				class="no-print contents lg:order-1 lg:flex lg:min-w-0 lg:flex-col lg:gap-3 lg:sticky lg:top-4 lg:h-[calc(100vh-5.5rem)] lg:self-start"
 			>
 				<section
-					class="order-5 shrink-0 rounded-lg border border-slate-200 bg-white shadow-sm lg:order-none"
+					class="order-5 min-w-0 shrink-0 rounded-lg border border-slate-200 bg-white shadow-sm lg:order-none"
 				>
 					{#if student}
 						<div class="flex items-start justify-between gap-2 px-3 py-2.5">
@@ -479,7 +479,7 @@
 
 				{#if student}
 					<section
-						class="order-6 shrink-0 rounded-lg border border-slate-200 bg-white shadow-sm lg:order-none"
+						class="order-6 min-w-0 shrink-0 rounded-lg border border-slate-200 bg-white shadow-sm lg:order-none"
 					>
 						<button
 							type="button"
@@ -531,7 +531,7 @@
 						{/if}
 					</section>
 
-					<div class="order-7 lg:order-none lg:min-h-0 lg:shrink-0 lg:overflow-y-auto">
+					<div class="order-7 min-w-0 lg:order-none lg:min-h-0 lg:shrink-0 lg:overflow-y-auto">
 						<PriorCreditsPanel {student} onchange={touch} />
 					</div>
 
@@ -543,7 +543,7 @@
 							? 'bg-amber-100 text-amber-800'
 							: 'bg-emerald-100 text-emerald-700'}
 					<section
-						class="order-4 rounded-lg border border-slate-200 bg-white shadow-sm lg:order-none lg:flex lg:min-h-0 lg:flex-1 lg:flex-col"
+						class="order-4 min-w-0 rounded-lg border border-slate-200 bg-white shadow-sm lg:order-none lg:flex lg:min-h-0 lg:flex-1 lg:flex-col"
 					>
 						<button
 							type="button"
@@ -610,7 +610,7 @@
 			<!-- Two rows of four fill the viewport, so a standard 4-year plan needs no page
 			     scroll; a longer plan scrolls inside this column only. -->
 			<main
-				class="order-1 flex flex-col lg:order-2 lg:sticky lg:top-4 lg:h-[calc(100vh-5.5rem)] lg:self-start"
+				class="order-1 flex min-w-0 flex-col lg:order-2 lg:sticky lg:top-4 lg:h-[calc(100vh-5.5rem)] lg:self-start"
 			>
 				{#if !student}
 					<div class="rounded-lg border border-dashed border-slate-300 bg-white p-12 text-center">
@@ -654,7 +654,7 @@
 							>
 							{#if showExports}
 								<div
-									class="absolute right-0 z-30 mt-1 w-52 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg"
+									class="absolute right-0 z-30 mt-1 w-52 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg"
 								>
 									{#each exportActions as action (action.label)}
 										{#if action.href}
@@ -747,7 +747,7 @@
 					{/if}
 
 					<div class="lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-1">
-						<div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+						<div class="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
 						{#each sortedSemesters as sem (sem.id)}
 							<SemesterCard
 								semester={sem}
@@ -775,13 +775,13 @@
 			<!-- Sticky full-height column: the two panes divide the viewport and scroll
 			     independently, so requirements stay visible while the plan grid scrolls. -->
 			<aside
-				class="contents lg:order-3 lg:flex lg:flex-col lg:gap-3 lg:sticky lg:top-4 lg:h-[calc(100vh-5.5rem)] lg:self-start"
+				class="contents lg:order-3 lg:flex lg:min-w-0 lg:flex-col lg:gap-3 lg:sticky lg:top-4 lg:h-[calc(100vh-5.5rem)] lg:self-start"
 			>
 				{#if student && program}
-					<div class="order-2 lg:order-none lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+					<div class="order-2 min-w-0 lg:order-none lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
 						<RequirementsPanel title="Major requirements" items={majorProgress} fill collapsible />
 					</div>
-					<div class="order-3 lg:order-none lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+					<div class="order-3 min-w-0 lg:order-none lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
 						<RequirementsPanel title="General education" items={genedProgress} fill collapsible />
 					</div>
 				{/if}

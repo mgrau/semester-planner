@@ -128,7 +128,7 @@
 </script>
 
 <div
-	class="print-page flex min-h-32 flex-col rounded-lg border bg-white shadow-sm transition-colors sm:min-h-56 {showGap
+	class="print-page flex min-h-32 min-w-0 flex-col rounded-lg border bg-white shadow-sm transition-colors sm:min-h-56 {showGap
 		? 'border-blue-400 ring-1 ring-blue-300'
 		: 'border-slate-200'}"
 	role="list"
@@ -161,6 +161,7 @@
 		{#each entries as entry (entry.key)}
 			<div
 				role="listitem"
+				class="min-w-0"
 				data-chip={entry.gap || entry.hidden ? '0' : '1'}
 				class:hidden={!entry.gap && entry.hidden}
 				animate:flip={{ duration: 180, easing: cubicOut }}

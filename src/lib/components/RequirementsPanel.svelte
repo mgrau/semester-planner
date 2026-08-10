@@ -146,7 +146,7 @@
 				{#if openDetail === item.id && item.notes}
 					<!-- Popover, not inline: the catalog text is often several paragraphs. -->
 					<div
-						class="absolute right-2 z-20 mt-1 max-h-64 w-80 overflow-y-auto rounded-md border border-slate-200 bg-white p-3 text-xs whitespace-pre-line text-slate-600 shadow-lg"
+						class="absolute right-2 left-2 z-20 mt-1 max-h-64 overflow-y-auto rounded-md border border-slate-200 bg-white p-3 text-xs whitespace-pre-line text-slate-600 shadow-lg sm:left-auto sm:w-80"
 					>
 						<div class="mb-1 flex items-start justify-between gap-2">
 							<span class="font-semibold text-slate-800">{item.name}</span>

@@ -257,7 +257,7 @@
 				bind:value={newPlacement}
 				placeholder="MATH 163"
 				aria-label="Course the student places past"
-				class="w-28 rounded border border-slate-300 px-2 py-0.5 text-xs uppercase"
+				class="w-full min-w-0 flex-1 rounded border border-slate-300 px-2 py-0.5 text-xs uppercase sm:w-28 sm:flex-none"
 				onkeydown={(e) => e.key === 'Enter' && addPlacement()}
 			/>
 			<button
@@ -277,7 +277,7 @@
 				<input
 					bind:value={newCode}
 					placeholder="MATH 211"
-					class="w-28 rounded border border-slate-300 px-2 py-1 text-xs uppercase"
+					class="w-full min-w-0 flex-1 rounded border border-slate-300 px-2 py-1 text-xs uppercase sm:w-28 sm:flex-none"
 					onkeydown={(e) => e.key === 'Enter' && addCourse()}
 				/>
 				<input
