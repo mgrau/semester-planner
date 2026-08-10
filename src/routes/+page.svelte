@@ -401,14 +401,14 @@
 	<header
 		class="no-print sticky top-0 z-40 border-b border-slate-200 bg-[var(--color-odu-blue)] text-white"
 	>
-		<div class="mx-auto flex max-w-[1800px] items-center gap-2 px-3 py-2 sm:gap-4 sm:px-4 sm:py-2.5">
+		<div class="mx-auto flex max-w-[1800px] items-center gap-1.5 px-3 py-2 sm:gap-4 sm:px-4 sm:py-2.5">
 			<!-- The full title and catalog year are context, not identity; on a phone the student
 			     and the credit count are what matter, so the chrome gives way first. -->
-			<!-- The title yields space to the student, who is the more useful thing to see. -->
-			<h1 class="shrink-0 text-sm font-semibold sm:text-base">
+			<!-- The title yields space to the student, and on a phone gives it up entirely: you
+			     know which app you opened, and the name and status badge do not fit beside it. -->
+			<h1 class="hidden shrink-0 text-sm font-semibold sm:block sm:text-base">
 				<span class="hidden md:inline">ODU Semester Planner</span>
-				<span class="hidden sm:inline md:hidden">ODU Planner</span>
-				<span class="sm:hidden">ODU</span>
+				<span class="md:hidden">ODU Planner</span>
 			</h1>
 			<span class="hidden shrink-0 rounded bg-white/10 px-2 py-0.5 text-xs lg:inline">
 				Catalog {catalog.catalogYear}
@@ -446,9 +446,11 @@
 						aria-label="Edit student"
 						onclick={() => (editing = student)}><Icon name="pencil" /></button
 					>
+					<!-- Hidden on a phone, where tapping the name already opens the roster and the
+					     header has no room for a second way to do it. -->
 					<button
 						type="button"
-						class="shrink-0 rounded p-1 text-white/60 hover:bg-white/10 hover:text-white"
+						class="hidden shrink-0 rounded p-1 text-white/60 hover:bg-white/10 hover:text-white sm:block"
 						title="Switch to another advisee"
 						aria-label="Switch advisee"
 						onclick={() => (showPicker = true)}><Icon name="switch" /></button
@@ -654,10 +656,10 @@
 									: 'Show summer terms in the plan'}
 								onclick={() => toggleSummers(!student.settings.includeSummers)}
 							>
-								<Icon name={student.settings.includeSummers ? 'check' : 'plus'} />
-								<span class="hidden @min-[30rem]:inline">Summers</span><span
-									class="@min-[30rem]:hidden">Su</span
-								>
+								<!-- Its own icon, not a second plus: beside "+ Term" two plus signs would mean
+								     different things, and at narrow widths the icon is all that is left. -->
+								<Icon name="sun" />
+								<span class="hidden @min-[30rem]:inline">Summers</span>
 							</button>
 
 							<div class="flex-1"></div>
