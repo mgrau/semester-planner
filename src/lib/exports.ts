@@ -10,6 +10,67 @@ export function studentToYaml(student: Student): string {
 	return stringify({ format: 'odu-planner-student/v1', student }, { lineWidth: 100 });
 }
 
+/**
+ * Markers around the plan data embedded in the printed page.
+ *
+ * A browser turning HTML into a PDF cannot attach a file to it, so the record rides along as
+ * text: invisible on the page, present in the PDF's text layer, and findable by these markers.
+ */
+export const PLAN_DATA_BEGIN = 'ODU-PLANNER-DATA-BEGIN';
+export const PLAN_DATA_END = 'ODU-PLANNER-DATA-END';
+
+/**
+ * Base64 rather than the YAML itself: PDF text extraction does not preserve whitespace
+ * faithfully, and YAML is whitespace-significant, so a round-trip through a text layer would
+ * corrupt it. Base64 has no whitespace in its alphabet, so whatever line breaks extraction
+ * introduces can simply be stripped.
+ */
+export function encodeStudent(student: Student): string {
+	const bytes = new TextEncoder().encode(JSON.stringify(student));
+	let binary = '';
+	for (const b of bytes) binary += String.fromCharCode(b);
+	return btoa(binary);
+}
+
+export function decodeStudent(encoded: string): Student {
+	const clean = encoded.replace(/[^A-Za-z0-9+/=]/g, '');
+	const binary = atob(clean);
+	const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
+	return JSON.parse(new TextDecoder().decode(bytes)) as Student;
+}
+
+/** Pull a plan out of text extracted from a PDF, or null if this PDF has none. */
+export function extractEmbeddedStudent(text: string): Student | null {
+	const start = text.indexOf(PLAN_DATA_BEGIN);
+	const end = text.indexOf(PLAN_DATA_END, start + 1);
+	if (start < 0 || end < 0) return null;
+	const student = decodeStudent(text.slice(start + PLAN_DATA_BEGIN.length, end));
+	if (!student?.semesters || !student?.programId) {
+		throw new Error('The plan data in that PDF is incomplete.');
+	}
+	return student;
+}
+
+/**
+ * Text of every page, concatenated. pdf.js is imported on demand: it is a few hundred KB and
+ * only matters when someone actually drops a PDF.
+ */
+export async function textFromPdf(file: File): Promise<string> {
+	const pdfjs = await import('pdfjs-dist');
+	const worker = await import('pdfjs-dist/build/pdf.worker.mjs?url');
+	pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
+
+	const doc = await pdfjs.getDocument({ data: await file.arrayBuffer() }).promise;
+	let text = '';
+	for (let page = 1; page <= doc.numPages; page++) {
+		const content = await (await doc.getPage(page)).getTextContent();
+		// Joined without separators: the payload is one long base64 run and extraction already
+		// breaks it into fragments.
+		text += content.items.map((i) => ('str' in i ? i.str : '')).join('');
+	}
+	return text;
+}
+
 export function studentFromYaml(text: string): Student {
 	const doc = parse(text);
 	const student = doc?.student ?? doc;

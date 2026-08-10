@@ -28,6 +28,7 @@
 		"vitest": "^4.1.10"
 	},
 	"dependencies": {
+		"pdfjs-dist": "^6.2.108",
 		"yaml": "^2.9.0"
 	}
 }

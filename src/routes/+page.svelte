@@ -34,6 +34,8 @@
 		planToTsv,
 		studentToYaml,
 		studentFromYaml,
+		extractEmbeddedStudent,
+		textFromPdf,
 		copyPlanToClipboard,
 		download,
 		slugify
@@ -340,9 +342,20 @@
 	}
 
 	// --- roster -------------------------------------------------------------
+	/** Accepts either the exported YAML or a printed PDF, which carries the same record. */
 	async function importStudent(file: File) {
 		try {
-			const s = studentFromYaml(await file.text());
+			const isPdf = /\.pdf$/i.test(file.name) || file.type === 'application/pdf';
+			const s = isPdf
+				? extractEmbeddedStudent(await textFromPdf(file))
+				: studentFromYaml(await file.text());
+
+			if (!s) {
+				alert(
+					'That PDF has no plan data in it. Only PDFs printed from this app carry a plan; use the .yaml file otherwise.'
+				);
+				return;
+			}
 			s.id = roster.newId();
 			roster.upsert(s);
 		} catch (e) {

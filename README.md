@@ -12,7 +12,7 @@ localStorage and travel as YAML files.
 ```sh
 npm install
 npm run dev          # http://localhost:5173
-npm test             # 130 tests, incl. end-to-end against the real catalog
+npm test             # 135 tests, incl. end-to-end against the real catalog
 npm run build        # static site in build/
 ```
 

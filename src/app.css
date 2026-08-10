@@ -30,7 +30,20 @@ body {
    The printable plan is a normal route styled for paper: the browser's
    "Save as PDF" produces real vector text, which beats a canvas rasterization
    and keeps course codes selectable in the resulting file. */
+/* The embedded plan data: never on screen, and on paper only as unreadable 1px white text.
+   It exists so a printed PDF can be loaded back into the app. */
+.plan-data {
+	display: none;
+}
+
 @media print {
+	.plan-data {
+		display: block;
+		font-size: 1px;
+		line-height: 1;
+		color: #fff;
+		word-break: break-all;
+	}
 	.no-print {
 		display: none !important;
 	}

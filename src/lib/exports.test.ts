@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { planToHtmlTable } from './exports';
+import {
+	PLAN_DATA_BEGIN,
+	PLAN_DATA_END,
+	decodeStudent,
+	encodeStudent,
+	extractEmbeddedStudent,
+	planToHtmlTable
+} from './exports';
 import { catalog } from './catalog';
 import type { CourseKind } from './courseKind';
 import type { Student } from './types';
@@ -95,5 +102,33 @@ describe('spreadsheet export', () => {
 		const r = cells(planToHtmlTable(withEmpty, catalog, kinds));
 		expect(r[2].at(-1)).toBe('0');
 		expect(r.at(-1)?.at(-1)).toBe('=SUM(D3)');
+	});
+});
+
+describe('plan data embedded in the printed PDF', () => {
+	it('round-trips a student through the encoding', () => {
+		const encoded = encodeStudent(student);
+		expect(decodeStudent(encoded)).toEqual(student);
+	});
+
+	it('survives the whitespace a PDF text layer introduces', () => {
+		// Extraction breaks a long run into fragments and may insert line breaks; base64 has no
+		// whitespace in its alphabet, so stripping it is lossless. YAML would not survive this.
+		const mangled = encodeStudent(student).replace(/(.{40})/g, '$1\n   ');
+		expect(decodeStudent(mangled)).toEqual(student);
+	});
+
+	it('finds the payload inside surrounding page text', () => {
+		const page = `Test Student — Astrophysics Fall 2026 MATH 211 …${PLAN_DATA_BEGIN}${encodeStudent(student)}${PLAN_DATA_END}Advising aid only.`;
+		expect(extractEmbeddedStudent(page)?.name).toBe(student.name);
+	});
+
+	it('returns null for a PDF that carries no plan', () => {
+		expect(extractEmbeddedStudent('Some other document entirely.')).toBeNull();
+	});
+
+	it('reports a truncated payload rather than importing a broken student', () => {
+		const page = `${PLAN_DATA_BEGIN}${encodeStudent({ ...student, semesters: [] }).slice(0, 20)}${PLAN_DATA_END}`;
+		expect(() => extractEmbeddedStudent(page)).toThrow();
 	});
 });

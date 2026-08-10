@@ -152,7 +152,7 @@
 						<span class="inline-flex items-center gap-1"><Icon name="upload" />Import</span>
 						<input
 							type="file"
-							accept=".yaml,.yml"
+							accept=".yaml,.yml,.pdf"
 							class="hidden"
 							onchange={(e) => {
 								const f = e.currentTarget.files?.[0];

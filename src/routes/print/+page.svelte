@@ -14,6 +14,7 @@
 	import { majorViewProgress } from '$lib/engine/majorView';
 	import { buildKindIndex, kindOf, KIND_STYLES } from '$lib/courseKind';
 	import { base } from '$app/paths';
+	import { PLAN_DATA_BEGIN, PLAN_DATA_END, encodeStudent } from '$lib/exports';
 
 	let student = $derived(roster.selected);
 	let program = $derived(student ? catalog.programs.get(student.programId) : undefined);
@@ -211,6 +212,15 @@
 				<p class="text-[10px] leading-snug whitespace-pre-line text-slate-700">{student.notes}</p>
 			</section>
 		{/if}
+
+		<!--
+			The plan itself, carried in the PDF's text layer so the document can be loaded back.
+			Invisible on the page (1px, white) rather than hidden with `display: none`, which would
+			keep it out of the PDF altogether. Screen-only viewers never see it; see app.css.
+		-->
+		<div class="plan-data" aria-hidden="true">
+			{PLAN_DATA_BEGIN}{encodeStudent(student)}{PLAN_DATA_END}
+		</div>
 
 		<p class="mt-3 text-[9px] text-slate-400">
 			Advising aid only. Verify against DegreeWorks and the official ODU catalog before
