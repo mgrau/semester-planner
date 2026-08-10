@@ -102,7 +102,9 @@
 			<p class="text-xs text-slate-600">
 				{programLabel(student.programId)} · Catalog {student.catalogYear}{#if student.studentId}
 					· {student.studentId}{/if} ·
-				{totalCredits(taken) + placeholderCredits}/{program?.total_credits ?? 120} cr ·
+				<span class="whitespace-nowrap"
+					>{totalCredits(taken) + placeholderCredits}/{program?.total_credits ?? 120} cr</span
+				> ·
 				{new Date().toLocaleDateString()}
 			</p>
 		</header>
@@ -131,7 +133,9 @@
 								<thead>
 									<tr class="border-b border-slate-400">
 										<th colspan="2" class="pb-0.5 text-left align-top font-bold">{termLabel(sem)}</th>
-										<th class="pb-0.5 text-right align-top font-bold">
+										<!-- The unit must not wrap away from its number; the column is narrow enough
+										     that "15" and "cr" would otherwise land on separate lines. -->
+										<th class="pb-0.5 text-right align-top font-bold whitespace-nowrap">
 											{sem.courses.reduce((s, c) => s + c.credits, 0)} cr
 										</th>
 									</tr>
