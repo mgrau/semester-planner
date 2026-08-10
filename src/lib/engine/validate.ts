@@ -121,15 +121,20 @@ export function validatePlan(student: Student, catalog: Catalog): Issue[] {
 				});
 			}
 
-			for (const note of unique([...pre.notes, ...preco.notes, ...co.notes])) {
-				if (isRoutineNote(note)) continue;
-				// The advisor recorded this on the student, e.g. high school chemistry.
-				if (declared.some((d) => note.toLowerCase().includes(d) || d.includes(note.toLowerCase())))
-					continue;
+			// One line per course, not one per clause: a course with three unverifiable
+			// conditions is one thing to check with the student, not three conflicts.
+			const toConfirm = unique([...pre.notes, ...preco.notes, ...co.notes]).filter(
+				(note) =>
+					!isRoutineNote(note) &&
+					!isUnactionableNote(note) &&
+					// The advisor recorded this on the student, e.g. high school chemistry.
+					!declared.some((d) => note.toLowerCase().includes(d) || d.includes(note.toLowerCase()))
+			);
+			if (toConfirm.length) {
 				issues.push({
 					severity: 'info',
 					kind: 'policy',
-					message: `${pc.code}: ${note} — confirm with the student.`,
+					message: `${pc.code} assumes ${toConfirm.join('; ')} — confirm with the student.`,
 					semesterId: sem.id,
 					course: pc.code
 				});
@@ -202,6 +207,21 @@ const ROUTINE_NOTE = /permission of (the )?(instructor|department|the chair)|ins
 
 function isRoutineNote(note: string): boolean {
 	return ROUTINE_NOTE.test(note);
+}
+
+/**
+ * Prose that cannot be acted on, so reporting it only crowds out what can.
+ *
+ * Two kinds show up in the catalog. A recommendation is not a requirement — "CHEM 105N strongly
+ * recommended" is advice, and treating it as something to confirm misrepresents it. And a
+ * dangling comparative like the "or higher" in "MATH 102M or MATH 103M or higher" says nothing
+ * standing alone; the courses it qualifies are already checked.
+ */
+const UNACTIONABLE_NOTE = /\brecommend/i;
+const DANGLING_QUALIFIER = /^(or\s+)?(higher|above|better|equivalent)$/i;
+
+function isUnactionableNote(note: string): boolean {
+	return UNACTIONABLE_NOTE.test(note) || DANGLING_QUALIFIER.test(note.trim());
 }
 
 function unique<T>(xs: T[]): T[] {

@@ -5,48 +5,6 @@ import { KIND_STYLES, type CourseKind } from '$lib/courseKind';
 import { fullName } from '$lib/stores/roster.svelte';
 import { programLabel } from '$lib/catalog';
 
-/** A stable, human-editable YAML representation of a plan. */
-export function planToYaml(student: Student, catalog: Catalog): string {
-	const doc = {
-		student: {
-			name: fullName(student),
-			student_id: student.studentId,
-			program: student.programId,
-			catalog_year: student.catalogYear,
-			exported_at: new Date().toISOString().slice(0, 10)
-		},
-		settings: student.settings,
-		placed_past: student.placements ?? [],
-		prior_credits: student.priorCredits.map((p) => ({
-			...(p.kind === 'course' ? { course: p.course } : { category: p.category }),
-			credits: p.credits,
-			grade: p.grade,
-			source: p.source,
-			note: p.note
-		})),
-		plan: sortSemesters(student.semesters).map((sem) => ({
-			term: termLabel(sem),
-			credits: sem.courses.reduce((s, c) => s + c.credits, 0),
-			courses: sem.courses.map((c) =>
-				c.placeholder
-					? {
-							requirement: c.placeholder.label,
-							category: c.placeholder.category,
-							credits: c.credits
-						}
-					: {
-							course: c.code,
-							title: catalog.courses.get(c.code)?.title,
-							credits: c.credits,
-							...(c.note ? { note: c.note } : {})
-						}
-			)
-		})),
-		notes: student.notes
-	};
-	return stringify(doc, { lineWidth: 100 });
-}
-
 /** Round-trippable export: the full student record, for reloading into the app. */
 export function studentToYaml(student: Student): string {
 	return stringify({ format: 'odu-planner-student/v1', student }, { lineWidth: 100 });
@@ -131,34 +89,53 @@ function esc(s: string): string {
  * fills, bold, and merged header rows — none of which survive TSV. The plain-text flavor is
  * written alongside it, so pasting into a plain editor still gives usable columns.
  */
-export function planToHtmlTable(student: Student, catalog: Catalog, kinds: Map<string, CourseKind>): string {
+export function planToHtmlTable(
+	student: Student,
+	catalog: Catalog,
+	kinds: Map<string, CourseKind>
+): string {
 	const border = 'border:1px solid #cbd5e1;';
 	const rows: string[] = [];
 
-	rows.push(
+	// Row numbers are tracked so the credit cells can be real formulas rather than frozen
+	// numbers: a plan pasted into Sheets is usually about to be edited, and a total that does
+	// not follow the edit is worse than no total. Every row is four columns wide so credits
+	// always land in column D.
+	let row = 0;
+	const push = (html: string) => {
+		rows.push(html);
+		row++;
+	};
+
+	push(
 		`<tr><td colspan="4" style="${border}background:#003057;color:#ffffff;font-weight:bold;font-size:13pt;padding:6px;">` +
 			`${esc(fullName(student))} — ${esc(programLabel(student.programId))}` +
 			`</td></tr>`
 	);
-	rows.push(
+	push(
 		`<tr><td colspan="4" style="${border}background:#eef2f6;color:#334155;padding:4px;">` +
 			`Catalog ${esc(student.catalogYear)} · generated ${new Date().toLocaleDateString()} · advising aid only` +
 			`</td></tr>`
 	);
 
-	let grandTotal = 0;
+	const termTotalCells: string[] = [];
 
 	for (const sem of sortSemesters(student.semesters)) {
-		const termCredits = sem.courses.reduce((s, c) => s + c.credits, 0);
-		grandTotal += termCredits;
+		const count = sem.courses.length;
+		// Header, then the column labels, then the courses.
+		const firstCourseRow = row + 3;
+		const lastCourseRow = firstCourseRow + count - 1;
+		const totalCell = `D${row + 1}`;
+		termTotalCells.push(totalCell);
 
-		rows.push(
+		const total = count ? `=SUM(D${firstCourseRow}:D${lastCourseRow})` : '0';
+		push(
 			`<tr>` +
 				`<td colspan="3" style="${border}background:#1e3a5f;color:#ffffff;font-weight:bold;padding:4px;">${esc(termLabel(sem))}</td>` +
-				`<td style="${border}background:#1e3a5f;color:#ffffff;font-weight:bold;text-align:right;padding:4px;">${termCredits} cr</td>` +
+				`<td style="${border}background:#1e3a5f;color:#ffffff;font-weight:bold;text-align:right;padding:4px;">${total}</td>` +
 				`</tr>`
 		);
-		rows.push(
+		push(
 			`<tr>` +
 				['Course', 'Title', 'Type', 'Cr']
 					.map(
@@ -169,9 +146,10 @@ export function planToHtmlTable(student: Student, catalog: Catalog, kinds: Map<s
 				`</tr>`
 		);
 
-		if (!sem.courses.length) {
-			rows.push(
-				`<tr><td colspan="4" style="${border}color:#94a3b8;font-style:italic;">No courses planned</td></tr>`
+		if (!count) {
+			push(
+				`<tr><td colspan="3" style="${border}color:#94a3b8;font-style:italic;">No courses planned</td>` +
+					`<td style="${border}text-align:right;">0</td></tr>`
 			);
 			continue;
 		}
@@ -184,7 +162,7 @@ export function planToHtmlTable(student: Student, catalog: Catalog, kinds: Map<s
 			const title = isPlaceholder
 				? `${c.placeholder!.label} — choose a course`
 				: (catalog.courses.get(c.code)?.title ?? '');
-			rows.push(
+			push(
 				`<tr>` +
 					`<td style="${border}background:${fill};color:${text};font-weight:bold;font-family:monospace;">${isPlaceholder ? '—' : esc(c.code)}</td>` +
 					`<td style="${border}background:${fill};color:${text};${isPlaceholder ? 'font-style:italic;' : ''}">${esc(title)}</td>` +
@@ -195,10 +173,13 @@ export function planToHtmlTable(student: Student, catalog: Catalog, kinds: Map<s
 		}
 	}
 
-	rows.push(
+	// Sum the per-term totals rather than every course row, so the grand total keeps working
+	// if a whole term is deleted.
+	const grand = termTotalCells.length ? `=SUM(${termTotalCells.join(',')})` : '0';
+	push(
 		`<tr>` +
 			`<td colspan="3" style="${border}background:#003057;color:#ffffff;font-weight:bold;padding:4px;">Total planned credits</td>` +
-			`<td style="${border}background:#003057;color:#ffffff;font-weight:bold;text-align:right;padding:4px;">${grandTotal}</td>` +
+			`<td style="${border}background:#003057;color:#ffffff;font-weight:bold;text-align:right;padding:4px;">${grand}</td>` +
 			`</tr>`
 	);
 

@@ -107,11 +107,21 @@ export function evaluate(expr: Expr | null | undefined, state: CreditState): Eva
 		const deciding = real.length ? real.map((c) => c.result) : parts;
 		const satisfied = deciding.some((p) => p.satisfied);
 
+		// Sibling prose alternatives belong in one sentence. The parser splits "a qualifying score
+		// on SAT or ACT" into two leaves, and reporting "ACT" on its own says nothing; joined back
+		// with "or" it reads as the catalog wrote it.
+		const leafProse = expr.one_of
+			.filter((e) => 'note' in e || 'placement' in e)
+			.map((e) => ('note' in e ? e.note : (e as { placement: string }).placement));
+		const nestedNotes = expr.one_of
+			.filter((e) => !('note' in e) && !('placement' in e))
+			.flatMap((e) => evaluate(e, state).notes);
+
 		return {
 			satisfied,
 			// Any one of the alternatives closes the gap; show them all as options.
 			missing: satisfied ? [] : deciding.flatMap((p) => p.missing),
-			notes: parts.flatMap((p) => p.notes)
+			notes: [...(leafProse.length ? [leafProse.join(' or ')] : []), ...nestedNotes]
 		};
 	}
 

@@ -31,7 +31,6 @@
 	import type { IconName } from '$lib/components/Icon.svelte';
 	import {
 		planToTsv,
-		planToYaml,
 		studentToYaml,
 		studentFromYaml,
 		copyPlanToClipboard,
@@ -301,10 +300,6 @@
 		}
 	}
 
-	function exportYaml() {
-		if (!student) return;
-		download(`${slugify(fullName(student))}-plan.yaml`, planToYaml(student, catalog), 'text/yaml');
-	}
 	/** Save any student's full record, re-importable into this app. */
 	function exportStudentFile(target: Student | null = student) {
 		if (!target) return;
@@ -337,10 +332,9 @@
 			run: copyForSheets
 		},
 		{ label: 'Download .tsv', short: '.tsv', icon: 'table' as IconName, run: exportTsv },
-		{ label: 'Download plan .yaml', short: '.yaml', icon: 'download' as IconName, run: exportYaml },
 		{
-			label: 'Save student file',
-			short: 'Save student',
+			label: 'Save student (.yaml)',
+			short: '.yaml',
 			icon: 'download' as IconName,
 			title: 'Full record, re-importable into this app',
 			run: () => exportStudentFile(student)

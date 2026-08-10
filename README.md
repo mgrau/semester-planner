@@ -12,7 +12,7 @@ localStorage and travel as YAML files.
 ```sh
 npm install
 npm run dev          # http://localhost:5173
-npm test             # 112 tests, incl. end-to-end against the real catalog
+npm test             # 119 tests, incl. end-to-end against the real catalog
 npm run build        # static site in build/
 ```
 
@@ -93,8 +93,10 @@ letterbox.
   all on by default) and **Mathematics already earned** (MATH 212 / 211 / 163 / 166 / 162M, off
   by default). With the defaults, the planner has to assume nothing at all.
 - **Transcript paste**: drop in DegreeWorks or transcript text and confirm the rows it finds.
-- **Exports**: YAML (readable plan), YAML (full re-importable student record), TSV for pasting
-  into Google Sheets, and a print view whose "Save as PDF" produces real selectable text.
+- **Exports**: a formatted paste for Google Sheets **with live formulas** — term totals are
+  `=SUM(...)` over their courses and the grand total sums the term totals, so the numbers follow
+  an edit instead of going stale; TSV; a re-importable student YAML; and a print view whose
+  "Save as PDF" produces real selectable text.
 
 ## Layout
 
