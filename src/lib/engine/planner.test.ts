@@ -196,3 +196,53 @@ describe('generatePlan', () => {
 		expect(placed.length).toBe(1);
 	});
 });
+
+describe('faults found by students testing real plans', () => {
+	const astroLike: NormalizedProgram = {
+		...program,
+		id: 'test-astro',
+		requirements: [{ id: 'core', name: 'Core', all_of: ['MATH 211'] }]
+	};
+
+	/** Language and Culture is 6 credits — two courses, not one of 4 and one of 3. */
+	const sixCreditCategory: GenEdCategory[] = [
+		{ id: 'language', name: 'Language and Culture', credits: 6, approved: ['SPAN 111F'] },
+		{ id: 'nature', name: 'The Nature of Science', credits: 8, approved: ['PHYS 261N'] }
+	];
+
+	const planWith = (genEd: GenEdCategory[]) =>
+		generatePlan({
+			program: astroLike,
+			catalog: { ...catalog, genEd },
+			settings,
+			startTerm: 'fall',
+			startYear: 2026,
+			priorCredits: []
+		});
+
+	it('gives every placeholder a distinct code', () => {
+		// Two slots of one category can land in the same term. They used to share a code, which
+		// is a duplicate key in a keyed {#each} — a hard render error that froze the whole plan
+		// column, so Clear and Auto-populate appeared to do nothing.
+		const r = planWith(sixCreditCategory);
+		const codes = r.semesters.flatMap((s) => s.courses.map((c) => c.code));
+		expect(new Set(codes).size, 'placeholder codes must be unique').toBe(codes.length);
+	});
+
+	it('reserves exactly the credits a category asks for', () => {
+		const r = planWith(sixCreditCategory);
+		const byCategory = new Map<string, number>();
+		for (const sem of r.semesters) {
+			for (const c of sem.courses) {
+				if (!c.placeholder?.category) continue;
+				byCategory.set(
+					c.placeholder.category,
+					(byCategory.get(c.placeholder.category) ?? 0) + c.credits
+				);
+			}
+		}
+		// 6 came out as 4 + 3 = 7 before, over-reserving a credit.
+		expect(byCategory.get('language')).toBe(6);
+		expect(byCategory.get('nature')).toBe(8);
+	});
+});

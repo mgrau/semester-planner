@@ -12,7 +12,7 @@ import type {
 import { coursesIn, evaluate, minimalAdditions, type CreditState } from './expr';
 import { creditsOf, poolOptions, satisfiedCategoriesFrom } from './requirements';
 import { nextTerm, sortSemesters } from './validate';
-import { avoidedCourses, earliestYear, preferredCourses } from '$lib/catalog';
+import { avoidedCourses, classStanding, earliestYear, preferredCourses } from '$lib/catalog';
 
 /**
  * Greedy critical-path planner.
@@ -268,9 +268,12 @@ function genEdSlots(
 			if (catId === cat.id && !held.has(course)) owed -= creditsOf(catalog.courses.get(course));
 		}
 
+		// Split into whole courses that sum to what is owed. Nature of Science is 8, which is two
+		// four-credit labs; Language and Culture is 6, which is two three-credit courses. Taking
+		// 4 first and rounding the remainder up reserved 7 credits for a 6-credit requirement.
 		while (owed > 0) {
-			const chunk = Math.min(owed, 4);
-			slots.push({ category: cat.id, label: cat.name, credits: chunk === 4 ? 4 : 3 });
+			const chunk = owed % 4 === 0 ? 4 : Math.min(3, owed);
+			slots.push({ category: cat.id, label: cat.name, credits: chunk });
 			owed -= chunk;
 		}
 	}
@@ -321,7 +324,11 @@ export function generatePlan(req: PlanRequest): PlanResult {
 		catalog
 	);
 
+	/** Credits the student holds before the term being filled. */
+	let creditsSoFar = req.priorCredits.reduce((n, p) => n + (p.credits ?? 0), 0);
+
 	const semesters: Semester[] = [];
+	let slotSeq = 0;
 	const completed: Set<string> = new Set(held);
 	let { term, year } = { term: req.startTerm, year: req.startYear };
 	const termsPerYear = settings.includeSummers ? 3 : 2;
@@ -340,7 +347,14 @@ export function generatePlan(req: PlanRequest): PlanResult {
 
 		// Class standing, which the catalog does not encode. Senior Thesis lists only ENGL 211C
 		// as a prerequisite, so without this it lands in the sophomore year.
-		const yearOfStudy = Math.floor(semesters.length / termsPerYear) + 1;
+		//
+		// Whichever reading is more generous wins. Credits alone would strand a transfer student's
+		// thesis three years out; terms elapsed alone would hold back a student in their fourth
+		// year here who is a few credits short of the senior threshold.
+		const yearOfStudy = Math.max(
+			classStanding(creditsSoFar),
+			Math.floor(semesters.length / termsPerYear) + 1
+		);
 
 		// Eligible now, hardest-blocking first.
 		const eligible = [...needed]
@@ -422,7 +436,10 @@ export function generatePlan(req: PlanRequest): PlanResult {
 		while (slots.length && credits + slots[0].credits <= cap) {
 			const slot = slots.shift()!;
 			planned.push({
-				code: `placeholder:${slot.category}:${semesters.length}`,
+				// A running counter, not the term index: two slots of the same category can land
+				// in one term, and a repeated code is a duplicate key in a keyed `{#each}` —
+				// which is a hard render error, not a cosmetic clash.
+				code: `placeholder:${slot.category}:${slotSeq++}`,
 				placeholder: { label: slot.label, category: slot.category },
 				credits: slot.credits,
 				auto: true
@@ -433,6 +450,7 @@ export function generatePlan(req: PlanRequest): PlanResult {
 		if (planned.length) {
 			semesters.push({ id, term, year, courses: planned });
 			for (const p of planned) if (!p.placeholder) completed.add(p.code);
+			creditsSoFar += planned.reduce((n, p) => n + p.credits, 0);
 		} else if (needed.size > 0) {
 			// Nothing could be placed — everything left is gated behind a term restriction.
 			semesters.push({ id, term, year, courses: [] });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { catalog, programList } from '$lib/catalog';
+import { catalog, classStanding, programList } from '$lib/catalog';
 import { generatePlan } from './planner';
 import { validatePlan } from './validate';
 import { describe as describeExpr } from './expr';
@@ -254,6 +254,42 @@ function studentWith(overrides: Partial<Student> = {}): Student {
 		...overrides
 	};
 }
+
+describe('class standing follows credits, not the length of the plan', () => {
+	/** Enough prior credit to be a senior on arrival. */
+	const senior = Array.from({ length: 6 }, (_, i) => ({
+		id: String(i),
+		kind: 'course' as const,
+		course: `XXXX ${100 + i}`,
+		credits: 16
+	}));
+
+	it('does not strand the thesis three years out for a transfer student', () => {
+		// Standing used to be counted from the first term of the plan, so a student arriving with
+		// two years of credit had Senior Thesis pushed to their fourth year here.
+		const result = planFor('physics-astrophysics-bs', senior);
+		const idx = (code: string) =>
+			result.semesters.findIndex((s) => s.courses.some((c) => c.code === code));
+		expect(idx('PHYS 489W')).toBeGreaterThanOrEqual(0);
+		expect(idx('PHYS 489W'), 'a senior should reach the thesis promptly').toBeLessThanOrEqual(3);
+	});
+
+	it('still holds it back for a student starting from nothing', () => {
+		const result = planFor('physics-astrophysics-bs');
+		const idx = result.semesters.findIndex((s) =>
+			s.courses.some((c) => c.code === 'PHYS 489W')
+		);
+		expect(idx).toBeGreaterThanOrEqual(4);
+	});
+
+	it('reads standing off the credit thresholds', () => {
+		expect(classStanding(0)).toBe(1);
+		expect(classStanding(30)).toBe(2);
+		expect(classStanding(60)).toBe(3);
+		expect(classStanding(90)).toBe(4);
+		expect(classStanding(200)).toBe(4);
+	});
+});
 
 describe('placement is not credit', () => {
 	it('awards no credit for a declared placement', () => {

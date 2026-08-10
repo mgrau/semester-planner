@@ -299,6 +299,14 @@
 		});
 	}
 
+	/**
+	 * Clearing keeps locked courses, so say so on the button itself when there are any — a plan
+	 * that stays half-full after "Clear" reads as a broken button.
+	 */
+	const lockedCount = $derived(
+		(student?.semesters ?? []).reduce((n, sem) => n + sem.courses.filter((c) => c.locked).length, 0)
+	);
+
 	function clearPlan() {
 		roster.update((s) => {
 			for (const sem of s.semesters) sem.courses = sem.courses.filter((c) => c.locked);
@@ -716,10 +724,16 @@
 							<button
 								type="button"
 								class="inline-flex items-center gap-1.5 rounded border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
-								title="Clear the plan, keeping locked courses"
-								aria-label="Clear the plan, keeping locked courses"
+								title={
+									lockedCount
+										? `Clear the plan, keeping ${lockedCount} locked course${lockedCount === 1 ? '' : 's'}`
+										: 'Clear the plan'
+								}
+								aria-label="Clear unlocked courses"
 								onclick={clearPlan}
-								><Icon name="eraser" /><span class="hidden @min-[30rem]:inline">Clear</span></button
+								><Icon name="eraser" /><span class="hidden @min-[30rem]:inline"
+									>{lockedCount ? 'Clear unlocked' : 'Clear'}</span
+								></button
 							>
 							<div class="flex-1"></div>
 

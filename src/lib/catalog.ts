@@ -38,6 +38,7 @@ interface PreferencesDoc {
 	requirement_labels?: Record<string, string>;
 	starting_preparation?: PreparationOption[];
 	earliest_year?: Record<string, number>;
+	class_standing_credits?: Record<string, number>;
 	term_offerings?: Record<string, Term[]>;
 	discontinued?: string[];
 	taken_together?: string[][];
@@ -82,6 +83,18 @@ export const avoidedCourses = new Set(preferences.avoid ?? []);
 export const earliestYear = new Map<string, number>(
 	Object.entries(preferences.earliest_year ?? {})
 );
+
+/**
+ * Class standing from credits earned: 1 freshman through 4 senior. Thresholds are configurable
+ * because they are policy, not catalog text; see data/local/preferences.yaml.
+ */
+const STANDING = Object.entries(preferences.class_standing_credits ?? { 2: 30, 3: 60, 4: 90 })
+	.map(([year, credits]) => ({ year: Number(year), credits }))
+	.sort((a, b) => b.credits - a.credits);
+
+export function classStanding(credits: number): number {
+	return STANDING.find((s) => credits >= s.credits)?.year ?? 1;
+}
 
 /** Entry conditions offered when creating a student. See data/local/preferences.yaml. */
 export const startingPreparation: PreparationOption[] = preferences.starting_preparation ?? [];

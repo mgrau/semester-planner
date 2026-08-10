@@ -245,6 +245,16 @@ taken_together:
 discontinued:
   - PHYS 120 # Physics in the 21st Century. Leaves PHYS 309 as the Seminar requirement.
 
+# Credits needed for each class standing, which is how `earliest_year` is judged.
+#
+# Standing is a matter of credits earned, not terms elapsed: a student who transfers in two
+# years of coursework is a junior in their first term at ODU. These are the conventional
+# thresholds — confirm them against the catalog for a student sitting near a boundary.
+class_standing_credits:
+  2: 30 # sophomore
+  3: 60 # junior
+  4: 90 # senior
+
 # Courses that should not be scheduled before a given year of study.
 #
 # The catalog's prerequisites are necessary but not sufficient for good advising: PHYS 489W
