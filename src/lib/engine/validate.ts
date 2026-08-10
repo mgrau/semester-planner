@@ -14,6 +14,25 @@ export function termLabel(s: { term: Term; year: number }): string {
 	return `${s.term[0].toUpperCase()}${s.term.slice(1)} ${s.year}`;
 }
 
+/** Chronological position, for comparing two terms without sorting a list. */
+export function termOrdinal(s: { term: Term; year: number }): number {
+	return s.year * 4 + TERM_ORDER[s.term];
+}
+
+/**
+ * The term that follows this one. Summer is skipped unless the plan includes it, so stepping
+ * through a fall/spring plan never lands on a summer that is not wanted.
+ */
+export function nextTerm(
+	term: Term,
+	year: number,
+	includeSummers: boolean
+): { term: Term; year: number } {
+	if (term === 'fall') return { term: 'spring', year: year + 1 };
+	if (term === 'spring') return includeSummers ? { term: 'summer', year } : { term: 'fall', year };
+	return { term: 'fall', year };
+}
+
 /** Prerequisite prose the student has already declared, so it need not be re-confirmed. */
 function declaredNotes(priorCredits: PriorCredit[]): string[] {
 	return priorCredits.flatMap((p) => p.satisfiesNotes ?? []).map((n) => n.toLowerCase());

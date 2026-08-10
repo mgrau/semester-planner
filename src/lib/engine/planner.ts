@@ -11,7 +11,7 @@ import type {
 } from '$lib/types';
 import { coursesIn, evaluate, minimalAdditions, type CreditState } from './expr';
 import { creditsOf, poolOptions, satisfiedCategoriesFrom } from './requirements';
-import { sortSemesters } from './validate';
+import { nextTerm, sortSemesters } from './validate';
 import { avoidedCourses, earliestYear, preferredCourses } from '$lib/catalog';
 
 /**
@@ -47,12 +47,6 @@ export interface PlanResult {
 	/** Requirements the planner could not place within the target horizon. */
 	unplaced: { code: string; reason: string }[];
 	notes: string[];
-}
-
-function nextTerm(term: Term, year: number, includeSummers: boolean): { term: Term; year: number } {
-	if (term === 'fall') return { term: 'spring', year: year + 1 };
-	if (term === 'spring') return includeSummers ? { term: 'summer', year } : { term: 'fall', year };
-	return { term: 'fall', year };
 }
 
 /** Longest chain of still-needed courses that depends on this one. */

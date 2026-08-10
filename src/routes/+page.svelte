@@ -7,7 +7,7 @@
 		startTermLabel,
 		shortTermLabel
 	} from '$lib/stores/roster.svelte';
-	import { validatePlan, sortSemesters, termLabel } from '$lib/engine/validate';
+	import { validatePlan, sortSemesters, termLabel, nextTerm, termOrdinal } from '$lib/engine/validate';
 	import { generatePlan } from '$lib/engine/planner';
 	import {
 		genEdProgress,
@@ -217,26 +217,38 @@
 		pickerTarget = null;
 	}
 
+	/**
+	 * Add the earliest term the plan is missing, rather than always appending to the end.
+	 *
+	 * A plan with Fall 2026 and Fall 2027 but no Spring 2027 has a hole in the middle, and that
+	 * hole is what an advisor is trying to fill. Only once the sequence is unbroken does this
+	 * extend past the last term. Summer is skipped entirely unless the plan includes summers.
+	 */
 	function addSemester() {
 		roster.update((s) => {
 			const sorted = sortSemesters(s.semesters);
-			const last = sorted[sorted.length - 1];
-			let term: Term = 'fall';
-			let year = new Date().getFullYear();
-			if (last) {
-				if (last.term === 'fall') {
-					term = 'spring';
-					year = last.year + 1;
-				} else if (last.term === 'spring') {
-					term = s.settings.includeSummers ? 'summer' : 'fall';
-					year = last.year;
-				} else {
-					term = 'fall';
-					year = last.year;
-				}
+			const add = (t: { term: Term; year: number }) =>
+				s.semesters.push({ id: `${t.term}-${t.year}`, term: t.term, year: t.year, courses: [] });
+
+			if (!sorted.length) {
+				add({ term: s.startTerm, year: s.startYear });
+				return;
 			}
-			const id = `${term}-${year}`;
-			if (!s.semesters.some((x) => x.id === id)) s.semesters.push({ id, term, year, courses: [] });
+
+			const have = new Set(sorted.map((x) => x.id));
+			const last = sorted[sorted.length - 1];
+			let cur = { term: sorted[0].term, year: sorted[0].year };
+
+			while (termOrdinal(cur) <= termOrdinal(last)) {
+				if (!have.has(`${cur.term}-${cur.year}`)) {
+					add(cur);
+					return;
+				}
+				cur = nextTerm(cur.term, cur.year, s.settings.includeSummers);
+			}
+
+			// No gaps: carry on past the end.
+			if (!have.has(`${cur.term}-${cur.year}`)) add(cur);
 		});
 	}
 
@@ -360,16 +372,10 @@
 	}
 	let copied = $state(false);
 	let showExports = $state(false);
+	let showSheetMenu = $state(false);
 
-	/** One definition, rendered as a menu on a phone and as a button row where there is room. */
-	let exportActions = $derived([
-		{
-			label: copied ? 'Copied to clipboard' : 'Copy for Sheets',
-			short: copied ? 'Copied' : 'Copy for Sheets',
-			icon: (copied ? 'check' : 'clipboard') as IconName,
-			run: copyForSheets
-		},
-		{ label: 'Download .tsv', short: '.tsv', icon: 'table' as IconName, run: exportTsv },
+	/** The exports that are plain downloads, shown as their own buttons where there is room. */
+	let fileActions = $derived([
 		{
 			label: 'Save student (.yaml)',
 			short: '.yaml',
@@ -391,6 +397,18 @@
 		run?: () => void;
 		href?: string;
 	}[]);
+
+	/** The phone menu carries everything, since there is no room for a split control there. */
+	let exportActions = $derived([
+		{
+			label: copied ? 'Copied to clipboard' : 'Copy for Sheets',
+			short: copied ? 'Copied' : 'Copy for Sheets',
+			icon: (copied ? 'check' : 'clipboard') as IconName,
+			run: copyForSheets
+		},
+		{ label: 'Download .tsv', short: '.tsv', icon: 'table' as IconName, run: exportTsv },
+		...fileActions
+	]);
 
 	let sortedSemesters = $derived(student ? sortSemesters(student.semesters) : []);
 </script>
@@ -710,7 +728,43 @@
 							</div>
 
 							<div class="hidden flex-wrap items-center gap-2 sm:flex">
-								{#each exportActions as action (action.label)}
+								<!-- Copy and .tsv are the same export in two deliveries, so they share a
+								     control: the click does the common one, the caret offers the other. -->
+								<div class="relative flex">
+									<button
+										type="button"
+										class="inline-flex items-center gap-1.5 rounded-l border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
+										onclick={copyForSheets}
+										><Icon name={copied ? 'check' : 'clipboard'} />{copied
+											? 'Copied'
+											: 'Copy for Sheets'}</button
+									>
+									<button
+										type="button"
+										class="inline-flex items-center rounded-r border border-l-0 border-slate-300 bg-white px-1.5 py-1.5 hover:bg-slate-50"
+										title="Other spreadsheet formats"
+										aria-label="Other spreadsheet formats"
+										aria-expanded={showSheetMenu}
+										onclick={() => (showSheetMenu = !showSheetMenu)}
+										><Icon name="chevron-down" class="h-3 w-3" /></button
+									>
+									{#if showSheetMenu}
+										<div
+											class="absolute top-full right-0 z-30 mt-1 w-44 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg"
+										>
+											<button
+												type="button"
+												class="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50"
+												onclick={() => {
+													exportTsv();
+													showSheetMenu = false;
+												}}><Icon name="table" />Download .tsv</button
+											>
+										</div>
+									{/if}
+								</div>
+
+								{#each fileActions as action (action.label)}
 									{#if action.href}
 										<a
 											href={action.href}
