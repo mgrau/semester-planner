@@ -184,16 +184,15 @@ term_offerings:
 
 # What a transfer associate degree waives.
 #
-# The catalog's wording: an AA, AS or AA&S from the Virginia Community College System or
-# Richard Bland — or an AAS that includes the general education courses — "meets all
-# lower-division General Education requirements, except those specified as major or college
-# requirements and requirements for completion of the undergraduate writing program".
+# The catalog's wording: a qualifying associate degree "meets all lower-division General
+# Education requirements, except those specified as major or college requirements and
+# requirements for completion of the undergraduate writing program".
 #
-# So the bulk option under "Satisfied without coursework" marks every lower-division category
-# except those listed here. The upper-division requirements are never waived by it: the
+# So the option under "Satisfied without coursework" marks every lower-division category except
+# those listed here. The upper-division requirements are never waived by it: the
 # writing-intensive course in the major is taken at ODU regardless.
 associate_degree:
-  label: Associate degree (VCCS or Richard Bland)
+  label: Associate degree (transfer)
   excludes:
     - written # the undergraduate writing program — ENGL 110C and ENGL 211C/231C
 

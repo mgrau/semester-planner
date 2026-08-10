@@ -125,4 +125,25 @@ describe('transfer associate degree', () => {
 		}));
 		expect(courseworkCredits(records)).toBe(0);
 	});
+
+	it('is one record naming the degree, not one per category', () => {
+		const block: PriorCredit = {
+			id: '1',
+			kind: 'category',
+			categories: associateDegreeCategories.map((c) => c.id),
+			credits: 0,
+			source: 'Associate degree (transfer)'
+		};
+		// It satisfies every category it covers...
+		const satisfied = satisfiedCategoriesFrom([block]);
+		expect(satisfied.size).toBe(associateDegreeCategories.length);
+		expect(satisfied.has('philosophy')).toBe(true);
+		expect(satisfied.has('written')).toBe(false);
+
+		// ...while reading as a single line.
+		const v = view(block);
+		expect(v.name).toBe('Associate degree (transfer)');
+		expect(v.detail).toBe('11 general education categories waived');
+		expect(v.credits).toBe('');
+	});
 })

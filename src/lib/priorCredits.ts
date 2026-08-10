@@ -36,6 +36,15 @@ export function describePriorCredit(
 	courses: Map<string, Course>
 ): PriorCreditView {
 	if (p.kind === 'category') {
+		// A block waiver names itself; a single-category record names the requirement.
+		if (p.categories?.length) {
+			const n = p.categories.length;
+			return {
+				name: p.source ?? 'Transfer credit',
+				detail: `${n} general education ${n === 1 ? 'category' : 'categories'} waived`,
+				credits: ''
+			};
+		}
 		const name = genEd.find((c) => c.id === p.category)?.name ?? p.category ?? 'Requirement';
 		return { name, detail: p.source ?? 'Requirement satisfied', credits: '' };
 	}

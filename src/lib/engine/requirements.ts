@@ -243,8 +243,12 @@ export function takenFrom(
 }
 
 export function satisfiedCategoriesFrom(priorCredits: PriorCredit[]): Set<string> {
+	// A record may name one category or several: a transfer associate degree waives a whole
+	// block of them, and is recorded once rather than once per category.
 	return new Set(
-		priorCredits.filter((p) => p.kind === 'category' && p.category).map((p) => p.category!)
+		priorCredits
+			.filter((p) => p.kind === 'category')
+			.flatMap((p) => p.categories ?? (p.category ? [p.category] : []))
 	);
 }
 

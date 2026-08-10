@@ -173,6 +173,11 @@ export interface PriorCredit {
 	course?: string;
 	/** Gen-ed category id, when kind === 'category'. */
 	category?: string;
+	/**
+	 * Several categories satisfied by one thing — a transfer associate degree waives eleven of
+	 * them, and eleven identical rows says less than one row naming the degree.
+	 */
+	categories?: string[];
 	credits: number;
 	grade?: Grade;
 	/** Free text: "AP Physics C", "Tidewater CC PHY 241", "HS language waiver". */

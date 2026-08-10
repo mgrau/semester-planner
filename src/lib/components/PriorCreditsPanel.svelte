@@ -63,9 +63,15 @@
 	function addCategory(value: string) {
 		if (!value) return;
 		if (value === ASSOCIATE_DEGREE) {
-			// One action for the common transfer case, rather than fourteen trips through the
-			// picker. Each category still lands as its own record, so any of them can be undone.
-			for (const cat of associateDegreeCategories) satisfy(cat.id, associateDegreeLabel);
+			// One record naming the degree, not one per category: what the advisor recorded is
+			// "they hold an associate degree", and eleven identical rows would bury the rest.
+			student.priorCredits.push({
+				id: roster.newId(),
+				kind: 'category',
+				categories: associateDegreeCategories.map((c) => c.id),
+				credits: 0,
+				source: associateDegreeLabel
+			});
 		} else {
 			satisfy(value, 'Satisfied by prior credit');
 		}
@@ -74,9 +80,15 @@
 
 	const ASSOCIATE_DEGREE = '__associate_degree__';
 
-	/** True once every category the degree covers is already recorded. */
+	/** Every category already covered, whether recorded singly or as part of a block waiver. */
+	let satisfiedIds = $derived(
+		new Set(
+			student.priorCredits.flatMap((p) => p.categories ?? (p.category ? [p.category] : []))
+		)
+	);
+
 	let associateDegreeApplied = $derived(
-		associateDegreeCategories.every((c) => student.priorCredits.some((p) => p.category === c.id))
+		associateDegreeCategories.every((c) => satisfiedIds.has(c.id))
 	);
 
 	function remove(id: string) {
@@ -137,9 +149,7 @@
 	);
 
 	/** Categories not already recorded, so the picker never offers a duplicate. */
-	let availableCategories = $derived(
-		catalog.genEd.filter((c) => !student.priorCredits.some((p) => p.category === c.id))
-	);
+	let availableCategories = $derived(catalog.genEd.filter((c) => !satisfiedIds.has(c.id)));
 </script>
 
 <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
@@ -344,12 +354,6 @@
 				<option value={cat.id}>{cat.name}</option>
 			{/each}
 		</select>
-		<!-- The catalog waives lower-division general education for these degrees, but not the
-		     undergraduate writing program, and never the upper-division requirements. -->
-		<p class="mt-1 text-xs text-slate-400">
-			An associate degree does not waive Written Communication or the writing-intensive course
-			in the major.
-		</p>
 	</div>
 
 	<!-- Placed past ------------------------------------------------------------------- -->
