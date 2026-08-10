@@ -97,8 +97,8 @@
 		<p class="text-sm text-slate-500">No student selected.</p>
 	{:else}
 		<!-- One compact line: the sheet's value is the plan, not the letterhead. -->
-		<header class="mb-3 flex items-baseline justify-between gap-3 border-b-2 border-slate-800 pb-1.5">
-			<h1 class="text-lg font-bold">{fullName(student)}</h1>
+		<header class="mb-2 flex items-baseline justify-between gap-3 border-b-2 border-slate-800 pb-1">
+			<h1 class="text-base font-bold">{fullName(student)}</h1>
 			<p class="text-xs text-slate-600">
 				{programLabel(student.programId)} · Catalog {student.catalogYear}{#if student.studentId}
 					· {student.studentId}{/if} ·
@@ -108,7 +108,7 @@
 		</header>
 
 		{#if errors.length}
-			<div class="mb-3 rounded border border-red-300 bg-red-50 px-2 py-1.5 text-xs text-red-900">
+			<div class="mb-2 rounded border border-red-300 bg-red-50 px-2 py-1 text-[11px] text-red-900">
 				<strong>{errors.length} unresolved conflict(s):</strong>
 				<ul class="list-inside list-disc">
 					{#each errors as e}<li>{e.message}</li>{/each}
@@ -116,14 +116,14 @@
 			</div>
 		{/if}
 
-		<div class="mb-4 space-y-3">
+		<div class="mb-3 space-y-2">
 			{#each academicYears as group (group.year)}
 				<div
-					class="print-page grid gap-4 {hasSummer ? 'grid-cols-3' : 'grid-cols-2'}"
+					class="print-page grid gap-3 {hasSummer ? 'grid-cols-3' : 'grid-cols-2'}"
 				>
 					{#each group.terms.slice(0, hasSummer ? 3 : 2) as sem}
 						{#if sem}
-							<table class="w-full border-collapse text-[11px] leading-snug">
+							<table class="w-full border-collapse text-[10px] leading-snug">
 								<thead>
 									<tr class="border-b border-slate-400">
 										<th colspan="2" class="pb-0.5 text-left font-bold">{termLabel(sem)}</th>
@@ -137,17 +137,17 @@
 										{@const kind = kindOf(c.code, Boolean(c.placeholder), kindIndex)}
 										<tr class="border-b border-slate-100">
 											<td
-												class="w-[4.5rem] border-l-4 py-0.5 pl-1.5 font-mono font-medium {KIND_STYLES[kind]
+												class="w-16 border-l-4 py-0 pl-1.5 font-mono font-medium {KIND_STYLES[kind]
 													.accent}"
 											>
 												{c.placeholder ? '—' : c.code}
 											</td>
-											<td class="py-0.5">
+											<td class="py-0">
 												{c.placeholder
 													? `${c.placeholder.label} (choose)`
 													: (catalog.courses.get(c.code)?.title ?? '')}
 											</td>
-											<td class="py-0.5 text-right">{c.credits}</td>
+											<td class="py-0 text-right">{c.credits}</td>
 										</tr>
 									{:else}
 										<tr
@@ -164,12 +164,12 @@
 			{/each}
 		</div>
 
-		<div class="grid grid-cols-2 gap-6 text-[11px] leading-snug">
+		<div class="grid grid-cols-2 gap-5 text-[10px] leading-snug">
 			<section class="print-page">
-				<h2 class="mb-1 border-b border-slate-400 text-sm font-bold">Major requirements</h2>
+				<h2 class="mb-0.5 border-b border-slate-400 text-xs font-bold">Major requirements</h2>
 				<ul>
 					{#each major as m}
-						<li class="flex justify-between border-b border-slate-100 py-0.5">
+						<li class="flex justify-between border-b border-slate-100 py-0">
 							<span>{m.satisfied ? '☑' : '☐'} {m.name}</span>
 							<span class="text-slate-500">{m.earnedCredits}/{m.requiredCredits}</span>
 						</li>
@@ -177,10 +177,10 @@
 				</ul>
 			</section>
 			<section class="print-page">
-				<h2 class="mb-1 border-b border-slate-400 text-sm font-bold">General education</h2>
+				<h2 class="mb-0.5 border-b border-slate-400 text-xs font-bold">General education</h2>
 				<ul>
 					{#each gened as g}
-						<li class="flex justify-between border-b border-slate-100 py-0.5">
+						<li class="flex justify-between border-b border-slate-100 py-0">
 							<span>
 								{g.satisfied ? (g.plannedCredits > 0 ? '◐' : '☑') : '☐'}
 								{g.name}
@@ -197,7 +197,7 @@
 		</div>
 
 
-		<p class="mt-5 text-[10px] text-slate-400">
+		<p class="mt-3 text-[9px] text-slate-400">
 			Advising aid only. Verify against DegreeWorks and the official ODU catalog before
 			registration.
 		</p>

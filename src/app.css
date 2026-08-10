@@ -41,7 +41,8 @@ body {
 		break-inside: avoid;
 	}
 	@page {
-		margin: 0.5in;
+		/* Buying vertical room here means less of it has to come out of the type size. */
+		margin: 0.4in;
 		size: letter portrait;
 	}
 }
