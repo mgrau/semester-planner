@@ -100,9 +100,23 @@ _BENIGN_NOTE_RE = re.compile(
     r"|^(?:admission|admitted)\s+(?:to|into)\b"
     r"|^equivalent$"
     r"|^(?:its\s+)?equivalent\b"
-    r"|^approval\s+by\s+department\b",
+    r"|^approval\s+by\s+department\b"
+    # "MATH 102M or MATH 103M or higher": a level qualifier on the list before it. There is no
+    # course to name, and the courses it qualifies are already leaves of the same choice.
+    r"|^(?:or\s+)?(?:higher|above)$"
+    # "High school chemistry" is a real entry condition, just not one expressed as a course.
+    r"|^high\s+school\b",
     re.IGNORECASE,
 )
+
+#: "CHEM 105N strongly recommended" is advice, not a prerequisite.
+_RECOMMENDATION_RE = re.compile(
+    r"\b(?:strongly\s+|highly\s+)?recommend(?:ed|s)?\b|\bsuggested\b",
+    re.IGNORECASE,
+)
+
+#: Words that make a clause binding, so a recommendation alongside them is not the whole story.
+_REQUIREMENT_WORD_RE = re.compile(r"\b(?:required|must|prerequisite)\b", re.IGNORECASE)
 
 _PLACEMENT_RE = re.compile(
     r"\bplacement\b|\bplaced\s+into\b|\bSAT\b|\bACT\b|\bAccuplacer\b"
@@ -481,6 +495,16 @@ def _parse_segment(text: str, ctx: _Ctx) -> Optional[Dict[str, Any]]:
     if len(semis) > 1:
         return _combine("and", [p for p in (_parse_segment(s, ctx) for s in semis) if p])
 
+    # A clause that only recommends is advice about the whole clause, not about its last
+    # course. "CHEM 321 and CHEM 441 recommended" was becoming `CHEM 321 AND note(441)`, which
+    # made CHEM 321 a hard prerequisite the catalog never demanded. Kept whole instead.
+    #
+    # A clause carrying a requirement word as well is left to the normal path, so that
+    # "a microbiology course required and a pathogenesis course recommended" does not lose the
+    # part that binds.
+    if _RECOMMENDATION_RE.search(text) and not _REQUIREMENT_WORD_RE.search(text):
+        return _leaf(text, ctx)
+
     # Prose with no course code at all is a single note -- never shred it.
     if not _has_course(text):
         return _leaf(text, ctx)
@@ -582,6 +606,11 @@ def _leaf(text: str, ctx: _Ctx) -> Optional[Dict[str, Any]]:
     # "Placement into ENGL 110C" is a placement, not a course requirement.
     if re.match(r"^(?:placement|placed|placement\s+testing)\b", working, re.IGNORECASE):
         return {"placement": original}
+
+    # A recommendation names a course without requiring it. Emitting a course leaf here would
+    # turn "CHEM 105N strongly recommended" into a hard prerequisite; keep the wording instead.
+    if _RECOMMENDATION_RE.search(working):
+        return {"note": original}
 
     codes = COURSE_RE.findall(working)
     if len(codes) == 1:

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { catalog, programList } from '$lib/catalog';
 import { generatePlan } from './planner';
 import { validatePlan } from './validate';
+import { describe as describeExpr } from './expr';
 import { DEFAULT_SETTINGS } from '$lib/stores/roster.svelte';
 import { genEdProgress, programProgress, satisfiedCategoriesFrom, takenFrom } from './requirements';
 import type { Student } from '$lib/types';
@@ -370,5 +371,42 @@ describe('gen-ed progress against real data', () => {
 		);
 		expect(progress.find((p) => p.id === 'math')?.satisfied).toBe(true);
 		expect(progress.find((p) => p.id === 'nature')?.satisfied).toBe(true);
+	});
+});
+
+describe('CHEM 121N parses to what the catalog actually says', () => {
+	const chem = catalog.courses.get('CHEM 121N')!;
+
+	it('is no longer flagged for manual review', () => {
+		expect(chem.needs_review).toBeFalsy();
+	});
+
+	it('requires C or better in MATH 102M or 103M, or a higher math course', () => {
+		const prereq = chem.prereq as { all_of: unknown[] };
+		const math = prereq.all_of[0] as { one_of: { course?: string; note?: string }[] };
+		expect(math.one_of.map((b) => b.course ?? b.note)).toEqual([
+			'MATH 102M',
+			'MATH 103M',
+			'higher'
+		]);
+	});
+
+	it('treats the chemistry background as advice, not a requirement', () => {
+		// "High school chemistry, CHEM 103, or CHEM 105N strongly recommended" is a soft
+		// requirement; parsing it into course leaves made CHEM 105N look mandatory.
+		const prereq = chem.prereq as { all_of: { note?: string }[] };
+		expect(prereq.all_of[1].note).toContain('recommended');
+		expect(prereq.all_of[1].note).toContain('High school chemistry');
+	});
+
+	it('must be taken with the lab', () => {
+		expect(describeExpr(chem.coreq)).toBe('CHEM 122N or CHEM 120');
+	});
+
+	it('leaves a default new student with no parse warnings at all', () => {
+		const flagged = ['CHEM 121N', 'CHEM 122N', 'MATH 211', 'MATH 212', 'PHYS 261N'].filter(
+			(c) => catalog.courses.get(c)?.needs_review
+		);
+		expect(flagged).toEqual([]);
 	});
 });

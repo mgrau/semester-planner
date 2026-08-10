@@ -12,7 +12,7 @@ localStorage and travel as YAML files.
 ```sh
 npm install
 npm run dev          # http://localhost:5173
-npm test             # 142 tests, incl. end-to-end against the real catalog
+npm test             # 147 tests, incl. end-to-end against the real catalog
 npm run build        # static site in build/
 ```
 
@@ -213,7 +213,7 @@ The catalog data is scraped, and the scrapers were honest about what they could 
 Before trusting this for a real advising session, read `data/*_review.md`. The things most worth
 knowing:
 
-- **884 of 7,813 courses (11%) are flagged `needs_review`** — their prerequisite text did not
+- **820 of 7,813 courses (10.5%) are flagged `needs_review`** — their prerequisite text did not
   fully parse. The app marks these with an info-level notice when they appear in a plan. Nothing
   was silently dropped; unparsed text is preserved as a note.
 - **Unresolvable prerequisite clauses pass rather than block** — but an instructor override is
