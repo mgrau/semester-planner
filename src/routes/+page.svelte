@@ -607,20 +607,25 @@
 								onclick={addSemester}
 								><Icon name="plus" /><span class="hidden @min-[30rem]:inline">Term</span></button
 							>
-							<label
-								class="inline-flex cursor-pointer items-center gap-1.5 rounded border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
-								title="Show summer terms in the plan"
+							<!-- A toggle rather than a checkbox: it changes the plan on the spot, so it
+							     should read as a control that is currently on, not a form field. -->
+							<button
+								type="button"
+								class="inline-flex items-center gap-1.5 rounded border px-3 py-1.5 text-sm transition-colors {student
+									.settings.includeSummers
+									? 'border-blue-600 bg-blue-600 text-white hover:bg-blue-700'
+									: 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'}"
+								aria-pressed={student.settings.includeSummers}
+								title={student.settings.includeSummers
+									? 'Hide summer terms'
+									: 'Show summer terms in the plan'}
+								onclick={() => toggleSummers(!student.settings.includeSummers)}
 							>
-								<input
-									type="checkbox"
-									class="h-3.5 w-3.5"
-									checked={student.settings.includeSummers}
-									onchange={(e) => toggleSummers(e.currentTarget.checked)}
-								/>
+								<Icon name={student.settings.includeSummers ? 'check' : 'plus'} />
 								<span class="hidden @min-[30rem]:inline">Summers</span><span
 									class="@min-[30rem]:hidden">Su</span
 								>
-							</label>
+							</button>
 
 							<div class="flex-1"></div>
 

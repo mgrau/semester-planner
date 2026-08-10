@@ -118,16 +118,20 @@
 
 		<div class="mb-3 space-y-2">
 			{#each academicYears as group (group.year)}
+				<!-- `items-start` matters: a grid item stretches by default, and a stretched table
+				     hands the extra height to its rows — header included. The term with the fewest
+				     courses gets the most, so its heading drifts down out of line with the others.
+				     Summer, being shortest, drifted furthest. -->
 				<div
-					class="print-page grid gap-3 {hasSummer ? 'grid-cols-3' : 'grid-cols-2'}"
+					class="print-page grid items-start gap-3 {hasSummer ? 'grid-cols-3' : 'grid-cols-2'}"
 				>
 					{#each group.terms.slice(0, hasSummer ? 3 : 2) as sem}
 						{#if sem}
-							<table class="w-full border-collapse text-[10px] leading-snug">
+							<table class="w-full border-collapse align-top text-[10px] leading-snug">
 								<thead>
 									<tr class="border-b border-slate-400">
-										<th colspan="2" class="pb-0.5 text-left font-bold">{termLabel(sem)}</th>
-										<th class="pb-0.5 text-right font-bold">
+										<th colspan="2" class="pb-0.5 text-left align-top font-bold">{termLabel(sem)}</th>
+										<th class="pb-0.5 text-right align-top font-bold">
 											{sem.courses.reduce((s, c) => s + c.credits, 0)} cr
 										</th>
 									</tr>
