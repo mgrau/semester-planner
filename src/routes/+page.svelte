@@ -114,7 +114,7 @@
 	let pickerTitle = $state('Add a course');
 	let showSettings = $state(false);
 	/** Mobile-only disclosure; the pane is always shown at desktop width. */
-	let showConflicts = $state(false);
+	let showNotes = $state(false);
 	/** Course whose action sheet is open — the touch route to move/lock/remove. */
 	let actionTarget = $state<{ course: PlannedCourse; semesterId: string } | null>(null);
 	let showPicker = $state(false);
@@ -358,8 +358,8 @@
 </script>
 
 <div class="min-h-screen">
-	<!-- Sticky so the student, credit count and conflict badges stay in view while a long
-	     plan scrolls on a phone. Below the modal layers, above the page content. -->
+	<!-- Sticky so the student, credit count and status badge stay in view while a long plan
+	     scrolls on a phone. Below the modal layers, above the page content. -->
 	<header
 		class="no-print sticky top-0 z-40 border-b border-slate-200 bg-[var(--color-odu-blue)] text-white"
 	>
@@ -444,7 +444,7 @@
 				{/if}
 				{#if !errorCount && !warnCount}
 					<span class="shrink-0 rounded bg-emerald-500 px-2 py-0.5 text-xs font-medium">
-						<span class="hidden sm:inline">No conflicts</span><span class="sm:hidden">OK</span>
+						<span class="hidden sm:inline">No issues</span><span class="sm:hidden">OK</span>
 					</span>
 				{/if}
 			{/if}
@@ -460,7 +460,7 @@
 		</div>
 	{:else}
 		<div class="mx-auto grid max-w-[1800px] gap-3 p-3 sm:gap-4 sm:p-4 lg:grid-cols-[260px_1fr_320px]">
-			<!-- Student, settings, earned credit, conflicts ------------------------- -->
+			<!-- Student, settings, earned credit, notes ---------------------------- -->
 			<!-- `contents` below lg lets these sections become grid children in their own right,
 			     so the plan can come first on a phone without rendering the DOM twice. -->
 			<aside
@@ -524,9 +524,11 @@
 						<PriorCreditsPanel {student} onchange={touch} />
 					</div>
 
-					<!-- Conflicts sit at the bottom of the desktop column and take the remaining
-					     height; on a phone they collapse to a header that still shows the count. -->
-					{@const conflictTone = errorCount
+					<!-- Notes sit at the bottom of the desktop column and take the remaining height;
+					     on a phone they collapse to a header that still shows the count. Called notes
+					     rather than conflicts because most entries are advisory — a placement to
+					     confirm, a light term — and only the red ones actually block a plan. -->
+					{@const noteTone = errorCount
 						? 'bg-red-100 text-red-700'
 						: warnCount
 							? 'bg-amber-100 text-amber-800'
@@ -537,16 +539,16 @@
 						<button
 							type="button"
 							class="flex w-full items-center justify-between border-b border-slate-100 px-3 py-2.5 lg:hidden"
-							aria-expanded={showConflicts}
-							onclick={() => (showConflicts = !showConflicts)}
+							aria-expanded={showNotes}
+							onclick={() => (showNotes = !showNotes)}
 						>
-							<h3 class="text-sm font-semibold text-slate-800">Conflicts</h3>
+							<h3 class="text-sm font-semibold text-slate-800">Notes</h3>
 							<span class="flex items-center gap-2">
-								<span class="rounded px-1.5 py-0.5 text-xs font-medium {conflictTone}">
+								<span class="rounded px-1.5 py-0.5 text-xs font-medium {noteTone}">
 									{issues.length || 'none'}
 								</span>
 								<Icon
-									name={showConflicts ? 'chevron-down' : 'chevron-right'}
+									name={showNotes ? 'chevron-down' : 'chevron-right'}
 									class="h-4 w-4 text-slate-400"
 								/>
 							</span>
@@ -555,14 +557,14 @@
 						<header
 							class="hidden shrink-0 items-center justify-between border-b border-slate-100 px-3 py-2 lg:flex"
 						>
-							<h3 class="text-sm font-semibold text-slate-800">Conflicts</h3>
-							<span class="rounded px-1.5 text-xs font-medium {conflictTone}">
+							<h3 class="text-sm font-semibold text-slate-800">Notes</h3>
+							<span class="rounded px-1.5 text-xs font-medium {noteTone}">
 								{issues.length || 'none'}
 							</span>
 						</header>
 
 						<ul
-							class="divide-y divide-slate-50 lg:min-h-0 lg:flex-1 lg:overflow-y-auto {showConflicts
+							class="divide-y divide-slate-50 lg:min-h-0 lg:flex-1 lg:overflow-y-auto {showNotes
 								? ''
 								: 'hidden lg:block'}"
 						>
@@ -587,7 +589,7 @@
 								</li>
 							{:else}
 								<li class="px-3 py-4 text-center text-xs text-slate-400">
-									No prerequisite or credit-load conflicts.
+									Nothing to flag.
 								</li>
 							{/each}
 						</ul>
@@ -781,7 +783,14 @@
 			>
 				{#if student && program}
 					<div class="order-2 min-w-0 lg:order-none lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
-						<RequirementsPanel title="Major requirements" items={majorProgress} fill collapsible />
+						<RequirementsPanel
+							title="Major requirements"
+							subtitle={programLabel(student.programId)}
+							items={majorProgress}
+							onedit={() => (editing = student)}
+							fill
+							collapsible
+						/>
 					</div>
 					<div class="order-3 min-w-0 lg:order-none lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
 						<RequirementsPanel title="General education" items={genedProgress} fill collapsible />

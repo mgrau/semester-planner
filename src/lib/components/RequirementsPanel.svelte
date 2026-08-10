@@ -10,9 +10,21 @@
 		fill?: boolean;
 		/** Collapse to a tappable header below `lg`. Always open on a wide screen. */
 		collapsible?: boolean;
+		/** Named under the title — the major these requirements belong to. */
+		subtitle?: string;
+		/** Shows a pencil beside the subtitle when the subtitle is something you can change. */
+		onedit?: () => void;
 	}
 
-	let { title, items, onpick, fill = false, collapsible = false }: Props = $props();
+	let {
+		title,
+		items,
+		onpick,
+		fill = false,
+		collapsible = false,
+		subtitle,
+		onedit
+	}: Props = $props();
 
 	let done = $derived(items.filter((i) => i.satisfied).length);
 
@@ -28,31 +40,51 @@
 		? 'lg:flex lg:min-h-0 lg:flex-1 lg:flex-col'
 		: ''}"
 >
-	{#if collapsible}
-		<!-- Below `lg` the header doubles as the disclosure control; the count stays visible so a
-		     closed pane still says how much is left. -->
-		<button
-			type="button"
-			class="flex w-full shrink-0 items-center justify-between border-b border-slate-100 px-3 py-2.5 lg:hidden"
-			aria-expanded={isOpen}
-			onclick={() => (isOpen = !isOpen)}
-		>
-			<h3 class="text-sm font-semibold text-slate-800">{title}</h3>
-			<span class="flex items-center gap-2">
-				<span class="text-xs text-slate-500">{done}/{items.length} met</span>
-				<Icon name={isOpen ? 'chevron-down' : 'chevron-right'} class="h-4 w-4 text-slate-400" />
+	<!-- One definition of the heading, rendered in a disclosure button below `lg` and as plain
+	     text above it. The edit control has to sit outside that button — a button inside a
+	     button is invalid and would swallow the tap. -->
+	{#snippet heading()}
+		<span class="flex min-w-0 flex-1 items-center justify-between gap-2">
+			<span class="min-w-0">
+				<span class="block text-sm font-semibold text-slate-800">{title}</span>
+				{#if subtitle}
+					<span class="block truncate text-xs text-slate-500">{subtitle}</span>
+				{/if}
 			</span>
-		</button>
-	{/if}
+			<span class="shrink-0 text-xs text-slate-500">{done}/{items.length} met</span>
+		</span>
+	{/snippet}
 
-	<header
-		class="shrink-0 items-center justify-between border-b border-slate-100 px-3 py-2 {collapsible
-			? 'hidden lg:flex'
-			: 'flex'}"
-	>
-		<h3 class="text-sm font-semibold text-slate-800">{title}</h3>
-		<span class="text-xs text-slate-500">{done}/{items.length} met</span>
-	</header>
+	<div class="flex shrink-0 items-center gap-1 border-b border-slate-100 px-3 py-2">
+		{#if collapsible}
+			<button
+				type="button"
+				class="flex min-w-0 flex-1 items-center gap-2 text-left lg:hidden"
+				aria-expanded={isOpen}
+				onclick={() => (isOpen = !isOpen)}
+			>
+				{@render heading()}
+				<Icon
+					name={isOpen ? 'chevron-down' : 'chevron-right'}
+					class="h-4 w-4 shrink-0 text-slate-400"
+				/>
+			</button>
+		{/if}
+
+		<div class="min-w-0 flex-1 {collapsible ? 'hidden lg:flex' : 'flex'}">
+			{@render heading()}
+		</div>
+
+		{#if onedit}
+			<button
+				type="button"
+				class="shrink-0 rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-blue-700"
+				title="Change the major"
+				aria-label="Change the major"
+				onclick={onedit}><Icon name="pencil" /></button
+			>
+		{/if}
+	</div>
 
 	<ul
 		class="divide-y divide-slate-50 {fill ? 'lg:min-h-0 lg:flex-1 lg:overflow-y-auto' : ''} {collapsible &&

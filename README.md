@@ -12,7 +12,7 @@ localStorage and travel as YAML files.
 ```sh
 npm install
 npm run dev          # http://localhost:5173
-npm test             # 119 tests, incl. end-to-end against the real catalog
+npm test             # 118 tests, incl. end-to-end against the real catalog
 npm run build        # static site in build/
 ```
 
@@ -22,11 +22,12 @@ One page, three full-height columns that scroll independently — the page itsel
 Below 1024px it reflows to a single column; see **On a phone** below.
 
 - **Left** — the current advisee with **Edit** (name, student ID, major, start term) and
-  **Switch**, then plan settings, credit already earned, and conflicts at the bottom filling the
+  **Switch**, then plan settings, credit already earned, and notes at the bottom filling the
   remaining height.
 - **Centre** — the semester grid, four across. Eight terms fit without scrolling; a longer plan
   scrolls inside this column.
-- **Right** — the requirement checker: major requirements above, general education below.
+- **Right** — the requirement checker: major requirements above (named with the student's major,
+  with a pencil to change it), general education below.
 
 The roster lives in a modal, grouped by starting cohort and listed as *Last, First · Term ·
 Major*, each row with edit, save-to-YAML, and delete actions. The same edit dialog opens from
@@ -38,9 +39,9 @@ the full wording and the approved-course list.
 
 ## On a phone
 
-Below `lg` the three columns become one, ordered **plan → requirements → conflicts → student**,
+Below `lg` the three columns become one, ordered **plan → requirements → notes → student**,
 so the schedule is what you land on. The secondary panes collapse to tappable headers that keep
-their counts visible while closed ("Requirements 9/14", "Conflicts none").
+their counts visible while closed ("Requirements 9/14", "Notes none").
 
 The asides use `display: contents` below `lg`, which makes their sections grid children in their
 own right and lets each carry its own `order`. That keeps a single DOM: rendering a separate
@@ -54,7 +55,7 @@ drop target suppresses the click that follows so the sheet does not open on top 
 
 The header carries the student's identity — name, start term, major — rather than a side panel,
 since it is the one piece of chrome that never collapses and the one thing every pane is about.
-It is sticky, so that plus the credit count and conflict badges stay in view while a long plan
+It is sticky, so that plus the credit count and status badge stay in view while a long plan
 scrolls. Detail sheds as width shrinks: the app title contracts to "ODU", the catalog year and
 major drop out, and "Fall 2026" becomes "Fa26". The name never does. Tapping the student name opens the roster, since the student pane is collapsed at the
 bottom. The six export buttons collapse into one **Export** menu below `sm`, defined once and
