@@ -46,6 +46,13 @@ export interface PlanRequest {
 	placements?: string[];
 	/** Courses the advisor has already placed and locked; the planner works around them. */
 	locked?: Semester[];
+	/**
+	 * The terms the plan is allowed to use. Given these, the planner fills exactly them and
+	 * invents none — which semesters a student has is the advisor's call, so a plan that does not
+	 * fit is reported as unplaced rather than quietly growing a summer. Omit to let the planner
+	 * lay out its own terms from the start term.
+	 */
+	availableTerms?: { id: string; term: Term; year: number }[];
 }
 
 export interface PlanResult {
@@ -340,15 +347,24 @@ export function generatePlan(req: PlanRequest): PlanResult {
 	const semesters: Semester[] = [];
 	let slotSeq = 0;
 	const completed: Set<string> = new Set(held);
-	let { term, year } = { term: req.startTerm, year: req.startYear };
 	const termsPerYear = settings.includeSummers ? 3 : 2;
 	const targetTermCount = settings.targetYears * termsPerYear;
+
+	// Either the terms the advisor has laid out, or a fresh run of them from the start term.
+	const fixed = req.availableTerms?.length
+		? sortSemesters(req.availableTerms.map((t) => ({ ...t, courses: [] }))).map(
+				({ id, term, year }) => ({ id, term, year })
+			)
+		: null;
+
+	let cursor = 0;
+	let { term, year } = fixed ? fixed[0] : { term: req.startTerm, year: req.startYear };
 	// Allow overrun past the target so an infeasible plan is shown honestly rather than truncated.
-	const maxTerms = targetTermCount + 4;
+	const maxTerms = fixed ? fixed.length : targetTermCount + 4;
 	let guard = 0;
 
 	while ((needed.size > 0 || slots.length > 0) && guard++ < maxTerms) {
-		const id = `${term}-${year}`;
+		const id = fixed ? fixed[cursor].id : `${term}-${year}`;
 		const planned: PlannedCourse[] = [...(lockedByTerm.get(id) ?? [])];
 		let credits = planned.reduce((s, c) => s + c.credits, 0);
 		const cap = term === 'summer' ? settings.summerMaxCredits : settings.maxCreditsPerTerm;
@@ -466,7 +482,23 @@ export function generatePlan(req: PlanRequest): PlanResult {
 			semesters.push({ id, term, year, courses: [] });
 		}
 
-		({ term, year } = nextTerm(term, year, settings.includeSummers));
+		if (fixed) {
+			cursor += 1;
+			if (cursor >= fixed.length) break;
+			({ term, year } = fixed[cursor]);
+		} else {
+			({ term, year } = nextTerm(term, year, settings.includeSummers));
+		}
+	}
+
+	// Terms the plan never reached still belong to the student — and may be holding a locked
+	// course, which must not be dropped just because the planner ran out of work.
+	if (fixed) {
+		const filled = new Set(semesters.map((s) => s.id));
+		for (const t of fixed) {
+			if (filled.has(t.id)) continue;
+			semesters.push({ ...t, courses: [...(lockedByTerm.get(t.id) ?? [])] });
+		}
 	}
 
 	for (const code of needed) {

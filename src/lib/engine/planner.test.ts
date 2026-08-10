@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { generatePlan } from './planner';
-import type { Catalog, Course, GenEdCategory, NormalizedProgram, PlannerSettings } from '$lib/types';
+import type {
+	Catalog,
+	Course,
+	GenEdCategory,
+	NormalizedProgram,
+	PlannerSettings,
+	Term
+} from '$lib/types';
 
 /**
  * A miniature physics curriculum with the same shape as the real one: a MATH gateway chain
@@ -244,5 +251,67 @@ describe('faults found by students testing real plans', () => {
 		// 6 came out as 4 + 3 = 7 before, over-reserving a credit.
 		expect(byCategory.get('language')).toBe(6);
 		expect(byCategory.get('nature')).toBe(8);
+	});
+});
+
+describe('the terms available to the plan', () => {
+	const terms = (ids: [Term, number][]) =>
+		ids.map(([term, year]) => ({ id: `${term}-${year}`, term, year }));
+
+	it('fills only the terms it was given, and adds none', () => {
+		// Auto-populate works inside the schedule the advisor has laid out; growing a summer term
+		// on its own would undo a decision they made deliberately.
+		const availableTerms = terms([
+			['fall', 2026],
+			['spring', 2027],
+			['fall', 2027],
+			['spring', 2028]
+		]);
+		const r = generatePlan({ ...base, availableTerms });
+		expect(r.semesters.map((s) => s.id)).toEqual(availableTerms.map((t) => t.id));
+		expect(r.semesters.some((s) => s.term === 'summer')).toBe(false);
+	});
+
+	it('fills a summer the advisor did add', () => {
+		const availableTerms = terms([
+			['fall', 2026],
+			['spring', 2027],
+			['summer', 2027]
+		]);
+		const r = generatePlan({ ...base, availableTerms });
+		expect(r.semesters.map((s) => s.id)).toEqual(availableTerms.map((t) => t.id));
+	});
+
+	it('reports what did not fit rather than making room for it', () => {
+		const r = generatePlan({ ...base, availableTerms: terms([['fall', 2026]]) });
+		expect(r.semesters).toHaveLength(1);
+		expect(r.unplaced.length).toBeGreaterThan(0);
+	});
+
+	it('keeps a locked course in a term the planner never reached', () => {
+		const availableTerms = terms([
+			['fall', 2026],
+			['spring', 2027],
+			['fall', 2027],
+			['spring', 2028],
+			['fall', 2028],
+			['spring', 2029]
+		]);
+		const locked = [
+			{
+				id: 'spring-2029',
+				term: 'spring' as const,
+				year: 2029,
+				courses: [{ code: 'ENGL 110C', credits: 3, locked: true }]
+			}
+		];
+		const r = generatePlan({ ...base, availableTerms, locked });
+		const last = r.semesters.find((s) => s.id === 'spring-2029');
+		expect(last?.courses.map((c) => c.code)).toContain('ENGL 110C');
+	});
+
+	it('lays out its own terms when none are given', () => {
+		const r = generatePlan(base);
+		expect(r.semesters.length).toBeGreaterThan(1);
 	});
 });

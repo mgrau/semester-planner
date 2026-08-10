@@ -295,7 +295,10 @@
 			startYear: student.startYear,
 			priorCredits: student.priorCredits,
 			placements: student.placements ?? [],
-			locked: student.semesters
+			locked: student.semesters,
+			// Fill the terms already on screen and no others. Adding a term is the advisor's
+			// decision, made with the tabs on the edge of each card.
+			availableTerms: student.semesters
 		});
 		planNotes = result.notes;
 		unplaced = result.unplaced;
@@ -940,7 +943,11 @@
 						</div>
 					{/if}
 
-					<div class="lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:px-1">
+					<!-- The negative margin and matching padding cancel out, so a card's edges line up
+					     with the toolbar above it while the scroll box still has room for the add tabs
+					     hanging off the right of each card. Padding alone would inset the cards;
+					     neither alone would keep the tabs from being clipped. -->
+					<div class="lg:-mx-3 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:px-3">
 						{#snippet termCard(sem: Semester)}
 							{@const next = missingNextTerm(sem)}
 							{@const summer = missingSummer(sem)}
