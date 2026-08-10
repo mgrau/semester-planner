@@ -14,17 +14,19 @@
 	import { majorViewProgress } from '$lib/engine/majorView';
 	import { buildKindIndex, kindOf, KIND_STYLES } from '$lib/courseKind';
 	import { base } from '$app/paths';
-	import { PLAN_DATA_BEGIN, PLAN_DATA_END, encodeStudent, slugify } from '$lib/exports';
+	import { PLAN_DATA_BEGIN, PLAN_DATA_END, encodeStudent } from '$lib/exports';
 
 	let student = $derived(roster.selected);
 	let program = $derived(student ? catalog.programs.get(student.programId) : undefined);
 
 	/**
 	 * "Save as PDF" takes its default filename from the document title, so name the page after
-	 * the student — matching the .yaml export rather than leaving every plan called the same
-	 * thing in the advisor's downloads folder.
+	 * the student rather than leaving every plan called the same thing in the advisor's
+	 * downloads folder.
 	 */
-	let pageTitle = $derived(student ? `${slugify(fullName(student))}-plan` : 'ODU Semester Planner');
+	let pageTitle = $derived(
+		student ? `ODU Semester Plan - ${fullName(student)}` : 'ODU Semester Planner'
+	);
 	let semesters = $derived(student ? sortSemesters(student.semesters) : []);
 
 	/**
