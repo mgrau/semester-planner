@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { isStale, MAX_AGE_MS } from './selfUpdate';
 
 const NOW = Date.parse('2026-08-10T12:00:00.000Z');
-const hours = (n: number) => new Date(NOW - n * 3600_000).toISOString();
+/** Build stamps are Unix seconds, the form svelte.config.js writes. */
+const hours = (n: number) => String(Math.floor((NOW - n * 3600_000) / 1000));
 
 describe('isStale', () => {
 	it('leaves a recent build alone', () => {
@@ -18,11 +19,13 @@ describe('isStale', () => {
 	it('treats an unstamped build as current rather than reloading forever', () => {
 		expect(isStale('', NOW)).toBe(false);
 		expect(isStale('unknown', NOW)).toBe(false);
+		// A dev build has no stamp at all; it must never decide it is out of date.
+		expect(isStale(undefined as unknown as string, NOW)).toBe(false);
 	});
 
 	it('holds at 48 hours', () => {
 		expect(MAX_AGE_MS).toBe(48 * 3600_000);
-		expect(isStale(new Date(NOW - MAX_AGE_MS).toISOString(), NOW)).toBe(false);
-		expect(isStale(new Date(NOW - MAX_AGE_MS - 1).toISOString(), NOW)).toBe(true);
+		expect(isStale(String((NOW - MAX_AGE_MS) / 1000), NOW)).toBe(false);
+		expect(isStale(String((NOW - MAX_AGE_MS) / 1000 - 1), NOW)).toBe(true);
 	});
 });

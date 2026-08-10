@@ -21,12 +21,13 @@ export const MAX_AGE_MS = 48 * 60 * 60 * 1000;
 const RECHECK_MS = 60 * 60 * 1000;
 
 /**
- * `version` is stamped at build time in svelte.config.js. An unparseable stamp means the app was
- * built without one, so treat it as new rather than reloading on every check.
+ * `version` is stamped at build time in svelte.config.js, as Unix seconds. A stamp that is not a
+ * plain number means the app was built without one, so treat it as new rather than reloading on
+ * every check.
  */
 export function isStale(buildStamp: string, now: number, maxAge = MAX_AGE_MS): boolean {
-	const built = Date.parse(buildStamp);
-	return Number.isNaN(built) ? false : now - built > maxAge;
+	if (!/^\d+$/.test(buildStamp)) return false;
+	return now - Number(buildStamp) * 1000 > maxAge;
 }
 
 /**
