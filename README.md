@@ -12,7 +12,7 @@ localStorage and travel as YAML files.
 ```sh
 npm install
 npm run dev          # http://localhost:5173
-npm test             # 118 tests, incl. end-to-end against the real catalog
+npm test             # 122 tests, incl. end-to-end against the real catalog
 npm run build        # static site in build/
 ```
 
@@ -148,6 +148,11 @@ it. Three things live there:
   from the department; courses that genuinely run every semester (the intro sequences, the senior
   thesis courses, introductory astronomy) and the sporadic upper-division electives are
   deliberately left unconstrained rather than given invented terms.
+- **`taken_together`** — courses that must share a term. The catalog states this unevenly:
+  CHEM 121N carries a real corequisite on CHEM 122N, but CHEM 123N has none and CHEM 124N lists
+  123N only as a *pre-or-corequisite*, which would permit taking the lab a term later. Each entry
+  becomes a mutual corequisite, so the planner places the group as a unit and a split plan is
+  flagged.
 - **`discontinued`** — courses ODU no longer offers. They stay in the catalog so a returning
   student's credit can still be named, but the planner will not schedule them and a plan
   containing one is flagged. PHYS 120 is listed, which leaves PHYS 309 as the Seminar requirement.

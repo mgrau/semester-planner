@@ -1,5 +1,6 @@
 import type {
 	Catalog,
+	Expr,
 	Term,
 	Course,
 	GenEdCategory,
@@ -39,6 +40,7 @@ interface PreferencesDoc {
 	earliest_year?: Record<string, number>;
 	term_offerings?: Record<string, Term[]>;
 	discontinued?: string[];
+	taken_together?: string[][];
 }
 
 /** A checkbox offered when creating a student: what they already bring with them. */
@@ -194,23 +196,50 @@ function applyCategoryFilters(categories: GenEdCategory[]): GenEdCategory[] {
 }
 
 /**
- * Apply hand-recorded term availability over what the catalog states.
+ * Apply the hand-recorded corrections in data/local/preferences.yaml over what the catalog says.
  *
- * The catalog names a term for only a handful of courses, and a course with no stated term is
- * treated as available every term — so a fall-only course would silently be schedulable in the
- * spring. These overrides are departmental knowledge; see data/local/preferences.yaml.
+ * Three kinds, all filling gaps the catalog leaves rather than contradicting it:
+ *
+ * - **Term availability.** The catalog names a term for only a handful of courses, and a course
+ *   with no stated term is treated as available every term — so a fall-only course would
+ *   silently be schedulable in the spring.
+ * - **Discontinued courses**, which stay nameable but must never be scheduled.
+ * - **Courses taken together.** A lecture/lab pair the catalog links only loosely becomes a
+ *   mutual corequisite, so the planner places them as a unit and a split plan is flagged.
  */
-function applyTermOfferings(courses: Course[]): Course[] {
-	const overrides = preferences.term_offerings ?? {};
+function applyLocalOverrides(courses: Course[]): Course[] {
+	const terms = preferences.term_offerings ?? {};
 	const retired = new Set(preferences.discontinued ?? []);
-	if (!Object.keys(overrides).length && !retired.size) return courses;
+
+	/** course -> the others it must share a term with */
+	const partners = new Map<string, string[]>();
+	for (const group of preferences.taken_together ?? []) {
+		for (const code of group) {
+			partners.set(code, [...(partners.get(code) ?? []), ...group.filter((c) => c !== code)]);
+		}
+	}
+
+	if (!Object.keys(terms).length && !retired.size && !partners.size) return courses;
+
 	return courses.map((c) => {
-		const terms = overrides[c.code];
-		if (!terms && !retired.has(c.code)) return c;
+		const withPartners = partners.get(c.code);
+		if (!terms[c.code] && !retired.has(c.code) && !withPartners) return c;
+
+		// Add to any corequisite the catalog already states rather than replacing it.
+		const required: Expr[] = (withPartners ?? []).map((course) => ({ course }));
+		const coreq = withPartners?.length
+			? c.coreq
+				? ({ all_of: [c.coreq, ...required] } as Expr)
+				: required.length === 1
+					? required[0]
+					: ({ all_of: required } as Expr)
+			: c.coreq;
+
 		return {
 			...c,
-			...(terms ? { terms } : {}),
-			...(retired.has(c.code) ? { discontinued: true } : {})
+			...(terms[c.code] ? { terms: terms[c.code] } : {}),
+			...(retired.has(c.code) ? { discontinued: true } : {}),
+			...(withPartners?.length ? { coreq } : {})
 		};
 	});
 }
@@ -233,7 +262,7 @@ for (const mod of Object.values(programDocs)) {
 	if (p?.id) programs.set(p.id, normalizeProgram(p));
 }
 
-export const allCourses: Course[] = applyTermOfferings(coursesData.courses ?? []);
+export const allCourses: Course[] = applyLocalOverrides(coursesData.courses ?? []);
 
 export const catalog: Catalog = {
 	courses: buildCourseIndex(allCourses),

@@ -5,6 +5,7 @@ import { generatePlan } from './planner';
 import { reservedByCategory, reservedCredits, takenFrom, totalCredits } from './requirements';
 import { DEFAULT_SETTINGS } from '$lib/stores/roster.svelte';
 import { validatePlan } from './validate';
+import { describe as describeExpr } from './expr';
 import type { Student } from '$lib/types';
 
 const astro = catalog.programs.get('physics-astrophysics-bs')!;
@@ -292,3 +293,55 @@ function studentWith(overrides: Partial<Student> = {}): Student {
 		...overrides
 	};
 }
+
+describe('lecture and lab pairs', () => {
+	it('makes CHEM 123N and CHEM 124N mutual corequisites', () => {
+		// The catalog links them only loosely: 123N has no corequisite, and 124N lists 123N as a
+		// pre-*or*-corequisite, which would permit taking the lab a term later.
+		expect(describeExpr(catalog.courses.get('CHEM 123N')?.coreq)).toBe('CHEM 124N');
+		expect(describeExpr(catalog.courses.get('CHEM 124N')?.coreq)).toBe('CHEM 123N');
+	});
+
+	it('keeps the catalog corequisite the first pair already has', () => {
+		expect(describeExpr(catalog.courses.get('CHEM 121N')?.coreq)).toContain('CHEM 122N');
+	});
+
+	it('schedules each pair in one term', () => {
+		const physics = catalog.programs.get('physics-bs')!;
+		const r = generatePlan({
+			program: physics,
+			catalog,
+			settings: { ...DEFAULT_SETTINGS },
+			startTerm: 'fall',
+			startYear: 2026,
+			priorCredits: [],
+			placements: ['MATH 163', 'MATH 166', 'MATH 162M']
+		});
+		const termOf = (code: string) => r.semesters.find((s) => s.courses.some((c) => c.code === code))?.id;
+		expect(termOf('CHEM 121N')).toBe(termOf('CHEM 122N'));
+		expect(termOf('CHEM 123N')).toBe(termOf('CHEM 124N'));
+		expect(termOf('CHEM 123N')).toBeDefined();
+	});
+
+	it('flags a plan that splits a pair across terms', () => {
+		const student = studentWith({
+			programId: 'physics-bs',
+			placements: ['MATH 163'],
+			semesters: [
+				{
+					id: 'fall-2026',
+					term: 'fall',
+					year: 2026,
+					courses: [
+						{ code: 'CHEM 121N', credits: 3 },
+						{ code: 'CHEM 122N', credits: 1 }
+					]
+				},
+				{ id: 'spring-2027', term: 'spring', year: 2027, courses: [{ code: 'CHEM 123N', credits: 3 }] },
+				{ id: 'fall-2027', term: 'fall', year: 2027, courses: [{ code: 'CHEM 124N', credits: 1 }] }
+			]
+		});
+		const errors = validatePlan(student, catalog).filter((i) => i.kind === 'coreq-unmet');
+		expect(errors.map((e) => e.message)).toContain('CHEM 123N must be taken with CHEM 124N.');
+	});
+});

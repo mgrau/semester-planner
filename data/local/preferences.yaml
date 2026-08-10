@@ -182,6 +182,18 @@ term_offerings:
   # fixed rotation, so no term can be recorded truthfully. Leaving them unconstrained lets the
   # planner place them anywhere; confirm availability with the department before registration.
 
+# Courses that have to be scheduled in the same term.
+#
+# The catalog states this unevenly. CHEM 121N carries a real corequisite on CHEM 122N, so the
+# first lecture/lab pair is already enforced — but CHEM 123N has no corequisite at all, and
+# CHEM 124N lists 123N only as a *pre-or-corequisite*, which permits taking the lab a term
+# later. In practice the lab accompanies its lecture, so record the pairing here.
+#
+# Each entry becomes a mutual corequisite: the planner places the group as a unit, and a plan
+# that splits them is flagged.
+taken_together:
+  - [CHEM 123N, CHEM 124N] # Foundations of Chemistry II lecture and lab
+
 # Courses ODU no longer offers.
 #
 # They stay in the catalog data — a returning student may hold credit for one, and the app must
