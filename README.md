@@ -49,6 +49,10 @@ The asides use `display: contents` below `lg`, which makes their sections grid c
 own right and lets each carry its own `order`. That keeps a single DOM: rendering a separate
 mobile tree would mean two places to change every pane.
 
+Clicking a course opens its catalog entry — when it is offered, its prerequisites and
+corequisites in the catalog's own wording, whether it is writing intensive, and the full
+description — above the actions for it.
+
 **Drag-and-drop does not exist on touch** — `dragstart` and friends never fire there, and the
 hover-only lock and remove buttons are equally unreachable. Tapping a course opens an action
 sheet instead: move to any term (with the resulting credit load shown per term), lock, remove,

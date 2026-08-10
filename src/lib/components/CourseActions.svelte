@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Catalog, PlannedCourse, Semester } from '$lib/types';
 	import { sortSemesters, termLabel } from '$lib/engine/validate';
+	import { describe } from '$lib/engine/expr';
 	import Icon from './Icon.svelte';
 
 	interface Props {
@@ -34,12 +35,36 @@
 		planned && !planned.placeholder ? (catalog.courses.get(planned.code)?.title ?? '') : ''
 	);
 	let ordered = $derived(sortSemesters(semesters));
+
+	/** The catalog entry behind the chip; absent for an unfilled requirement slot. */
+	let course = $derived(planned && !planned.placeholder ? catalog.courses.get(planned.code) : undefined);
+
+	/**
+	 * The catalog's own wording where we have it, rather than the parsed tree read back out.
+	 * If the two ever disagree, the catalog is right — and `needs_review` says so explicitly.
+	 */
+	let facts = $derived.by(() => {
+		if (!course) return [] as { label: string; value: string }[];
+		const out: { label: string; value: string }[] = [];
+		if (course.terms?.length) out.push({ label: 'Offered', value: course.terms.join(', ') });
+		const prereq = course.raw_prereq_text ?? describe(course.prereq);
+		if (prereq) out.push({ label: 'Prerequisites', value: prereq });
+		const precoreq = course.raw_precoreq_text ?? describe(course.precoreq);
+		if (precoreq) out.push({ label: 'Pre- or corequisite', value: precoreq });
+		const coreq = describe(course.coreq);
+		if (coreq) out.push({ label: 'Corequisite', value: coreq });
+		if (course.attributes?.includes('W')) out.push({ label: 'Attributes', value: 'Writing intensive' });
+		return out;
+	});
 </script>
 
 <!--
-	Touch has no drag-and-drop: `dragstart` and friends never fire on a phone, so without this
-	a course cannot be moved, locked, or removed there at all. The hover-only chip buttons are
-	equally unreachable. This sheet is the touch path for every action a chip supports.
+	What a course opens into: the catalog entry — when it runs, what it needs, what it covers —
+	and everything you can do with it from here.
+
+	It is also the only route to those actions on a phone. Touch has no drag-and-drop:
+	`dragstart` and friends never fire there, and the hover-only chip buttons are equally
+	unreachable, so without this a course could not be moved, locked, or removed at all.
 -->
 {#if target && planned}
 	<div
@@ -67,6 +92,35 @@
 					onclick={onclose}><Icon name="close" class="h-4 w-4" /></button
 				>
 			</header>
+
+			{#if course}
+				<div class="max-h-64 overflow-y-auto border-b border-slate-100 px-4 py-3">
+					<dl class="space-y-1.5 text-xs">
+						{#each facts as fact (fact.label)}
+							<div class="flex gap-2">
+								<dt class="w-32 shrink-0 font-medium text-slate-500">{fact.label}</dt>
+								<dd class="min-w-0 flex-1 text-slate-700">{fact.value}</dd>
+							</div>
+						{/each}
+					</dl>
+
+					{#if course.needs_review}
+						<p class="mt-2 rounded bg-amber-50 px-2 py-1 text-xs text-amber-800">
+							The importer could not fully parse this course's prerequisites, so what the app
+							enforces may be incomplete. The wording above is the catalog's.
+						</p>
+					{/if}
+					{#if course.discontinued}
+						<p class="mt-2 rounded bg-amber-50 px-2 py-1 text-xs text-amber-800">
+							ODU no longer offers this course.
+						</p>
+					{/if}
+
+					{#if course.description}
+						<p class="mt-2 text-xs leading-relaxed text-slate-600">{course.description}</p>
+					{/if}
+				</div>
+			{/if}
 
 			<div class="flex flex-col gap-1 border-b border-slate-100 p-2">
 				{#if planned.placeholder}
