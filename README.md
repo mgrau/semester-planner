@@ -19,6 +19,7 @@ npm run build        # static site in build/
 ## Layout
 
 One page, three full-height columns that scroll independently — the page itself never scrolls.
+Below 1024px it reflows to a single column; see **On a phone** below.
 
 - **Left** — the current advisee with **Edit** (name, student ID, major, start term) and
   **Switch**, then plan settings, credit already earned, and conflicts at the bottom filling the
@@ -34,6 +35,28 @@ then. Everywhere outside that list, students are shown as *First Last*.
 
 Catalog policy prose is kept out of the requirement rows; a **more** button opens a popover with
 the full wording and the approved-course list.
+
+## On a phone
+
+Below `lg` the three columns become one, ordered **plan → requirements → conflicts → student**,
+so the schedule is what you land on. The secondary panes collapse to tappable headers that keep
+their counts visible while closed ("Requirements 9/14", "Conflicts none").
+
+The asides use `display: contents` below `lg`, which makes their sections grid children in their
+own right and lets each carry its own `order`. That keeps a single DOM: rendering a separate
+mobile tree would mean two places to change every pane.
+
+**Drag-and-drop does not exist on touch** — `dragstart` and friends never fire there, and the
+hover-only lock and remove buttons are equally unreachable. Tapping a course opens an action
+sheet instead: move to any term (with the resulting credit load shown per term), lock, remove,
+or choose a course for a placeholder. Drag remains the desktop path; a drag that ends over a
+drop target suppresses the click that follows so the sheet does not open on top of the move.
+
+The header sheds its title and catalog year as width shrinks, keeping the student and the credit
+count. Tapping the student name opens the roster, since the student pane is collapsed at the
+bottom. The six export buttons collapse into one **Export** menu below `sm`, defined once and
+rendered either as a menu or as a button row. Modals go full-bleed rather than floating in a
+letterbox.
 
 ## What it does
 

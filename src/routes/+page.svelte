@@ -18,14 +18,16 @@
 		creditsOf
 	} from '$lib/engine/requirements';
 	import { majorViewProgress } from '$lib/engine/majorView';
-	import type { Course, Semester, Student, Term } from '$lib/types';
+	import type { Course, PlannedCourse, Semester, Student, Term } from '$lib/types';
 	import SemesterCard from '$lib/components/SemesterCard.svelte';
 	import RequirementsPanel from '$lib/components/RequirementsPanel.svelte';
 	import CoursePicker from '$lib/components/CoursePicker.svelte';
 	import PriorCreditsPanel from '$lib/components/PriorCreditsPanel.svelte';
 	import StudentPicker from '$lib/components/StudentPicker.svelte';
 	import StudentEditor from '$lib/components/StudentEditor.svelte';
+	import CourseActions from '$lib/components/CourseActions.svelte';
 	import Icon from '$lib/components/Icon.svelte';
+	import type { IconName } from '$lib/components/Icon.svelte';
 	import {
 		planToTsv,
 		planToYaml,
@@ -111,6 +113,10 @@
 	let pickerPool = $state<string[] | undefined>(undefined);
 	let pickerTitle = $state('Add a course');
 	let showSettings = $state(false);
+	/** Mobile-only disclosure; the pane is always shown at desktop width. */
+	let showConflicts = $state(false);
+	/** Course whose action sheet is open — the touch route to move/lock/remove. */
+	let actionTarget = $state<{ course: PlannedCourse; semesterId: string } | null>(null);
 	let showPicker = $state(false);
 	/** The student open in the edit dialog, from either the left pane or the roster list. */
 	let editing = $state<Student | null>(null);
@@ -153,6 +159,22 @@
 			const c = s.semesters.find((x) => x.id === semesterId)?.courses.find((c) => c.code === code);
 			if (c) c.locked = !c.locked;
 		});
+	}
+
+	function openActions(semesterId: string, code: string) {
+		const course = student?.semesters
+			.find((s) => s.id === semesterId)
+			?.courses.find((c) => c.code === code);
+		if (course) actionTarget = { course, semesterId };
+	}
+
+	/** Append to the end of the target term; the sheet has no notion of position. */
+	function moveViaSheet(toSemesterId: string) {
+		const t = actionTarget;
+		if (!t) return;
+		const to = student?.semesters.find((s) => s.id === toSemesterId);
+		moveCourse(t.semesterId, toSemesterId, t.course.code, to?.courses.length ?? 0);
+		actionTarget = null;
 	}
 
 	function openPicker(semesterId: string, replaceCode?: string) {
@@ -303,38 +325,97 @@
 		}
 	}
 	let copied = $state(false);
+	let showExports = $state(false);
+
+	/** One definition, rendered as a menu on a phone and as a button row where there is room. */
+	let exportActions = $derived([
+		{
+			label: copied ? 'Copied to clipboard' : 'Copy for Sheets',
+			short: copied ? 'Copied' : 'Copy for Sheets',
+			icon: (copied ? 'check' : 'clipboard') as IconName,
+			run: copyForSheets
+		},
+		{ label: 'Download .tsv', short: '.tsv', icon: 'table' as IconName, run: exportTsv },
+		{ label: 'Download plan .yaml', short: '.yaml', icon: 'download' as IconName, run: exportYaml },
+		{
+			label: 'Save student file',
+			short: 'Save student',
+			icon: 'download' as IconName,
+			title: 'Full record, re-importable into this app',
+			run: () => exportStudentFile(student)
+		},
+		{
+			label: 'Print / PDF',
+			short: 'Print / PDF',
+			icon: 'printer' as IconName,
+			href: `${base}/print`
+		}
+	] as {
+		label: string;
+		short: string;
+		icon: IconName;
+		title?: string;
+		run?: () => void;
+		href?: string;
+	}[]);
 
 	let sortedSemesters = $derived(student ? sortSemesters(student.semesters) : []);
 </script>
 
 <div class="min-h-screen">
 	<header class="no-print border-b border-slate-200 bg-[var(--color-odu-blue)] text-white">
-		<div class="mx-auto flex max-w-[1800px] items-center gap-4 px-4 py-2.5">
-			<h1 class="text-base font-semibold">ODU Semester Planner</h1>
-			<span class="rounded bg-white/10 px-2 py-0.5 text-xs">Catalog {catalog.catalogYear}</span>
+		<div class="mx-auto flex max-w-[1800px] items-center gap-2 px-3 py-2 sm:gap-4 sm:px-4 sm:py-2.5">
+			<!-- The full title and catalog year are context, not identity; on a phone the student
+			     and the credit count are what matter, so the chrome gives way first. -->
+			<h1 class="shrink-0 text-sm font-semibold sm:text-base">
+				<span class="hidden sm:inline">ODU Semester Planner</span>
+				<span class="sm:hidden">ODU Planner</span>
+			</h1>
+			<span class="hidden shrink-0 rounded bg-white/10 px-2 py-0.5 text-xs lg:inline">
+				Catalog {catalog.catalogYear}
+			</span>
 			{#if student}
-				<span class="text-sm text-white/90">
-					· {fullName(student)}
-					<span class="text-white/50">({programLabel(student.programId)})</span>
-				</span>
+				<!-- Tapping the name is the quickest route to the roster on a phone, where the
+				     student pane is collapsed at the bottom. -->
+				<button
+					type="button"
+					class="min-w-0 truncate text-left text-sm text-white/90 hover:text-white"
+					title="Switch advisee"
+					onclick={() => (showPicker = true)}
+				>
+					<span class="hidden sm:inline">· </span>{fullName(student)}
+					<span class="hidden text-white/50 md:inline">({programLabel(student.programId)})</span>
+				</button>
 			{/if}
 			<div class="flex-1"></div>
 			{#if student}
-				<span class="text-xs text-white/70" title={placeholderCredits
-					? `${totalCredits(taken)} in named courses + ${placeholderCredits} reserved for requirements not yet chosen`
-					: 'credits in named courses'}>
-					{creditTotal} / {program?.total_credits ?? 120} credits{placeholderCredits
-						? ` (${placeholderCredits} reserved)`
-						: ''}
+				<span
+					class="shrink-0 text-xs whitespace-nowrap text-white/70"
+					title={placeholderCredits
+						? `${totalCredits(taken)} in named courses + ${placeholderCredits} reserved for requirements not yet chosen`
+						: 'credits in named courses'}
+				>
+					{creditTotal}/{program?.total_credits ?? 120}<span class="hidden sm:inline"> credits</span
+					>{placeholderCredits ? ` (${placeholderCredits} res.)` : ''}
 				</span>
 				{#if errorCount}
-					<span class="rounded bg-red-500 px-2 py-0.5 text-xs font-medium">{errorCount} error{errorCount === 1 ? '' : 's'}</span>
+					<span class="shrink-0 rounded bg-red-500 px-2 py-0.5 text-xs font-medium">
+						{errorCount}<span class="hidden sm:inline">
+							error{errorCount === 1 ? '' : 's'}</span
+						>
+					</span>
 				{/if}
 				{#if warnCount}
-					<span class="rounded bg-amber-400 px-2 py-0.5 text-xs font-medium text-amber-950">{warnCount} warning{warnCount === 1 ? '' : 's'}</span>
+					<span class="shrink-0 rounded bg-amber-400 px-2 py-0.5 text-xs font-medium text-amber-950">
+						{warnCount}<span class="hidden sm:inline">
+							warning{warnCount === 1 ? '' : 's'}</span
+						>
+					</span>
 				{/if}
 				{#if !errorCount && !warnCount}
-					<span class="rounded bg-emerald-500 px-2 py-0.5 text-xs font-medium">No conflicts</span>
+					<span class="shrink-0 rounded bg-emerald-500 px-2 py-0.5 text-xs font-medium">
+						<span class="hidden sm:inline">No conflicts</span><span class="sm:hidden">OK</span>
+					</span>
 				{/if}
 			{/if}
 		</div>
@@ -350,8 +431,14 @@
 	{:else}
 		<div class="mx-auto grid max-w-[1800px] gap-4 p-4 lg:grid-cols-[260px_1fr_320px]">
 			<!-- Student, settings, earned credit, conflicts ------------------------- -->
-			<aside class="no-print flex flex-col gap-3 lg:sticky lg:top-4 lg:h-[calc(100vh-5.5rem)] lg:self-start">
-				<section class="shrink-0 rounded-lg border border-slate-200 bg-white shadow-sm">
+			<!-- `contents` below lg lets these sections become grid children in their own right,
+			     so the plan can come first on a phone without rendering the DOM twice. -->
+			<aside
+				class="no-print contents lg:order-1 lg:flex lg:flex-col lg:gap-3 lg:sticky lg:top-4 lg:h-[calc(100vh-5.5rem)] lg:self-start"
+			>
+				<section
+					class="order-5 shrink-0 rounded-lg border border-slate-200 bg-white shadow-sm lg:order-none"
+				>
 					{#if student}
 						<div class="flex items-start justify-between gap-2 px-3 py-2.5">
 							<div class="min-w-0">
@@ -391,10 +478,12 @@
 				</section>
 
 				{#if student}
-					<section class="shrink-0 rounded-lg border border-slate-200 bg-white shadow-sm">
+					<section
+						class="order-6 shrink-0 rounded-lg border border-slate-200 bg-white shadow-sm lg:order-none"
+					>
 						<button
 							type="button"
-							class="flex w-full items-center justify-between px-3 py-2 text-sm font-semibold text-slate-800"
+							class="flex w-full items-center justify-between px-3 py-2.5 text-sm font-semibold text-slate-800"
 							onclick={() => (showSettings = !showSettings)}
 						>
 							Plan settings
@@ -442,29 +531,52 @@
 						{/if}
 					</section>
 
-					<div class="min-h-0 shrink-0 overflow-y-auto">
+					<div class="order-7 lg:order-none lg:min-h-0 lg:shrink-0 lg:overflow-y-auto">
 						<PriorCreditsPanel {student} onchange={touch} />
 					</div>
 
-					<!-- Conflicts sit at the bottom of the column and take the remaining height. -->
+					<!-- Conflicts sit at the bottom of the desktop column and take the remaining
+					     height; on a phone they collapse to a header that still shows the count. -->
+					{@const conflictTone = errorCount
+						? 'bg-red-100 text-red-700'
+						: warnCount
+							? 'bg-amber-100 text-amber-800'
+							: 'bg-emerald-100 text-emerald-700'}
 					<section
-						class="flex min-h-0 flex-1 flex-col rounded-lg border border-slate-200 bg-white shadow-sm"
+						class="order-4 rounded-lg border border-slate-200 bg-white shadow-sm lg:order-none lg:flex lg:min-h-0 lg:flex-1 lg:flex-col"
 					>
-						<header
-							class="flex shrink-0 items-center justify-between border-b border-slate-100 px-3 py-2"
+						<button
+							type="button"
+							class="flex w-full items-center justify-between border-b border-slate-100 px-3 py-2.5 lg:hidden"
+							aria-expanded={showConflicts}
+							onclick={() => (showConflicts = !showConflicts)}
 						>
 							<h3 class="text-sm font-semibold text-slate-800">Conflicts</h3>
-							<span
-								class="rounded px-1.5 text-xs font-medium {errorCount
-									? 'bg-red-100 text-red-700'
-									: warnCount
-										? 'bg-amber-100 text-amber-800'
-										: 'bg-emerald-100 text-emerald-700'}"
-							>
+							<span class="flex items-center gap-2">
+								<span class="rounded px-1.5 py-0.5 text-xs font-medium {conflictTone}">
+									{issues.length || 'none'}
+								</span>
+								<Icon
+									name={showConflicts ? 'chevron-down' : 'chevron-right'}
+									class="h-4 w-4 text-slate-400"
+								/>
+							</span>
+						</button>
+
+						<header
+							class="hidden shrink-0 items-center justify-between border-b border-slate-100 px-3 py-2 lg:flex"
+						>
+							<h3 class="text-sm font-semibold text-slate-800">Conflicts</h3>
+							<span class="rounded px-1.5 text-xs font-medium {conflictTone}">
 								{issues.length || 'none'}
 							</span>
 						</header>
-						<ul class="min-h-0 flex-1 divide-y divide-slate-50 overflow-y-auto">
+
+						<ul
+							class="divide-y divide-slate-50 lg:min-h-0 lg:flex-1 lg:overflow-y-auto {showConflicts
+								? ''
+								: 'hidden lg:block'}"
+						>
 							{#each issues as issue}
 								<li class="flex items-start gap-1.5 px-3 py-1.5 text-xs">
 									<span
@@ -497,7 +609,9 @@
 			<!-- Plan grid --------------------------------------------------------- -->
 			<!-- Two rows of four fill the viewport, so a standard 4-year plan needs no page
 			     scroll; a longer plan scrolls inside this column only. -->
-			<main class="flex flex-col lg:sticky lg:top-4 lg:h-[calc(100vh-5.5rem)] lg:self-start">
+			<main
+				class="order-1 flex flex-col lg:order-2 lg:sticky lg:top-4 lg:h-[calc(100vh-5.5rem)] lg:self-start"
+			>
 				{#if !student}
 					<div class="rounded-lg border border-dashed border-slate-300 bg-white p-12 text-center">
 						<p class="text-sm text-slate-400">Choose an advisee to start planning.</p>
@@ -507,45 +621,85 @@
 						<button
 							type="button"
 							class="inline-flex items-center gap-1.5 rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
-							onclick={autoPopulate}><Icon name="wand" />Auto-populate plan</button
+							onclick={autoPopulate}
+							><Icon name="wand" /><span class="hidden sm:inline">Auto-populate plan</span><span
+								class="sm:hidden">Auto-populate</span
+							></button
 						>
 						<button
 							type="button"
 							class="inline-flex items-center gap-1.5 rounded border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
-							onclick={clearPlan}><Icon name="eraser" />Clear (keep locked)</button
+							onclick={clearPlan}
+							><Icon name="eraser" /><span class="hidden sm:inline">Clear (keep locked)</span><span
+								class="sm:hidden">Clear</span
+							></button
 						>
 						<button
 							type="button"
 							class="inline-flex items-center gap-1.5 rounded border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
 							onclick={addSemester}><Icon name="plus" />Term</button
 						>
+
 						<div class="flex-1"></div>
-						<button
-							type="button"
-							class="inline-flex items-center gap-1.5 rounded border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
-							onclick={copyForSheets}><Icon name={copied ? 'check' : 'clipboard'} />{copied ? 'Copied' : 'Copy for Sheets'}</button
-						>
-						<button
-							type="button"
-							class="inline-flex items-center gap-1.5 rounded border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
-							onclick={exportTsv}><Icon name="table" />.tsv</button
-						>
-						<button
-							type="button"
-							class="inline-flex items-center gap-1.5 rounded border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
-							onclick={exportYaml}><Icon name="download" />.yaml</button
-						>
-						<button
-							type="button"
-							class="inline-flex items-center gap-1.5 rounded border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
-							onclick={() => exportStudentFile(student)}
-							title="Full record, re-importable into this app"><Icon name="download" />Save student</button
-						>
-						<a
-							href="{base}/print"
-							class="inline-flex items-center gap-1.5 rounded border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
-							><Icon name="printer" />Print / PDF</a
-						>
+
+						<!-- Six export buttons crowd a phone off the screen. They collapse into one menu
+						     below `sm`, and stay laid out flat where there is room for them. -->
+						<div class="relative sm:hidden">
+							<button
+								type="button"
+								class="inline-flex items-center gap-1.5 rounded border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
+								aria-expanded={showExports}
+								onclick={() => (showExports = !showExports)}
+								><Icon name="download" />Export<Icon name="chevron-down" class="h-3 w-3" /></button
+							>
+							{#if showExports}
+								<div
+									class="absolute right-0 z-30 mt-1 w-52 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg"
+								>
+									{#each exportActions as action (action.label)}
+										{#if action.href}
+											<a
+												href={action.href}
+												class="flex items-center gap-2 px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
+												onclick={() => (showExports = false)}
+											>
+												<Icon name={action.icon} />{action.label}
+											</a>
+										{:else}
+											<button
+												type="button"
+												class="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50"
+												onclick={() => {
+													action.run?.();
+													showExports = false;
+												}}
+											>
+												<Icon name={action.icon} />{action.label}
+											</button>
+										{/if}
+									{/each}
+								</div>
+							{/if}
+						</div>
+
+						<div class="hidden flex-wrap items-center gap-2 sm:flex">
+							{#each exportActions as action (action.label)}
+								{#if action.href}
+									<a
+										href={action.href}
+										class="inline-flex items-center gap-1.5 rounded border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
+										><Icon name={action.icon} />{action.short}</a
+									>
+								{:else}
+									<button
+										type="button"
+										class="inline-flex items-center gap-1.5 rounded border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
+										title={action.title}
+										onclick={action.run}><Icon name={action.icon} />{action.short}</button
+									>
+								{/if}
+							{/each}
+						</div>
 					</div>
 
 					{#if (planNotes.length || unplaced.length) && showPlanNotes}
@@ -592,7 +746,7 @@
 						</div>
 					{/if}
 
-					<div class="min-h-0 flex-1 overflow-y-auto pr-1">
+					<div class="lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-1">
 						<div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
 						{#each sortedSemesters as sem (sem.id)}
 							<SemesterCard
@@ -608,6 +762,7 @@
 								onadd={(id) => openPicker(id)}
 								onchoose={(id, code) => openPicker(id, code)}
 								ontogglelock={toggleLock}
+								onactivate={openActions}
 								ondelete={deleteSemester}
 							/>
 							{/each}
@@ -619,10 +774,16 @@
 			<!-- Requirement checker ------------------------------------------------ -->
 			<!-- Sticky full-height column: the two panes divide the viewport and scroll
 			     independently, so requirements stay visible while the plan grid scrolls. -->
-			<aside class="flex flex-col gap-3 lg:sticky lg:top-4 lg:h-[calc(100vh-5.5rem)] lg:self-start">
+			<aside
+				class="contents lg:order-3 lg:flex lg:flex-col lg:gap-3 lg:sticky lg:top-4 lg:h-[calc(100vh-5.5rem)] lg:self-start"
+			>
 				{#if student && program}
-					<RequirementsPanel title="Major requirements" items={majorProgress} fill />
-					<RequirementsPanel title="General education" items={genedProgress} fill />
+					<div class="order-2 lg:order-none lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+						<RequirementsPanel title="Major requirements" items={majorProgress} fill collapsible />
+					</div>
+					<div class="order-3 lg:order-none lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+						<RequirementsPanel title="General education" items={genedProgress} fill collapsible />
+					</div>
 				{/if}
 			</aside>
 		</div>
@@ -639,6 +800,26 @@
 />
 
 <StudentEditor student={editing} onclose={() => (editing = null)} />
+
+<CourseActions
+	target={actionTarget}
+	semesters={student?.semesters ?? []}
+	{catalog}
+	onmove={moveViaSheet}
+	onremove={() => {
+		if (actionTarget) removeCourse(actionTarget.semesterId, actionTarget.course.code);
+		actionTarget = null;
+	}}
+	ontogglelock={() => {
+		if (actionTarget) toggleLock(actionTarget.semesterId, actionTarget.course.code);
+		actionTarget = null;
+	}}
+	onchoose={() => {
+		if (actionTarget) openPicker(actionTarget.semesterId, actionTarget.course.code);
+		actionTarget = null;
+	}}
+	onclose={() => (actionTarget = null)}
+/>
 
 <CoursePicker
 	open={pickerOpen}

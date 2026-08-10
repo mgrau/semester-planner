@@ -128,13 +128,13 @@
 
 {#if open}
 	<div
-		class="fixed inset-0 z-50 flex items-start justify-center bg-slate-900/40 p-4 pt-16"
+		class="fixed inset-0 z-50 flex items-stretch justify-center bg-slate-900/40 sm:items-start sm:p-4 sm:pt-16"
 		role="presentation"
 		onclick={(e) => {
 			if (e.target === e.currentTarget) dismiss();
 		}}
 	>
-		<div class="flex max-h-[80vh] w-full max-w-3xl flex-col overflow-hidden rounded-lg bg-white shadow-xl">
+		<div class="flex h-full w-full flex-col overflow-hidden bg-white shadow-xl sm:h-auto sm:max-h-[80vh] sm:max-w-3xl sm:rounded-lg">
 			<header class="flex items-center justify-between border-b border-slate-100 px-4 py-3">
 				<h2 class="text-sm font-semibold text-slate-800">
 					Advisees <span class="font-normal text-slate-400">({roster.students.length})</span>
@@ -304,12 +304,16 @@
 						>
 							<button
 								type="button"
-								class="flex min-w-0 flex-1 items-center gap-3 px-4 py-2 text-left"
+								class="min-w-0 flex-1 px-4 py-2 text-left sm:flex sm:items-center sm:gap-3"
 								onclick={() => select(s.id)}
 							>
-								<span class="flex-1 truncate text-sm font-medium text-slate-800">{sortName(s)}</span>
-								<span class="w-24 shrink-0 text-xs text-slate-500">{startTermLabel(s)}</span>
-								<span class="w-44 shrink-0 truncate text-xs text-slate-600"
+								<span class="block truncate text-sm font-medium text-slate-800 sm:flex-1"
+									>{sortName(s)}</span
+								>
+								<span class="block text-xs text-slate-500 sm:w-24 sm:shrink-0">
+									{startTermLabel(s)}<span class="sm:hidden"> · {programLabel(s.programId)}</span>
+								</span>
+								<span class="hidden truncate text-xs text-slate-600 sm:block sm:w-44 sm:shrink-0"
 									>{programLabel(s.programId)}</span
 								>
 							</button>

@@ -2,6 +2,7 @@
 	import { searchCourses } from '$lib/catalog';
 	import type { Course } from '$lib/types';
 	import { catalog } from '$lib/catalog';
+	import Icon from './Icon.svelte';
 
 	interface Props {
 		open: boolean;
@@ -44,19 +45,22 @@
 
 {#if open}
 	<div
-		class="fixed inset-0 z-50 flex items-start justify-center bg-slate-900/30 p-4 pt-20"
+		class="fixed inset-0 z-50 flex items-stretch justify-center bg-slate-900/30 sm:items-start sm:p-4 sm:pt-20"
 		role="presentation"
 		onclick={(e) => {
 			if (e.target === e.currentTarget) onclose();
 		}}
 	>
-		<div class="w-full max-w-2xl overflow-hidden rounded-lg bg-white shadow-xl">
+		<div class="flex h-full w-full flex-col overflow-hidden bg-white shadow-xl sm:h-auto sm:max-w-2xl sm:rounded-lg">
 			<div class="border-b border-slate-100 p-3">
 				<div class="mb-2 flex items-center justify-between">
 					<h3 class="text-sm font-semibold text-slate-800">{title}</h3>
-					<button type="button" class="text-slate-400 hover:text-slate-700" onclick={onclose}>
-						✕
-					</button>
+					<button
+						type="button"
+						class="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+						aria-label="Close"
+						onclick={onclose}><Icon name="close" class="h-4 w-4" /></button
+					>
 				</div>
 				<!-- svelte-ignore a11y_autofocus -->
 				<input
@@ -72,7 +76,7 @@
 				/>
 			</div>
 
-			<ul class="max-h-96 overflow-y-auto">
+			<ul class="min-h-0 flex-1 overflow-y-auto sm:max-h-96 sm:flex-none">
 				{#each results as course (course.code)}
 					<li>
 						<button

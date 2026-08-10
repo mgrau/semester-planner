@@ -8,11 +8,16 @@
 		onpick?: (requirementId: string) => void;
 		/** Stretch to the available height and scroll internally, instead of growing the page. */
 		fill?: boolean;
+		/** Collapse to a tappable header below `lg`. Always open on a wide screen. */
+		collapsible?: boolean;
 	}
 
-	let { title, items, onpick, fill = false }: Props = $props();
+	let { title, items, onpick, fill = false, collapsible = false }: Props = $props();
 
 	let done = $derived(items.filter((i) => i.satisfied).length);
+
+	/** Only consulted below `lg`; the pane is always shown at desktop width. */
+	let isOpen = $state(false);
 
 	/** Which row has its detail popover open. Catalog prose is long; only one at a time. */
 	let openDetail = $state<string | null>(null);
@@ -20,16 +25,41 @@
 
 <section
 	class="rounded-lg border border-slate-200 bg-white shadow-sm {fill
-		? 'flex min-h-0 flex-1 flex-col'
+		? 'lg:flex lg:min-h-0 lg:flex-1 lg:flex-col'
 		: ''}"
 >
+	{#if collapsible}
+		<!-- Below `lg` the header doubles as the disclosure control; the count stays visible so a
+		     closed pane still says how much is left. -->
+		<button
+			type="button"
+			class="flex w-full shrink-0 items-center justify-between border-b border-slate-100 px-3 py-2.5 lg:hidden"
+			aria-expanded={isOpen}
+			onclick={() => (isOpen = !isOpen)}
+		>
+			<h3 class="text-sm font-semibold text-slate-800">{title}</h3>
+			<span class="flex items-center gap-2">
+				<span class="text-xs text-slate-500">{done}/{items.length} met</span>
+				<Icon name={isOpen ? 'chevron-down' : 'chevron-right'} class="h-4 w-4 text-slate-400" />
+			</span>
+		</button>
+	{/if}
+
 	<header
-		class="flex shrink-0 items-center justify-between border-b border-slate-100 px-3 py-2"
+		class="shrink-0 items-center justify-between border-b border-slate-100 px-3 py-2 {collapsible
+			? 'hidden lg:flex'
+			: 'flex'}"
 	>
 		<h3 class="text-sm font-semibold text-slate-800">{title}</h3>
 		<span class="text-xs text-slate-500">{done}/{items.length} met</span>
 	</header>
-	<ul class="divide-y divide-slate-50 {fill ? 'min-h-0 flex-1 overflow-y-auto' : ''}">
+
+	<ul
+		class="divide-y divide-slate-50 {fill ? 'lg:min-h-0 lg:flex-1 lg:overflow-y-auto' : ''} {collapsible &&
+		!isOpen
+			? 'hidden lg:block'
+			: ''}"
+	>
 		{#each items as item, i (item.id)}
 			{@const total = item.requiredCredits || 1}
 			{@const earnedPct = Math.min(100, (item.earnedCredits / total) * 100)}

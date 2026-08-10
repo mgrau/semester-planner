@@ -19,13 +19,13 @@
 
 {#if student}
 	<div
-		class="fixed inset-0 z-60 flex items-start justify-center bg-slate-900/40 p-4 pt-24"
+		class="fixed inset-0 z-60 flex items-end justify-center bg-slate-900/40 sm:items-start sm:p-4 sm:pt-24"
 		role="presentation"
 		onclick={(e) => {
 			if (e.target === e.currentTarget) onclose();
 		}}
 	>
-		<div class="w-full max-w-sm rounded-lg bg-white shadow-xl">
+		<div class="max-h-[90vh] w-full overflow-y-auto rounded-t-xl bg-white shadow-xl sm:max-w-sm sm:rounded-lg">
 			<header class="flex items-center justify-between border-b border-slate-100 px-4 py-2.5">
 				<h2 class="text-sm font-semibold text-slate-800">Edit {fullName(student)}</h2>
 				<button

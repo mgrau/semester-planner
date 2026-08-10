@@ -19,6 +19,7 @@
 		onadd: (semesterId: string) => void;
 		onchoose: (semesterId: string, code: string) => void;
 		ontogglelock: (semesterId: string, code: string) => void;
+		onactivate: (semesterId: string, code: string) => void;
 		ondelete: (semesterId: string) => void;
 	}
 
@@ -33,6 +34,7 @@
 		onadd,
 		onchoose,
 		ontogglelock,
+		onactivate,
 		ondelete
 	}: Props = $props();
 
@@ -126,7 +128,7 @@
 </script>
 
 <div
-	class="print-page flex min-h-56 flex-col rounded-lg border bg-white shadow-sm transition-colors {showGap
+	class="print-page flex min-h-32 flex-col rounded-lg border bg-white shadow-sm transition-colors sm:min-h-56 {showGap
 		? 'border-blue-400 ring-1 ring-blue-300'
 		: 'border-slate-200'}"
 	role="list"
@@ -182,6 +184,7 @@
 						onremove={() => onremove(semester.id, entry.course.code)}
 						onchoose={() => onchoose(semester.id, entry.course.code)}
 						ontogglelock={() => ontogglelock(semester.id, entry.course.code)}
+						onactivate={() => onactivate(semester.id, entry.course.code)}
 					/>
 				{/if}
 			</div>
