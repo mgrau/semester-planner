@@ -43,7 +43,7 @@
 				<section>
 					<h3 class="mb-1 font-semibold text-slate-800">Building a plan</h3>
 					<p class="text-slate-600">
-						Record what the student already brings under <strong>Credit already earned</strong> —
+						Record what the student already brings under <strong>Credit Earned</strong> —
 						transfer coursework, a waived requirement, or a course they place past. Then
 						<strong>Auto-populate</strong> lays out the remaining terms.
 					</p>

@@ -663,7 +663,12 @@
 				class="no-print contents lg:order-1 lg:flex lg:min-w-0 lg:flex-col lg:gap-3 lg:sticky lg:top-4 lg:h-[calc(100vh-5.5rem)] lg:self-start"
 			>
 				{#if student}
-					<div class="order-7 min-w-0 lg:order-none lg:min-h-0 lg:shrink-0 lg:overflow-y-auto">
+					<!-- Sized to its content, but never more than half the column: past that it gives
+					     way and scrolls inside itself, so the panes below it keep their place and the
+					     page as a whole still fits one screen. -->
+					<div
+						class="order-7 min-w-0 lg:order-none lg:flex lg:max-h-[50%] lg:min-h-0 lg:shrink lg:flex-col"
+					>
 						<PriorCreditsPanel {student} onchange={touch} />
 					</div>
 

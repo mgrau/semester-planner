@@ -152,9 +152,15 @@
 	let availableCategories = $derived(catalog.genEd.filter((c) => !satisfiedIds.has(c.id)));
 </script>
 
-<section class="rounded-lg border border-slate-200 bg-white shadow-sm">
-	<header class="flex items-center justify-between border-b border-slate-100 px-3 py-2">
-		<h3 class="text-sm font-semibold text-slate-800">Credit already earned</h3>
+<!-- The heading stays put and everything under it scrolls, so a student with a transcript's
+     worth of transfer credit cannot push the panes below off the screen. -->
+<section
+	class="rounded-lg border border-slate-200 bg-white shadow-sm lg:flex lg:min-h-0 lg:flex-1 lg:flex-col"
+>
+	<header
+		class="flex shrink-0 items-center justify-between border-b border-slate-100 px-3 py-2"
+	>
+		<h3 class="text-sm font-semibold text-slate-800">Credit Earned</h3>
 		<button
 			type="button"
 			class="no-print rounded border border-slate-300 px-2 py-0.5 text-xs hover:bg-slate-50"
@@ -164,6 +170,7 @@
 		</button>
 	</header>
 
+	<div class="lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
 	{#if showImport}
 		<div class="border-b border-slate-100 bg-slate-50 p-3">
 			{#if !parsed}
@@ -392,5 +399,6 @@
 			onclick={addPlacement}
 			><span class="inline-flex items-center gap-1"><Icon name="plus" />Add</span></button
 		>
+		</div>
 	</div>
 </section>
