@@ -4,7 +4,9 @@ import { bannerProgramId } from '$lib/catalog';
 
 /**
  * Importing a student from Banner Plus, which hands us a whole registration history in the URL
- * fragment. The contract is IMPORT.md, kept in step with the same file in the banner_plus repo.
+ * fragment. The producing end is bookmarklet/src/55-planner.js in the banner_plus repo; the two
+ * deploy separately and nothing checks them against each other, so `v` is what turns a mismatch
+ * into a refusal rather than a misreading.
  *
  * Everything here is pure: decode, match, merge, and describe. Nothing touches the roster or the
  * location — the caller does that, after an advisor has seen the summary and agreed to it. The

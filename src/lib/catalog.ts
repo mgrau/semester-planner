@@ -360,7 +360,7 @@ export const associateDegreeCategories: GenEdCategory[] = catalog.genEd.filter(
 );
 
 /**
- * Banner's major text -> one of our program ids, for the URL import. See IMPORT.md.
+ * Banner's major text -> one of our program ids, for the URL import.
  *
  * Takes the first major that maps, trying an exact match before falling back to the longest
  * configured name contained in the text — so "Physics & Electrical Engn - BS" resolves, and

@@ -153,7 +153,7 @@
 
 	/**
 	 * Banner Plus opens this app with a student's whole registration history in the URL fragment.
-	 * See IMPORT.md, which is a contract shared with that repository.
+	 * The payload is decoded and merged in $lib/import/bannerPlus.ts.
 	 *
 	 * The fragment is cleared the moment it is read, before anything is shown: it carries a named
 	 * student's transcript, so a reload must not re-import it and a screenshot must not carry it.

@@ -13,7 +13,11 @@ import { bannerProgramId, catalog } from '$lib/catalog';
 import { DEFAULT_SETTINGS } from '$lib/stores/roster.svelte';
 import type { Student } from '$lib/types';
 
-/** The contract under test is IMPORT.md, shared with the banner_plus repo. */
+/**
+ * The payload under test is what banner_plus emits from bookmarklet/src/55-planner.js.
+ * Nothing checks the two against each other at build time, so these fixtures are the only
+ * place the shape is pinned down on this side.
+ */
 
 function encode(value: unknown): string {
 	const bytes = new TextEncoder().encode(JSON.stringify(value));

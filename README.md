@@ -283,10 +283,14 @@ identity and their whole registration history already in the link, so a plan sta
 they have actually taken rather than from an empty grid. The record travels in the URL fragment,
 which never leaves the browser.
 
-**Not built yet.** Banner Plus emits the link; [`IMPORT.md`](IMPORT.md) specifies the format and
-what to do with it — including how to update a student we already hold without destroying an
-advisor's work. It is a contract between two repositories, so the copy in
-[banner_plus](https://github.com/mgrau/banner_plus/blob/main/IMPORT.md) has to change with it.
+A student we already hold is updated rather than duplicated, matched on UIN, and the advisor sees
+what the link would do before any of it happens. The import owns what Banner knows and nothing
+else: it never touches notes, prior credits, settings, or any term beyond the last one the link
+carries, and it only replaces course rows a previous import wrote.
+
+`src/lib/import/bannerPlus.ts` reads it; `bookmarklet/src/55-planner.js` in banner_plus writes it.
+Those two files are a contract between separately deployed apps — nothing checks them against each
+other at build time, so the payload carries a version and we refuse one we do not know.
 
 ## Known rough edges
 

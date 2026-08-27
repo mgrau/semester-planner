@@ -34,7 +34,7 @@ program_labels:
   physics-secondary-education-6-12-bs: Physics Education
   physics-minor: Physics Minor
 
-# Banner's own major text -> our program id, for the URL import (see IMPORT.md).
+# Banner's own major text -> our program id, for the URL import.
 #
 # Banner writes the registrar's wording, which is abbreviated and not ours. An exact match wins;
 # failing that the longest key that appears inside the major text is used, which catches the
