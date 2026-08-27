@@ -193,6 +193,19 @@ export interface PlannedCourse {
 	credits: number;
 	/** True when the autopopulate planner placed it, false when the advisor did. */
 	auto?: boolean;
+	/**
+	 * Where this slot came from. Absent means an advisor put it there by hand.
+	 *
+	 * This is what makes a re-import safe: without it there is no way to tell a row an import
+	 * wrote last month from one the advisor typed, and a merge would have to choose between
+	 * clobbering their work and never updating. `auto` is close but means something narrower —
+	 * placed by the autopopulate planner — so widening it would lose that distinction.
+	 */
+	origin?: 'banner' | 'auto';
+	/** Final grade, for a course already completed. Verbatim from the registrar. */
+	grade?: string;
+	/** completed | in-progress. Absent means planned but not yet taken. */
+	status?: 'completed' | 'in-progress';
 	locked?: boolean;
 	note?: string;
 }
@@ -212,6 +225,12 @@ export interface Student {
 	lastName?: string;
 	/** Free-form, e.g. "UIN 01234567". */
 	studentId?: string;
+	email?: string;
+	/**
+	 * Banner's directory-information flag. Set for a student whose record is confidential, so
+	 * anything printed or exported can carry the warning through.
+	 */
+	confidential?: boolean;
 	programId: string;
 	catalogYear: string;
 	startTerm: Term;

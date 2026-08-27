@@ -1,4 +1,4 @@
-import type { Catalog, Issue, PriorCredit, Semester, Student, Term } from '$lib/types';
+import type { Catalog, Grade, Issue, PriorCredit, Semester, Student, Term } from '$lib/types';
 import { describe, evaluate, type CreditState } from './expr';
 
 /** Chronological order within a calendar year. */
@@ -104,8 +104,14 @@ export function validatePlan(student: Student, catalog: Catalog): Issue[] {
 				});
 			}
 
+			// A course the registrar has already reported is history, not a proposal. Whether its
+			// prerequisites were met, and whether it is normally offered this term, were the
+			// university's questions to answer and it answered them by enrolling the student.
+			// Re-litigating a finished term buries the notes that are actually actionable.
+			const onRecord = pc.status === 'completed' || pc.status === 'in-progress';
+
 			const pre = evaluate(course.prereq, before);
-			if (!pre.satisfied) {
+			if (!pre.satisfied && !onRecord) {
 				// An unmet prerequisite is a real conflict. The planner schedules missing
 				// prerequisites rather than assuming them away, so anything left here is either a
 				// hand edit or a course the student must still place past — both worth flagging.
@@ -119,7 +125,7 @@ export function validatePlan(student: Student, catalog: Catalog): Issue[] {
 			}
 
 			const preco = evaluate(course.precoreq, withThisTerm);
-			if (!preco.satisfied) {
+			if (!preco.satisfied && !onRecord) {
 				issues.push({
 					severity: 'error',
 					kind: 'precoreq-unmet',
@@ -130,7 +136,7 @@ export function validatePlan(student: Student, catalog: Catalog): Issue[] {
 			}
 
 			const co = evaluate(course.coreq, withThisTerm);
-			if (!co.satisfied) {
+			if (!co.satisfied && !onRecord) {
 				issues.push({
 					severity: 'error',
 					kind: 'coreq-unmet',
@@ -142,7 +148,7 @@ export function validatePlan(student: Student, catalog: Catalog): Issue[] {
 
 			// One line per course, not one per clause: a course with three unverifiable
 			// conditions is one thing to check with the student, not three conflicts.
-			const toConfirm = unique([...pre.notes, ...preco.notes, ...co.notes]).filter(
+			const toConfirm = unique(onRecord ? [] : [...pre.notes, ...preco.notes, ...co.notes]).filter(
 				(note) =>
 					!isRoutineNote(note) &&
 					!isUnactionableNote(note) &&
@@ -159,7 +165,7 @@ export function validatePlan(student: Student, catalog: Catalog): Issue[] {
 				});
 			}
 
-			if (course.terms && !course.terms.includes(sem.term)) {
+			if (course.terms && !course.terms.includes(sem.term) && !onRecord) {
 				issues.push({
 					severity: 'warning',
 					kind: 'term-unavailable',
@@ -211,6 +217,15 @@ export function validatePlan(student: Student, catalog: Catalog): Issue[] {
 		}
 
 		for (const code of thisTerm) seen.add(code);
+		// Grades the registrar reported let a later "C or better" clause be checked properly.
+		// Banner writes "B+"; our Grade type is the letter alone, and anything outside A–D
+		// (P, S, CR) carries no letter to compare against.
+		for (const pc of sem.courses) {
+			const letter = pc.grade?.trim()[0]?.toUpperCase();
+			if (letter && 'ABCD'.includes(letter) && !seenGrades.has(pc.code)) {
+				seenGrades.set(pc.code, letter as Grade);
+			}
+		}
 	}
 
 	return issues;

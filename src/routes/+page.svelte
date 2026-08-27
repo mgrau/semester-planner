@@ -5,7 +5,8 @@
 		buildEmptySemesters,
 		fullName,
 		startTermLabel,
-		shortTermLabel
+		shortTermLabel,
+		DEFAULT_SETTINGS
 	} from '$lib/stores/roster.svelte';
 	import { validatePlan, sortSemesters, termLabel, nextTerm, termOrdinal } from '$lib/engine/validate';
 	import { evaluate } from '$lib/engine/expr';
@@ -44,8 +45,17 @@
 	} from '$lib/exports';
 	import { buildKindIndex, kindOf, legendFor, KIND_STYLES } from '$lib/courseKind';
 	import { startSelfUpdate } from '$lib/selfUpdate';
+	import ImportDialog from '$lib/components/ImportDialog.svelte';
+	import {
+		ImportError,
+		decodePayload,
+		importPayloadFrom,
+		prepareImport,
+		type ImportPlan
+	} from '$lib/import/bannerPlus';
 	import { drag } from '$lib/stores/dnd.svelte';
 	import { base } from '$app/paths';
+	import { untrack } from 'svelte';
 
 	let student = $derived(roster.selected);
 	let program = $derived(student ? catalog.programs.get(student.programId) : undefined);
@@ -136,11 +146,77 @@
 		roster.update(() => {});
 	}
 
+	// --- import from a Banner Plus link -------------------------------------
+	/** The pending import, held in memory once the fragment has been read and cleared. */
+	let pendingImport = $state<ImportPlan | null>(null);
+	let importError = $state<string | null>(null);
+
+	/**
+	 * Banner Plus opens this app with a student's whole registration history in the URL fragment.
+	 * See IMPORT.md, which is a contract shared with that repository.
+	 *
+	 * The fragment is cleared the moment it is read, before anything is shown: it carries a named
+	 * student's transcript, so a reload must not re-import it and a screenshot must not carry it.
+	 * Nothing is applied until the advisor has seen the summary and agreed — a link anyone can
+	 * construct deserves that more than a pasted transcript, not less.
+	 */
+	function checkForImport() {
+		const encoded = importPayloadFrom(location.hash);
+		if (!encoded) return;
+		// Native rather than SvelteKit's replaceState, which is not usable this early in the
+		// first render and would throw before the payload could be read. It does not fire
+		// hashchange, so clearing the fragment cannot re-enter this.
+		history.replaceState(history.state, '', location.pathname + location.search);
+
+		try {
+			pendingImport = prepareImport({
+				payload: decodePayload(encoded),
+				students: roster.students,
+				catalogYear: catalog.catalogYear,
+				defaultSettings: DEFAULT_SETTINGS,
+				newId: () => roster.newId(),
+				now: new Date().toISOString(),
+				knownCourses: new Set(catalog.courses.keys())
+			});
+		} catch (e) {
+			importError =
+				e instanceof ImportError
+					? e.message
+					: `That import link could not be read: ${(e as Error).message}`;
+		}
+	}
+
+	$effect(() => {
+		// Also on hashchange: clicking the bookmarklet again in a tab that already has the app
+		// open only changes the fragment, which the browser handles without reloading anything.
+		// untrack, so reading the roster inside does not re-run this on every edit.
+		untrack(checkForImport);
+		const onHashChange = () => untrack(checkForImport);
+		window.addEventListener('hashchange', onHashChange);
+		return () => window.removeEventListener('hashchange', onHashChange);
+	});
+
+	function applyImport() {
+		if (pendingImport) roster.upsert(pendingImport.student);
+		pendingImport = null;
+		importError = null;
+	}
+
 	// Reload a tab left open long enough to fall behind the deployed build — but not while a
 	// dialog is holding something the advisor has typed and not yet saved.
 	$effect(() =>
 		startSelfUpdate(
-			() => !(pickerOpen || showPicker || showHelp || editing || actionTarget || drag.code)
+			() =>
+				!(
+					pickerOpen ||
+					showPicker ||
+					showHelp ||
+					editing ||
+					actionTarget ||
+					drag.code ||
+					pendingImport ||
+					importError
+				)
 		)
 	);
 
@@ -1095,6 +1171,16 @@
 		</div>
 	</div>
 {/if}
+
+<ImportDialog
+	summary={pendingImport?.summary ?? null}
+	error={importError}
+	onconfirm={applyImport}
+	onclose={() => {
+		pendingImport = null;
+		importError = null;
+	}}
+/>
 
 <HelpDialog open={showHelp} onclose={() => (showHelp = false)} />
 

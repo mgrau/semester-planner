@@ -8,8 +8,8 @@ history already in the URL — every term, every course, every grade.
 The planner should create that student if it has never seen them, and update
 them if it has.
 
-**None of this is built yet.** Banner Plus emits the link today; this document
-specifies what to do with it. The same file lives in
+**Built.** The planner reads the link, shows the advisor what it would do, and
+applies it on confirmation — see `src/lib/import/bannerPlus.ts`. The same file lives in
 [banner_plus/IMPORT.md](https://github.com/mgrau/banner_plus/blob/main/IMPORT.md)
 — it is a contract between two repositories, so a change to one has to be a
 change to both.

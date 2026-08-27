@@ -34,6 +34,20 @@ program_labels:
   physics-secondary-education-6-12-bs: Physics Education
   physics-minor: Physics Minor
 
+# Banner's own major text -> our program id, for the URL import (see IMPORT.md).
+#
+# Banner writes the registrar's wording, which is abbreviated and not ours. An exact match wins;
+# failing that the longest key that appears inside the major text is used, which catches the
+# degree suffixes and combined-major wordings that multiply faster than a list keeps up with.
+# No match leaves the program for the advisor to pick — physics-bs is the wrong default for an
+# astrophysics student, and the requirements panel is where they would find out.
+banner_majors:
+  Physics: physics-bs
+  Astrophysics: physics-astrophysics-bs
+  Physics-Professional: physics-professional-bs
+  Physics & Electrical Engn: physics-electrical-engineering-bs
+  Secondary Physics Educ (6-12): physics-secondary-education-6-12-bs
+
 # Gen-ed categories the catalog defines by a rule rather than an enumerated course list.
 # `attributes: [W]` matches any Writing Intensive course.
 category_filters:

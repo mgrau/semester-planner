@@ -35,6 +35,7 @@ interface PreferencesDoc {
 	category_filters?: Record<string, RequirementFilter & { note?: string; credits?: number }>;
 	major_view?: MajorView;
 	program_labels?: Record<string, string>;
+	banner_majors?: Record<string, string>;
 	requirement_labels?: Record<string, string>;
 	starting_preparation?: PreparationOption[];
 	earliest_year?: Record<string, number>;
@@ -350,6 +351,28 @@ export const associateDegreeCategories: GenEdCategory[] = catalog.genEd.filter(
 		!/upper-division/i.test(c.group ?? '') &&
 		!(preferences.associate_degree?.excludes ?? []).includes(c.id)
 );
+
+/**
+ * Banner's major text -> one of our program ids, for the URL import. See IMPORT.md.
+ *
+ * Takes the first major that maps, trying an exact match before falling back to the longest
+ * configured name contained in the text — so "Physics & Electrical Engn - BS" resolves, and
+ * "Physics" does not win over "Physics & Electrical Engn". Returns undefined rather than
+ * guessing, which leaves the program for the advisor to choose.
+ */
+export function bannerProgramId(majors: string[]): string | undefined {
+	const configured = Object.entries(preferences.banner_majors ?? {});
+	const exact = new Map(configured.map(([name, id]) => [name.trim().toLowerCase(), id]));
+	const byLength = [...configured].sort((a, b) => b[0].length - a[0].length);
+
+	for (const major of majors) {
+		const text = major.trim().toLowerCase();
+		if (!text) continue;
+		const hit = exact.get(text) ?? byLength.find(([name]) => text.includes(name.toLowerCase()))?.[1];
+		if (hit && programs.has(hit)) return hit;
+	}
+	return undefined;
+}
 
 /** Substring search over code and title, for the catalog picker. */
 export function searchCourses(query: string, limit = 40): Course[] {

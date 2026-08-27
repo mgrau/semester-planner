@@ -91,7 +91,9 @@
 						In this browser, on this machine — there is no server. Use <strong>.yaml</strong> to move
 						a student to another machine or to keep a copy; a printed PDF carries the plan too, and
 						can be loaded back with <strong>Import</strong> — or by dropping the file anywhere on
-						the page.
+						the page. The Banner Plus bookmarklet can also open this planner on a student
+						straight from their Banner record, bringing their registration history with it; you
+						are shown what it would change before anything is applied.
 					</p>
 				</section>
 			</div>
