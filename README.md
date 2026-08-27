@@ -276,6 +276,18 @@ python3 scripts/scrape_programs.py --refresh
 Each caches raw HTML and produces byte-identical output on a re-run, so a diff shows exactly what
 ODU changed.
 
+## Importing from Banner
+
+[Banner Plus](https://github.com/mgrau/banner_plus) can open this planner with a student's
+identity and their whole registration history already in the link, so a plan starts from what
+they have actually taken rather than from an empty grid. The record travels in the URL fragment,
+which never leaves the browser.
+
+**Not built yet.** Banner Plus emits the link; [`IMPORT.md`](IMPORT.md) specifies the format and
+what to do with it — including how to update a student we already hold without destroying an
+advisor's work. It is a contract between two repositories, so the copy in
+[banner_plus](https://github.com/mgrau/banner_plus/blob/main/IMPORT.md) has to change with it.
+
 ## Known rough edges
 
 - The full course catalog ships to the browser as one ~890 KB gzipped chunk. Fine for an internal
