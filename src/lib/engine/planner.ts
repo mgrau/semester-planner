@@ -316,19 +316,24 @@ export function generatePlan(req: PlanRequest): PlanResult {
 		...(program.categoriesSatisfiedByMajor ?? [])
 	]);
 
-	// Courses already locked into terms by the advisor stay put.
-	const lockedByTerm = new Map<string, PlannedCourse[]>();
+	/**
+	 * Courses that stay exactly where they are: everything this planner did not put there.
+	 *
+	 * An advisor who placed a course chose it, and a course the registrar reported has already
+	 * happened — neither is the planner's to move or drop, whether or not it serves a
+	 * requirement. Only its own previous output (`auto`) and its own reservations
+	 * (placeholders) are re-flowed, so re-running it does not churn a plan someone has worked on.
+	 */
+	const fixedByTerm = new Map<string, PlannedCourse[]>();
 	for (const sem of req.locked ?? []) {
-		const keep = sem.courses.filter((c) => c.locked);
-		if (keep.length) lockedByTerm.set(`${sem.term}-${sem.year}`, keep);
+		const keep = sem.courses.filter((c) => c.locked || (!c.placeholder && c.auto !== true));
+		if (keep.length) fixedByTerm.set(`${sem.term}-${sem.year}`, keep);
 	}
-	const lockedCodes = new Set(
-		[...lockedByTerm.values()].flat().map((c) => c.code)
-	);
+	const fixedCodes = new Set([...fixedByTerm.values()].flat().map((c) => c.code));
 
 	const needed = new Set(neededCourses(program, held, catalog));
 	pruneAlternatives(needed, program, catalog, held);
-	for (const c of lockedCodes) needed.delete(c);
+	for (const c of fixedCodes) needed.delete(c);
 
 	const depth = new Map<string, number>();
 	for (const c of needed) depth.set(c, criticalPath(c, needed, catalog.courses));
@@ -365,7 +370,7 @@ export function generatePlan(req: PlanRequest): PlanResult {
 
 	while ((needed.size > 0 || slots.length > 0) && guard++ < maxTerms) {
 		const id = fixed ? fixed[cursor].id : `${term}-${year}`;
-		const planned: PlannedCourse[] = [...(lockedByTerm.get(id) ?? [])];
+		const planned: PlannedCourse[] = [...(fixedByTerm.get(id) ?? [])];
 		let credits = planned.reduce((s, c) => s + c.credits, 0);
 		const cap = term === 'summer' ? settings.summerMaxCredits : settings.maxCreditsPerTerm;
 
@@ -497,7 +502,7 @@ export function generatePlan(req: PlanRequest): PlanResult {
 		const filled = new Set(semesters.map((s) => s.id));
 		for (const t of fixed) {
 			if (filled.has(t.id)) continue;
-			semesters.push({ ...t, courses: [...(lockedByTerm.get(t.id) ?? [])] });
+			semesters.push({ ...t, courses: [...(fixedByTerm.get(t.id) ?? [])] });
 		}
 	}
 

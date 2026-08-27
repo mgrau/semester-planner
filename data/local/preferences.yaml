@@ -170,6 +170,20 @@ starting_preparation:
     grants:
       - { course: MATH 162M, credits: 3 }
 
+# Courses a student may take more than once, so seeing one twice in a plan is not flagged.
+#
+# The catalog says "May be repeated for credit" in the description of many courses and that is
+# read directly; these are the ones where it does not, but the department repeats them anyway.
+repeatable:
+  - PHYS 195 # Special Topics in Physics
+  - PHYS 197 # Undergraduate Research Experience
+  - PHYS 297 # Undergraduate Research I
+  - PHYS 368 # Internship
+  - PHYS 397 # Undergraduate Research II
+  - PHYS 495 # Special Topics in Physics
+  - PHYS 497 # Special Problems and Research
+  - ASTP 495 # Special Topics in Astrophysics
+
 # When a course is actually taught.
 #
 # The catalog states this for only 10 of the 126 PHYS/ASTP courses — the rest carry no

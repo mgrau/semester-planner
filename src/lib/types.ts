@@ -52,6 +52,11 @@ export interface Course {
 	 * can still be named, but the planner will not schedule it.
 	 */
 	discontinued?: boolean;
+	/**
+	 * May be taken more than once — research, internships, special topics. Seeing it twice in a
+	 * plan is the point, not a mistake.
+	 */
+	repeatable?: boolean;
 }
 
 export interface GenEdCategory {

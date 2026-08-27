@@ -42,6 +42,7 @@ interface PreferencesDoc {
 	class_standing_credits?: Record<string, number>;
 	term_offerings?: Record<string, Term[]>;
 	discontinued?: string[];
+	repeatable?: string[];
 	taken_together?: string[][];
 	associate_degree?: { label?: string; excludes?: string[] };
 	major_satisfies_gened?: Record<string, string[]>;
@@ -223,12 +224,18 @@ function applyCategoryFilters(categories: GenEdCategory[]): GenEdCategory[] {
  *   with no stated term is treated as available every term — so a fall-only course would
  *   silently be schedulable in the spring.
  * - **Discontinued courses**, which stay nameable but must never be scheduled.
+ * - **Repeatable courses.** The catalog states this in prose for many, which is read straight
+ *   off the description; the list here is for the ones it does not say it about — the physics
+ *   research and special-topics courses the department repeats as a matter of course.
  * - **Courses taken together.** A lecture/lab pair the catalog links only loosely becomes a
  *   mutual corequisite, so the planner places them as a unit and a split plan is flagged.
  */
+const REPEATABLE_PROSE = /may be repeated|repeated for credit|repeatable/i;
+
 function applyLocalOverrides(courses: Course[]): Course[] {
 	const terms = preferences.term_offerings ?? {};
 	const retired = new Set(preferences.discontinued ?? []);
+	const repeats = new Set(preferences.repeatable ?? []);
 
 	/** course -> the others it must share a term with */
 	const partners = new Map<string, string[]>();
@@ -238,11 +245,10 @@ function applyLocalOverrides(courses: Course[]): Course[] {
 		}
 	}
 
-	if (!Object.keys(terms).length && !retired.size && !partners.size) return courses;
-
 	return courses.map((c) => {
 		const withPartners = partners.get(c.code);
-		if (!terms[c.code] && !retired.has(c.code) && !withPartners) return c;
+		const repeatable = repeats.has(c.code) || REPEATABLE_PROSE.test(c.description ?? '');
+		if (!terms[c.code] && !retired.has(c.code) && !withPartners && !repeatable) return c;
 
 		// Add to any corequisite the catalog already states rather than replacing it.
 		const required: Expr[] = (withPartners ?? []).map((course) => ({ course }));
@@ -258,6 +264,7 @@ function applyLocalOverrides(courses: Course[]): Course[] {
 			...c,
 			...(terms[c.code] ? { terms: terms[c.code] } : {}),
 			...(retired.has(c.code) ? { discontinued: true } : {}),
+			...(repeatable ? { repeatable: true } : {}),
 			...(withPartners?.length ? { coreq } : {})
 		};
 	});

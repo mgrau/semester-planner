@@ -124,6 +124,15 @@ export function matchByUin(students: Student[], uin: string): Student[] {
 
 const termId = (t: BannerTermRef) => `${t.season}-${t.year}`;
 
+/**
+ * Banner splits `LAST, FIRST M`, so the middle initial rides along on the first name. An
+ * advisee is "Rowan", not "Rowan T" — everywhere this app shows a name it wants the one people
+ * use. Only a trailing single letter is dropped, so a one-letter first name survives.
+ */
+export function withoutMiddleInitial(first: string): string {
+	return first.trim().replace(/\s+[A-Za-z]\.?$/, '').trim() || first.trim();
+}
+
 /** Registration rows worth planning: withdrawn is neither credit earned nor work in progress. */
 function plannedCoursesOf(term: BannerTerm): PlannedCourse[] {
 	return term.courses
@@ -254,7 +263,8 @@ export function prepareImport(opts: PrepareOptions): ImportPlan {
 		: [];
 
 	const programId = bannerProgramId(b.majors ?? []);
-	const name = [b.firstName, b.lastName].filter(Boolean).join(' ').trim();
+	const firstName = withoutMiddleInitial(b.firstName ?? '');
+	const name = [firstName, b.lastName].filter(Boolean).join(' ').trim();
 
 	// --- create -----------------------------------------------------------
 	if (!existing) {
@@ -262,7 +272,7 @@ export function prepareImport(opts: PrepareOptions): ImportPlan {
 		const student: Student = {
 			id: newId(),
 			name,
-			firstName: b.firstName,
+			firstName,
 			lastName: b.lastName,
 			studentId: b.uin,
 			...(b.email ? { email: b.email } : {}),
@@ -335,7 +345,7 @@ export function prepareImport(opts: PrepareOptions): ImportPlan {
 	const student: Student = {
 		...existing,
 		// Banner is authoritative for identity.
-		firstName: b.firstName,
+		firstName,
 		lastName: b.lastName,
 		name,
 		studentId: b.uin,

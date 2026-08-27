@@ -94,7 +94,7 @@ export function validatePlan(student: Student, catalog: Catalog): Issue[] {
 			}
 
 			const earlier = placedIn.get(pc.code);
-			if (earlier) {
+			if (earlier && !course.repeatable) {
 				issues.push({
 					severity: 'warning',
 					kind: 'duplicate-course',

@@ -6,6 +6,7 @@ import {
 	matchByUin,
 	prepareImport,
 	uinDigits,
+	withoutMiddleInitial,
 	type BannerPayload
 } from './bannerPlus';
 import { bannerProgramId, catalog } from '$lib/catalog';
@@ -349,5 +350,30 @@ describe('what the summary tells the advisor', () => {
 			]
 		});
 		expect(summary.unknownCourses).toEqual(['ZZZ 999']);
+	});
+});
+
+describe('the name Banner hands over', () => {
+	it('drops the middle initial riding on the first name', () => {
+		// Banner splits "MARSILLAC, ROWAN T"; an advisee is "Rowan", not "Rowan T".
+		expect(withoutMiddleInitial('Rowan T')).toBe('Rowan');
+		expect(withoutMiddleInitial('Rowan T.')).toBe('Rowan');
+		expect(withoutMiddleInitial('Mary Jane K')).toBe('Mary Jane');
+	});
+
+	it('leaves a name that is not carrying one', () => {
+		expect(withoutMiddleInitial('Rowan')).toBe('Rowan');
+		expect(withoutMiddleInitial('Mary Jane')).toBe('Mary Jane');
+		// a one-letter first name is a name, not an initial
+		expect(withoutMiddleInitial('T')).toBe('T');
+	});
+
+	it('uses it for the record and the display name', () => {
+		const { student } = prepare({
+			...PAYLOAD,
+			student: { ...PAYLOAD.student, firstName: 'Rowan T' }
+		});
+		expect(student.firstName).toBe('Rowan');
+		expect(student.name).toBe('Rowan Doe');
 	});
 });

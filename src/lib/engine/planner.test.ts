@@ -5,6 +5,7 @@ import type {
 	Course,
 	GenEdCategory,
 	NormalizedProgram,
+	PlannedCourse,
 	PlannerSettings,
 	Term
 } from '$lib/types';
@@ -313,5 +314,64 @@ describe('the terms available to the plan', () => {
 	it('lays out its own terms when none are given', () => {
 		const r = generatePlan(base);
 		expect(r.semesters.length).toBeGreaterThan(1);
+	});
+});
+
+describe('re-running auto-populate over a plan someone has worked on', () => {
+	const planned = (courses: PlannedCourse[]) => [
+		{ id: 'fall-2026', term: 'fall' as const, year: 2026, courses }
+	];
+
+	it('leaves a course the advisor chose exactly where they put it', () => {
+		// PHYS 319 serves no requirement in this program. That is not a reason to remove it —
+		// an advisor who placed a course chose it.
+		const r = generatePlan({
+			...base,
+			locked: planned([{ code: 'PHYS 319', credits: 3, auto: false }])
+		});
+		const fall = r.semesters.find((s) => s.id === 'fall-2026')!;
+		expect(fall.courses.map((c) => c.code)).toContain('PHYS 319');
+	});
+
+	it('leaves a course the registrar reported', () => {
+		const r = generatePlan({
+			...base,
+			locked: planned([
+				{ code: 'ENGL 110C', credits: 3, origin: 'banner', status: 'completed', grade: 'A' }
+			])
+		});
+		const fall = r.semesters.find((s) => s.id === 'fall-2026')!;
+		expect(fall.courses.find((c) => c.code === 'ENGL 110C')?.grade).toBe('A');
+	});
+
+	it('still re-flows its own previous output', () => {
+		// Otherwise auto-populate could never improve on itself.
+		const r = generatePlan({
+			...base,
+			locked: planned([{ code: 'PHYS 355', credits: 3, auto: true }])
+		});
+		const fall = r.semesters.find((s) => s.id === 'fall-2026')!;
+		// PHYS 355 needs the whole physics sequence first, so it cannot stay in the opening term.
+		expect(fall.courses.map((c) => c.code)).not.toContain('PHYS 355');
+	});
+
+	it('does not schedule a fixed course a second time', () => {
+		const r = generatePlan({
+			...base,
+			locked: planned([{ code: 'MATH 211', credits: 4, auto: false }])
+		});
+		const all = r.semesters.flatMap((s) => s.courses.map((c) => c.code));
+		expect(all.filter((c) => c === 'MATH 211')).toHaveLength(1);
+	});
+
+	it('counts a fixed course against the term it sits in', () => {
+		const r = generatePlan({
+			...base,
+			locked: planned([{ code: 'PHYS 319', credits: 3, auto: false }])
+		});
+		for (const sem of r.semesters) {
+			const credits = sem.courses.reduce((n, c) => n + c.credits, 0);
+			expect(credits).toBeLessThanOrEqual(settings.maxCreditsPerTerm);
+		}
 	});
 });

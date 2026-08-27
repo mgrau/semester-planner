@@ -81,3 +81,44 @@ describe('coursework the registrar has already reported', () => {
 		expect(kinds(strong)).not.toContain('prereq-unmet');
 	});
 });
+
+describe('courses that may be taken more than once', () => {
+	const twice = (code: string): Student => ({
+		id: 't',
+		name: 'Test',
+		programId: 'physics-bs',
+		catalogYear: catalog.catalogYear,
+		startTerm: 'fall',
+		startYear: 2026,
+		priorCredits: [],
+		semesters: [
+			{ id: 'fall-2026', term: 'fall', year: 2026, courses: [{ code, credits: 1 }] },
+			{ id: 'spring-2027', term: 'spring', year: 2027, courses: [{ code, credits: 1 }] }
+		],
+		settings: { ...DEFAULT_SETTINGS },
+		updatedAt: ''
+	});
+
+	it('does not flag a research course taken in two terms', () => {
+		// Repeating PHYS 197 is the point of it, not a mistake.
+		expect(catalog.courses.get('PHYS 197')?.repeatable).toBe(true);
+		expect(validatePlan(twice('PHYS 197'), catalog).map((i) => i.kind)).not.toContain(
+			'duplicate-course'
+		);
+	});
+
+	it('reads the catalog when it says so itself', () => {
+		// Most repeatable courses say "May be repeated for credit" in their own description.
+		const stated = [...catalog.courses.values()].filter((c) =>
+			/may be repeated/i.test(c.description ?? '')
+		);
+		expect(stated.length).toBeGreaterThan(50);
+		expect(stated.every((c) => c.repeatable)).toBe(true);
+	});
+
+	it('still flags an ordinary course planned twice', () => {
+		expect(validatePlan(twice('MATH 211'), catalog).map((i) => i.kind)).toContain(
+			'duplicate-course'
+		);
+	});
+});
