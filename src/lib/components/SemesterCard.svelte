@@ -20,6 +20,7 @@
 		onadd: (semesterId: string) => void;
 		onchoose: (semesterId: string, code: string) => void;
 		ontogglelock: (semesterId: string, code: string) => void;
+		ontogglesemesterlock: (semesterId: string) => void;
 		onactivate: (semesterId: string, code: string) => void;
 		ondelete: (semesterId: string) => void;
 		/** Set when the term that follows this one is missing from the plan. */
@@ -42,6 +43,7 @@
 		onadd,
 		onchoose,
 		ontogglelock,
+		ontogglesemesterlock,
 		onactivate,
 		ondelete,
 		addNextLabel,
@@ -149,6 +151,7 @@
 
 	function drop(e: DragEvent) {
 		e.preventDefault();
+		if (semester.locked) return drag.end();
 		if (drag.code && drag.fromSemesterId) {
 			onmove(drag.fromSemesterId, semester.id, drag.code, gapIndex);
 		}
@@ -157,11 +160,18 @@
 </script>
 
 <div
-	class="print-page relative flex min-h-32 min-w-0 flex-col rounded-lg border bg-white shadow-sm transition-colors sm:min-h-56 {showGap
-		? 'border-blue-400 ring-1 ring-blue-300'
-		: 'border-slate-200'}"
+	class="print-page relative flex min-h-32 min-w-0 flex-col rounded-lg border shadow-sm transition-colors sm:min-h-56 {showGap
+		? 'border-blue-400 bg-white ring-1 ring-blue-300'
+		: semester.locked
+			? 'border-slate-300 bg-slate-50'
+			: 'border-slate-200 bg-white'}"
 	role="list"
 	ondragover={(e) => {
+		// A locked term takes nothing in: no preview gap opens, and the cursor says so.
+		if (semester.locked) {
+			if (e.dataTransfer) e.dataTransfer.dropEffect = 'none';
+			return;
+		}
 		e.preventDefault();
 		// Wait for the geometry snapshot; hit-testing an unsettled layout is what caused the
 		// courses to bounce between positions.
@@ -171,18 +181,38 @@
 	ondrop={drop}
 >
 	<header class="flex items-center justify-between border-b border-slate-100 px-3 py-2">
-		<h3 class="text-sm font-semibold text-slate-800">{termLabel(semester)}</h3>
+		<h3 class="flex min-w-0 items-center gap-1.5 text-sm font-semibold text-slate-800">
+			{termLabel(semester)}
+			{#if semester.locked}
+				<Icon name="lock" class="h-3.5 w-3.5 shrink-0 text-slate-400" />
+			{/if}
+		</h3>
 		<div class="flex items-center gap-1">
 			<span class="rounded px-1.5 py-0.5 text-xs font-semibold {loadTone}">
 				{previewCredits} cr
 			</span>
 			<button
 				type="button"
-				class="no-print rounded px-1 text-xs text-slate-300 hover:text-red-600"
-				title="Remove this term"
-				aria-label="Remove {termLabel(semester)}"
-				onclick={() => ondelete(semester.id)}><Icon name="close" /></button
+				class="no-print rounded px-1 text-xs {semester.locked
+					? 'text-slate-500 hover:text-slate-800'
+					: 'text-slate-300 hover:text-slate-700'}"
+				title={semester.locked
+					? 'Unlock this term'
+					: 'Lock this term so nothing moves in or out'}
+				aria-label="{semester.locked ? 'Unlock' : 'Lock'} {termLabel(semester)}"
+				aria-pressed={Boolean(semester.locked)}
+				onclick={() => ontogglesemesterlock(semester.id)}
+				><Icon name={semester.locked ? 'lock' : 'unlock'} /></button
 			>
+			{#if !semester.locked}
+				<button
+					type="button"
+					class="no-print rounded px-1 text-xs text-slate-300 hover:text-red-600"
+					title="Remove this term"
+					aria-label="Remove {termLabel(semester)}"
+					onclick={() => ondelete(semester.id)}><Icon name="close" /></button
+				>
+			{/if}
 		</div>
 	</header>
 
@@ -221,7 +251,9 @@
 		{/each}
 
 		{#if entries.length === 0}
-			<p class="px-1 py-3 text-center text-xs text-slate-400">Drag a course here, or click Add.</p>
+			<p class="px-1 py-3 text-center text-xs text-slate-400">
+				{semester.locked ? 'Locked and empty.' : 'Drag a course here, or click Add.'}
+			</p>
 		{/if}
 	</div>
 
@@ -235,13 +267,15 @@
 		</div>
 	{/if}
 
-	<button
-		type="button"
-		class="no-print border-t border-slate-100 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-50 hover:text-blue-700"
-		onclick={() => onadd(semester.id)}
-	>
-		<span class="inline-flex items-center gap-1"><Icon name="plus" />Add course</span>
-	</button>
+	{#if !semester.locked}
+		<button
+			type="button"
+			class="no-print border-t border-slate-100 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-50 hover:text-blue-700"
+			onclick={() => onadd(semester.id)}
+		>
+			<span class="inline-flex items-center gap-1"><Icon name="plus" />Add course</span>
+		</button>
+	{/if}
 
 	<!--
 		Tabs on the edge where the next term would go. They appear only when that term is missing,

@@ -231,6 +231,9 @@
 			const from = s.semesters.find((x) => x.id === fromId);
 			const to = s.semesters.find((x) => x.id === toId);
 			if (!from || !to) return;
+			// A locked term holds what it has and takes nothing new. Reordering within one is
+			// still fine — that moves nothing in or out.
+			if ((from.locked || to.locked) && fromId !== toId) return;
 			const idx = from.courses.findIndex((c) => c.code === code);
 			if (idx < 0) return;
 			const [moved] = from.courses.splice(idx, 1);
@@ -242,7 +245,19 @@
 	function removeCourse(semesterId: string, code: string) {
 		roster.update((s) => {
 			const sem = s.semesters.find((x) => x.id === semesterId);
-			if (sem) sem.courses = sem.courses.filter((c) => c.code !== code);
+			if (!sem || sem.locked) return;
+			sem.courses = sem.courses.filter((c) => c.code !== code);
+		});
+	}
+
+	/**
+	 * Settle a whole term: nothing moves in or out, and auto-populate leaves it alone. The
+	 * coarse form of locking each course in it, for a term that is registered or already over.
+	 */
+	function toggleSemesterLock(semesterId: string) {
+		roster.update((s) => {
+			const sem = s.semesters.find((x) => x.id === semesterId);
+			if (sem) sem.locked = !sem.locked;
 		});
 	}
 
@@ -1046,6 +1061,7 @@
 								onadd={(id) => openPicker(id)}
 								onchoose={(id, code) => openPicker(id, code)}
 								ontogglelock={toggleLock}
+								ontogglesemesterlock={toggleSemesterLock}
 								onactivate={openActions}
 								ondelete={deleteSemester}
 								addNextLabel={next ? termLabel(next) : undefined}

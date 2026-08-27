@@ -375,3 +375,92 @@ describe('re-running auto-populate over a plan someone has worked on', () => {
 		}
 	});
 });
+
+describe('a locked term', () => {
+	const withLocked = (courses: PlannedCourse[]) =>
+		generatePlan({
+			...base,
+			locked: [{ id: 'fall-2026', term: 'fall' as const, year: 2026, courses, locked: true }]
+		});
+
+	it('takes nothing new, even with room to spare', () => {
+		const r = withLocked([{ code: 'ENGL 110C', credits: 3, auto: true }]);
+		const fall = r.semesters.find((s) => s.id === 'fall-2026')!;
+		expect(fall.courses.map((c) => c.code)).toEqual(['ENGL 110C']);
+		expect(fall.courses.reduce((n, c) => n + c.credits, 0)).toBe(3);
+	});
+
+	it('keeps what the planner itself put there, which an unlocked term would re-flow', () => {
+		const r = withLocked([{ code: 'PHYS 355', credits: 3, auto: true }]);
+		const fall = r.semesters.find((s) => s.id === 'fall-2026')!;
+		expect(fall.courses.map((c) => c.code)).toContain('PHYS 355');
+	});
+
+	it('keeps a placeholder rather than re-flowing it', () => {
+		const r = withLocked([
+			{
+				code: 'placeholder:creativity:0',
+				placeholder: { label: 'Human Creativity', category: 'creativity' },
+				credits: 3,
+				auto: true
+			}
+		]);
+		const fall = r.semesters.find((s) => s.id === 'fall-2026')!;
+		expect(fall.courses.some((c) => c.placeholder?.category === 'creativity')).toBe(true);
+	});
+
+	it('stays locked in the plan it produces', () => {
+		const r = withLocked([{ code: 'ENGL 110C', credits: 3 }]);
+		expect(r.semesters.find((s) => s.id === 'fall-2026')?.locked).toBe(true);
+		expect(r.semesters.find((s) => s.id === 'spring-2027')?.locked).toBeUndefined();
+	});
+
+	it('does not stop the rest of the plan from being built', () => {
+		const r = withLocked([{ code: 'ENGL 110C', credits: 3 }]);
+		const all = r.semesters.flatMap((s) => s.courses.map((c) => c.code));
+		expect(all).toContain('MATH 211');
+		expect(all).toContain('PHYS 261N');
+	});
+})
+
+describe('gen-ed slots and the courses already in the plan', () => {
+	const reservedLabels = (r: ReturnType<typeof generatePlan>) =>
+		r.semesters.flatMap((s) => s.courses.filter((c) => c.placeholder).map((c) => c.placeholder!.label));
+
+	it('does not reserve a category an advisor has already filled', () => {
+		// ENGL 110C is the Written Communication course; it is sitting in the plan.
+		const r = generatePlan({
+			...base,
+			locked: [
+				{
+					id: 'fall-2026',
+					term: 'fall' as const,
+					year: 2026,
+					courses: [{ code: 'ENGL 110C', credits: 3, auto: false }]
+				}
+			]
+		});
+		expect(reservedLabels(r)).not.toContain('Written Communication');
+	});
+
+	it('does not reserve one the registrar says is finished', () => {
+		const r = generatePlan({
+			...base,
+			locked: [
+				{
+					id: 'fall-2026',
+					term: 'fall' as const,
+					year: 2026,
+					courses: [
+						{ code: 'ENGL 110C', credits: 3, origin: 'banner', status: 'completed', grade: 'A' }
+					]
+				}
+			]
+		});
+		expect(reservedLabels(r)).not.toContain('Written Communication');
+	});
+
+	it('still reserves the ones nothing covers', () => {
+		expect(reservedLabels(generatePlan(base))).toContain('Human Creativity');
+	});
+})

@@ -220,6 +220,11 @@ export interface Semester {
 	term: Term;
 	year: number;
 	courses: PlannedCourse[];
+	/**
+	 * A settled term: nothing moves in or out of it. Locking the term is the coarse form of
+	 * locking each course in it, for a semester that is registered or already over.
+	 */
+	locked?: boolean;
 }
 
 export interface Student {

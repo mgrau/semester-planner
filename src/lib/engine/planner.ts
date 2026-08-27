@@ -325,11 +325,20 @@ export function generatePlan(req: PlanRequest): PlanResult {
 	 * (placeholders) are re-flowed, so re-running it does not churn a plan someone has worked on.
 	 */
 	const fixedByTerm = new Map<string, PlannedCourse[]>();
+	/** Terms that are settled: nothing may be added to them either. */
+	const closedTerms = new Set<string>();
 	for (const sem of req.locked ?? []) {
-		const keep = sem.courses.filter((c) => c.locked || (!c.placeholder && c.auto !== true));
-		if (keep.length) fixedByTerm.set(`${sem.term}-${sem.year}`, keep);
+		const id = `${sem.term}-${sem.year}`;
+		if (sem.locked) closedTerms.add(id);
+		const keep = sem.locked
+			? sem.courses
+			: sem.courses.filter((c) => c.locked || (!c.placeholder && c.auto !== true));
+		if (keep.length) fixedByTerm.set(id, keep);
 	}
-	const fixedCodes = new Set([...fixedByTerm.values()].flat().map((c) => c.code));
+	const fixedCodes = new Set(
+		[...fixedByTerm.values()].flat().filter((c) => !c.placeholder).map((c) => c.code)
+	);
+	const lockedFlag = (id: string) => (closedTerms.has(id) ? { locked: true } : {});
 
 	const needed = new Set(neededCourses(program, held, catalog));
 	pruneAlternatives(needed, program, catalog, held);
@@ -340,7 +349,10 @@ export function generatePlan(req: PlanRequest): PlanResult {
 
 	const slots = genEdSlots(
 		catalog.genEd,
-		new Set([...held, ...needed]),
+		// Courses staying put count toward gen-ed too. Leaving them out reserved a slot for a
+		// category an advisor had already filled — or, after a Banner import, for one the
+		// student finished two years ago.
+		new Set([...held, ...needed, ...fixedCodes]),
 		satisfiedCats,
 		program,
 		catalog
@@ -372,7 +384,12 @@ export function generatePlan(req: PlanRequest): PlanResult {
 		const id = fixed ? fixed[cursor].id : `${term}-${year}`;
 		const planned: PlannedCourse[] = [...(fixedByTerm.get(id) ?? [])];
 		let credits = planned.reduce((s, c) => s + c.credits, 0);
-		const cap = term === 'summer' ? settings.summerMaxCredits : settings.maxCreditsPerTerm;
+		// A locked term is settled — nothing may be added to it, so its capacity is already spent.
+		const cap = closedTerms.has(id)
+			? credits
+			: term === 'summer'
+				? settings.summerMaxCredits
+				: settings.maxCreditsPerTerm;
 
 		const before: CreditState = { completed: new Set(completed), grades };
 
@@ -479,12 +496,12 @@ export function generatePlan(req: PlanRequest): PlanResult {
 		}
 
 		if (planned.length) {
-			semesters.push({ id, term, year, courses: planned });
+			semesters.push({ id, term, year, courses: planned, ...lockedFlag(id) });
 			for (const p of planned) if (!p.placeholder) completed.add(p.code);
 			creditsSoFar += planned.reduce((n, p) => n + p.credits, 0);
 		} else if (needed.size > 0) {
 			// Nothing could be placed — everything left is gated behind a term restriction.
-			semesters.push({ id, term, year, courses: [] });
+			semesters.push({ id, term, year, courses: [], ...lockedFlag(id) });
 		}
 
 		if (fixed) {
@@ -502,7 +519,7 @@ export function generatePlan(req: PlanRequest): PlanResult {
 		const filled = new Set(semesters.map((s) => s.id));
 		for (const t of fixed) {
 			if (filled.has(t.id)) continue;
-			semesters.push({ ...t, courses: [...(fixedByTerm.get(t.id) ?? [])] });
+			semesters.push({ ...t, courses: [...(fixedByTerm.get(t.id) ?? [])], ...lockedFlag(t.id) });
 		}
 	}
 
