@@ -1,4 +1,4 @@
-import { stringify, parse } from 'yaml';
+import { stringify, parseDocument, isMap, isSeq, isScalar, LineCounter, type Node } from 'yaml';
 import type { Catalog, Student } from '$lib/types';
 import { sortSemesters, termLabel } from '$lib/engine/validate';
 import { KIND_STYLES, type CourseKind } from '$lib/courseKind';
@@ -45,7 +45,7 @@ export function extractEmbeddedStudent(text: string): Student | null {
 	const end = text.indexOf(PLAN_DATA_END, start + 1);
 	if (start < 0 || end < 0) return null;
 	const student = decodeStudent(text.slice(start + PLAN_DATA_BEGIN.length, end));
-	if (!student?.semesters || !student?.programId) {
+	if (!student?.semesters || typeof student.programId !== 'string') {
 		throw new Error('The plan data in that PDF is incomplete.');
 	}
 	return student;
@@ -71,12 +71,61 @@ export async function textFromPdf(file: File): Promise<string> {
 	return text;
 }
 
+/**
+ * Read an exported plan, explaining what is wrong — and where — when it cannot.
+ *
+ * A file that fails here has usually been hand-edited or produced by an older version, so the
+ * message names the line rather than leaving the advisor to guess.
+ */
 export function studentFromYaml(text: string): Student {
-	const doc = parse(text);
-	const student = doc?.student ?? doc;
-	if (!student?.semesters || !student?.programId) {
-		throw new Error('This file does not look like an exported student plan.');
+	const lineCounter = new LineCounter();
+	const doc = parseDocument(text, { lineCounter, prettyErrors: false });
+	const sourceLines = text.split(/\r?\n/);
+
+	/** "line 12: `    - code: PHYS 226N`" for the line a node (or offset) starts on. */
+	const at = (offset: number) => {
+		const { line } = lineCounter.linePos(offset);
+		return `line ${line}: \`${sourceLines[line - 1]?.trim() ?? ''}\``;
+	};
+
+	const syntax = doc.errors[0];
+	if (syntax) {
+		throw new Error(`This file is not valid YAML (${syntax.message.split('\n')[0]}) at ${at(syntax.pos[0])}`);
 	}
+
+	const root = doc.contents;
+	if (!isMap(root)) {
+		throw new Error('This file does not look like an exported student plan: it has no "student:" section.');
+	}
+	// Older exports were the bare student record, with no `format`/`student` wrapper.
+	const wrapped = root.get('student', true) as Node | undefined;
+	const studentNode = wrapped ?? root;
+	if (!isMap(studentNode)) {
+		throw new Error(`The "student:" section should hold the student's fields, at ${at(wrapped?.range?.[0] ?? 0)}`);
+	}
+	const where = wrapped ? 'the "student:" section' : 'this file';
+
+	const semesters = studentNode.get('semesters', true) as Node | undefined;
+	if (semesters === undefined) {
+		throw new Error(`This does not look like an exported student plan: ${where} has no "semesters:" list.`);
+	}
+	if (!isSeq(semesters)) {
+		throw new Error(`"semesters:" should be a list of terms, at ${at(semesters.range![0])}`);
+	}
+
+	// An empty programId is legitimate: a Banner Plus import whose major did not map to one of
+	// our programs is saved that way, and the advisor picks the program after import.
+	const programId = studentNode.get('programId', true) as Node | undefined;
+	if (programId === undefined) {
+		throw new Error(`This does not look like an exported student plan: ${where} has no "programId:" field.`);
+	}
+	if (!isScalar(programId) || (programId.value !== null && typeof programId.value !== 'string')) {
+		throw new Error(`"programId:" should be a program name or empty, at ${at(programId.range![0])}`);
+	}
+
+	const js = doc.toJS();
+	const student = js.student ?? js;
+	student.programId ??= '';
 	return student as Student;
 }
 

@@ -5,7 +5,9 @@ import {
 	decodeStudent,
 	encodeStudent,
 	extractEmbeddedStudent,
-	planToHtmlTable
+	planToHtmlTable,
+	studentFromYaml,
+	studentToYaml
 } from './exports';
 import { catalog } from './catalog';
 import type { CourseKind } from './courseKind';
@@ -130,5 +132,35 @@ describe('plan data embedded in the printed PDF', () => {
 	it('reports a truncated payload rather than importing a broken student', () => {
 		const page = `${PLAN_DATA_BEGIN}${encodeStudent({ ...student, semesters: [] }).slice(0, 20)}${PLAN_DATA_END}`;
 		expect(() => extractEmbeddedStudent(page)).toThrow();
+	});
+});
+
+describe('importing an exported YAML plan', () => {
+	it('round-trips a student', () => {
+		expect(studentFromYaml(studentToYaml(student))).toEqual(student);
+	});
+
+	it('accepts a student with no program yet, as a Banner Plus import leaves them', () => {
+		const unmapped = { ...student, programId: '' };
+		expect(studentFromYaml(studentToYaml(unmapped)).programId).toBe('');
+	});
+
+	it('points at the line that is not valid YAML', () => {
+		const text = studentToYaml(student).replace('term: spring', 'term: [spring');
+		expect(() => studentFromYaml(text)).toThrow(/not valid YAML.*line \d+/s);
+	});
+
+	it('names the missing field', () => {
+		const text = studentToYaml(student).replace(/^  semesters:/m, '  terms:');
+		expect(() => studentFromYaml(text)).toThrow(/"student:" section has no "semesters:" list/);
+	});
+
+	it('shows the line holding a field of the wrong shape', () => {
+		const text = studentToYaml(student).replace(/^  programId: .*$/m, '  programId: [a, b]');
+		expect(() => studentFromYaml(text)).toThrow(/"programId:".*`programId: \[a, b\]`/);
+	});
+
+	it('explains a file that is not a plan at all', () => {
+		expect(() => studentFromYaml('just some text')).toThrow(/no "student:" section/);
 	});
 });
